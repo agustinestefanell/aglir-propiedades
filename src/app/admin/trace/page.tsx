@@ -381,7 +381,7 @@ function TraceCanvas() {
                       y={bgCy}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      fontSize="1.8"
+                      fontSize="0.9"
                       fill="#059669"
                       fontWeight="bold"
                       className="select-none"
@@ -408,7 +408,7 @@ function TraceCanvas() {
                     y={centroidY}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fontSize="2"
+                    fontSize="1"
                     fill="#059669"
                     fontWeight="bold"
                     className="select-none"
@@ -441,7 +441,7 @@ function TraceCanvas() {
                 <text
                   x={p.x + 0.25}
                   y={p.y - 0.3}
-                  fontSize="2"
+                  fontSize="1"
                   fill="white"
                   fontWeight="bold"
                   className="select-none"
