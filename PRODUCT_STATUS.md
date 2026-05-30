@@ -63,9 +63,10 @@ Ultima actualizacion: 2026-05-30 — OE 001
 |---|---|---|---|
 | Acceso restringido a desarrollo | Closed | Guard `NODE_ENV !== "development"` | — |
 | Plano a pantalla completa con zoom/pan | Closed | Mismo patron que `InteractivePlan` | — |
-| Click agrega vertice numerado | Closed | Punto rojo + label + polilinea | Probar alineacion con contenido real del plano |
+| Click agrega vertice numerado | Closed | Punto rojo (r≈4px) + label numerico + polilinea | Probar alineacion con contenido real del plano |
 | Dropdown con 58 IDs de lotes | Closed | Importa `lots` de `src/data/lots.ts` | — |
-| Cerrar poligono + copiar al clipboard | Closed | `navigator.clipboard.writeText` | — |
+| Cerrar poligono + copiar al clipboard | Closed | `navigator.clipboard.writeText`; zoom/pan no se resetea con ninguna accion de boton | — |
+| Persistencia de trazados en localStorage | Closed | `aglir_trace_polygons` — sobrevive refresh y reinicio del servidor; restaura por lote | — |
 | Calculo de coordenadas SVG correcto | Partial | Formula implementada; alineacion no verificada sobre plano real | Verificar que los puntos de los bordes del plano correspondan a `x=0,y=0` y `x=100,y=70.72` |
 
 ---

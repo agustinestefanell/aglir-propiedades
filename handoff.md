@@ -99,7 +99,7 @@ Leer el repositorio completo y escribir los 5 archivos del protocolo reflejando 
 - Remote URL real: `https://github.com/agustinestefanell/aglir-propiedades.git` (difiere del que tenia documentado el PRODUCT_STATUS.md anterior que decia `arenaglirsas-33`).
 - Archivos huerfanos identificados: `LotBottomSheet.tsx`, `VisitRequestForm.tsx` — pendientes de limpieza en OE futura.
 
-### Pendientes al cerrar esta OE
+### Pendientes al cerrar OE 001
 
 - Trazar los 58 poligonos con `/admin/trace`.
 - Auditar manzanas 1, 4, 5, 7.
@@ -107,3 +107,43 @@ Leer el repositorio completo y escribir los 5 archivos del protocolo reflejando 
 - Limpiar archivos huerfanos.
 - Conectar persistencia real.
 - Verificar casing de imports en Linux (ver CodingWorkshop.md).
+
+---
+
+## OE 004 — Mejoras UI en /admin/trace
+
+**Fecha:** 2026-05-30
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** UI fix + feature
+
+### Objetivo
+
+Reducir tamaño de vértices en el trazador, garantizar que los botones no reseteen el viewport, y agregar persistencia en localStorage.
+
+### Accion ejecutada
+
+**Reduccion de puntos de vertice:**
+- `r="0.7"` → `r="0.47"` en SVG units (≈4px a viewport estandar de 600px altura).
+- `strokeWidth="0.2"` → `strokeWidth="0.12"` (borde proporcional al nuevo tamano).
+- Offset de label ajustado: `x={p.x + 0.9}` → `x={p.x + 0.63}`, `y={p.y - 0.6}` → `y={p.y - 0.45}`. Numero sigue visible al lado del punto.
+
+**Garantia de zoom/pan invariante:**
+- Verificado que ninguno de los handlers de "Cerrar poligono", "Copiar" y "Limpiar" llama `setTf`.
+- Agregados comments explicitando el invariante (`// tf is intentionally NOT reset here`).
+
+**Persistencia localStorage (`aglir_trace_polygons`):**
+- Estructura: `Record<lotId, { points, closed }>` — un registro por cada lote trazado.
+- Guardado automatico via `useEffect` en cada cambio de `points` o `closed`.
+- Restauracion automatica al seleccionar un lote (via `useEffect` en `selectedId`).
+- Si el lote no tiene trazado guardado, la herramienta arranca limpia.
+- Sobrevive refresh del browser y reinicio del servidor de desarrollo.
+
+### Archivos tocados
+
+- `src/app/admin/trace/page.tsx`
+- `handoff.md`, `PRODUCT_STATUS.md` (actualizados)
+
+### Pendientes
+
+- Trazar los 58 poligonos con la herramienta y verificar alineacion con contenido real del plano.
+- Aplicar fix permanente del casing del directorio (ver CodingWorkshop.md).

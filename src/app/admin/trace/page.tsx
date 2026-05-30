@@ -6,9 +6,31 @@ import { lots } from "@/data/lots";
 // Coordinate space matches the plan image: 4682×3311 px → normalized to 100×70.72
 const SVG_W = 100;
 const SVG_H = 70.72;
+const LS_KEY = "aglir_trace_polygons";
 
 type Point = { x: number; y: number };
 type Tf = { scale: number; x: number; y: number };
+type LotTrace = { points: Point[]; closed: boolean };
+type StoredTraces = Record<string, LotTrace>;
+
+function loadTraces(): StoredTraces {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? (JSON.parse(raw) as StoredTraces) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveTrace(id: string, points: Point[], closed: boolean) {
+  try {
+    const all = loadTraces();
+    all[id] = { points, closed };
+    localStorage.setItem(LS_KEY, JSON.stringify(all));
+  } catch {
+    // localStorage unavailable (SSR, private mode)
+  }
+}
 
 export default function TracePage() {
   if (process.env.NODE_ENV !== "development") {
@@ -30,6 +52,24 @@ function TraceCanvas() {
   const [points, setPoints] = useState<Point[]>([]);
   const [closed, setClosed] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Restore last saved trace for the selected lot on mount and on lot change
+  useEffect(() => {
+    const saved = loadTraces()[selectedId];
+    if (saved) {
+      setPoints(saved.points);
+      setClosed(saved.closed);
+    } else {
+      setPoints([]);
+      setClosed(false);
+    }
+    setCopied(false);
+  }, [selectedId]);
+
+  // Persist to localStorage whenever points or closed state changes
+  useEffect(() => {
+    saveTrace(selectedId, points, closed);
+  }, [selectedId, points, closed]);
 
   const isDragging = useRef(false);
   const dragMoved = useRef(false);
@@ -190,6 +230,7 @@ function TraceCanvas() {
     ]);
   }
 
+  // None of these handlers touch `tf` — viewport stays exactly where it is.
   function handleClosePolygon() {
     if (points.length >= 3) setClosed(true);
   }
@@ -206,11 +247,12 @@ function TraceCanvas() {
     setPoints([]);
     setClosed(false);
     setCopied(false);
+    // tf is intentionally NOT reset here — zoom/pan must survive Limpiar
   }
 
   function handleSelectLot(id: string) {
+    // useEffect on selectedId restores saved trace for the new lot (or clears if none)
     setSelectedId(id);
-    handleReset();
   }
 
   const svgPointsStr = points.map((p) => `${p.x},${p.y}`).join(" ");
@@ -330,21 +372,21 @@ function TraceCanvas() {
                 />
               ))}
 
-            {/* Dots + labels */}
+            {/* Dots + labels — r≈4px at standard viewport; number stays visible beside dot */}
             {points.map((p, i) => (
               <g key={i}>
                 <circle
                   cx={p.x}
                   cy={p.y}
-                  r="0.7"
+                  r="0.47"
                   fill="#ef4444"
                   stroke="white"
-                  strokeWidth="0.2"
+                  strokeWidth="0.12"
                   vectorEffect="non-scaling-stroke"
                 />
                 <text
-                  x={p.x + 0.9}
-                  y={p.y - 0.6}
+                  x={p.x + 0.63}
+                  y={p.y - 0.45}
                   fontSize="2"
                   fill="white"
                   fontWeight="bold"
