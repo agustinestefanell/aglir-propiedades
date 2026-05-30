@@ -143,7 +143,57 @@ Reducir tamaño de vértices en el trazador, garantizar que los botones no reset
 - `src/app/admin/trace/page.tsx`
 - `handoff.md`, `PRODUCT_STATUS.md` (actualizados)
 
+### Pendientes de OE 004
+
+- Trazar los 90 lotes con la herramienta y verificar alineacion con contenido real del plano.
+- Aplicar fix permanente del casing del directorio (ver CodingWorkshop.md).
+
+---
+
+## OE 005 — Ajustes UI trazado + nuevos lotes
+
+**Fecha:** 2026-05-30
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** UI + Datos
+
+### Objetivo
+
+Refinar la herramienta de trazado y ampliar el dataset de lotes.
+
+### Accion ejecutada
+
+**UI `/admin/trace`:**
+
+1. Puntos de vertice reducidos al 30% del radio anterior: `r="0.47"` → `r="0.14"` (≈1.2px). Offset de label ajustado: `x+0.25`, `y-0.3`. Numero sigue visible al lado del punto.
+
+2. Zoom/pan invariante confirmado — ninguna accion del sistema modifica `tf`. Comment explicito: `// No system action modifies tf — viewport movement is 100% manual`.
+
+3. Poligonos cerrados: cambio de color rojo → verde esmeralda (fill rgba(52,211,153,0.3), stroke #059669) + etiqueta con el ID del lote centrada en el centroide del poligono.
+
+4. Fondo con todos los trazados guardados: al cargar `/admin/trace`, se recuperan todos los lotes cerrados del localStorage y se muestran como poligonos verdes de fondo. Permite ver el avance global de trazado. Se actualiza en tiempo real al cerrar nuevos poligonos.
+
+5. Dropdown mejorado: oculta el area cuando es 0 (placeholder) para no mostrar "(0 m²)" en lotes sin auditar.
+
+**Dataset `src/data/lots.ts`:**
+
+- Manzana 2 solares 1-5: 5 lotes nuevos (area pendiente, placeholder 0).
+- Manzana 3 solares 1-5: 5 lotes nuevos (area pendiente, placeholder 0).
+- Manzana 4 solares 6-14 + 22-24: 12 lotes nuevos (area pendiente).
+- Manzana 7 solares 1-10: 10 lotes nuevos (area pendiente).
+- Total nuevo: 32 lotes (OE decia 27, pero la lista explicita suma 32 — se agregaron exactamente los listados).
+- Total lotes en dataset: 90 (antes 58).
+- Tipo del array explicitado como `[string, string, number][]` para compatibilidad TypeScript.
+- Observaciones diferenciadas: `"Pendiente de auditoria. Area placeholder."` para area=0.
+- Dropdown de la herramienta de trazado muestra los 90 lotes en orden por manzana/solar.
+
+### Archivos tocados
+
+- `src/app/admin/trace/page.tsx`
+- `src/data/lots.ts`
+- `handoff.md`, `PRODUCT_STATUS.md`, `AglirPlans.md` (actualizados)
+
 ### Pendientes
 
-- Trazar los 58 poligonos con la herramienta y verificar alineacion con contenido real del plano.
-- Aplicar fix permanente del casing del directorio (ver CodingWorkshop.md).
+- Auditar areas reales de manzanas 2 (s.1-5), 3 (s.1-5), 4 (s.6-14 + 22-24) y 7 (s.1-10).
+- Trazar los 90 poligonos con `/admin/trace`.
+- Verificar alineacion visual del trazado sobre el plano real.

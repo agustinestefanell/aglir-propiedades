@@ -47,13 +47,21 @@ export default function TracePage() {
 
 function TraceCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
+  // No system action modifies tf — viewport movement is 100% manual (wheel, drag, pinch)
   const [tf, setTf] = useState<Tf>({ scale: 1, x: 0, y: 0 });
-  const [selectedId, setSelectedId] = useState(lots[0]?.id ?? "m2-s6");
+  const [selectedId, setSelectedId] = useState(lots[0]?.id ?? "m2-s1");
   const [points, setPoints] = useState<Point[]>([]);
   const [closed, setClosed] = useState(false);
   const [copied, setCopied] = useState(false);
+  // All saved traces for background display (other lots' closed polygons)
+  const [allTraces, setAllTraces] = useState<StoredTraces>({});
 
-  // Restore last saved trace for the selected lot on mount and on lot change
+  // Load all traces from localStorage on mount — shows previously closed polygons
+  useEffect(() => {
+    setAllTraces(loadTraces());
+  }, []);
+
+  // Restore saved trace whenever the selected lot changes
   useEffect(() => {
     const saved = loadTraces()[selectedId];
     if (saved) {
@@ -66,9 +74,10 @@ function TraceCanvas() {
     setCopied(false);
   }, [selectedId]);
 
-  // Persist to localStorage whenever points or closed state changes
+  // Persist to localStorage + sync allTraces for background display
   useEffect(() => {
     saveTrace(selectedId, points, closed);
+    setAllTraces((prev) => ({ ...prev, [selectedId]: { points, closed } }));
   }, [selectedId, points, closed]);
 
   const isDragging = useRef(false);
@@ -209,11 +218,9 @@ function TraceCanvas() {
     const cx = e.clientX - rect.left;
     const cy = e.clientY - rect.top;
 
-    // Map container click → logical inner-div position (undoing zoom/pan)
     const lx = (cx - tf.x) / tf.scale;
     const ly = (cy - tf.y) / tf.scale;
 
-    // Calculate where the SVG (100×70.72) renders within the inner div (letterbox offsets)
     const svgScale = Math.min(el.clientWidth / SVG_W, el.clientHeight / SVG_H);
     const svgLeft = (el.clientWidth - SVG_W * svgScale) / 2;
     const svgTop = (el.clientHeight - SVG_H * svgScale) / 2;
@@ -221,7 +228,6 @@ function TraceCanvas() {
     const svgX = (lx - svgLeft) / svgScale;
     const svgY = (ly - svgTop) / svgScale;
 
-    // Ignore clicks outside the image area
     if (svgX < 0 || svgX > SVG_W || svgY < 0 || svgY > SVG_H) return;
 
     setPoints((prev) => [
@@ -251,11 +257,12 @@ function TraceCanvas() {
   }
 
   function handleSelectLot(id: string) {
-    // useEffect on selectedId restores saved trace for the new lot (or clears if none)
     setSelectedId(id);
   }
 
   const svgPointsStr = points.map((p) => `${p.x},${p.y}`).join(" ");
+  const centroidX = points.length > 0 ? points.reduce((s, p) => s + p.x, 0) / points.length : 0;
+  const centroidY = points.length > 0 ? points.reduce((s, p) => s + p.y, 0) / points.length : 0;
   const outputJson = JSON.stringify(points.map((p) => ({ x: p.x, y: p.y })));
 
   return (
@@ -271,7 +278,8 @@ function TraceCanvas() {
         >
           {lots.map((lot) => (
             <option key={lot.id} value={lot.id}>
-              {lot.id} · M{lot.manzana} S{lot.solar} ({lot.area_m2} m²)
+              {lot.id} · M{lot.manzana} S{lot.solar}
+              {lot.area_m2 > 0 ? ` (${lot.area_m2} m²)` : ""}
             </option>
           ))}
         </select>
@@ -316,7 +324,7 @@ function TraceCanvas() {
 
         {closed && (
           <span className="rounded-full bg-emerald-800 px-2.5 py-0.5 text-xs font-bold text-emerald-200">
-            Cerrado
+            Cerrado ✓
           </span>
         )}
       </div>
@@ -352,16 +360,62 @@ function TraceCanvas() {
             preserveAspectRatio="xMidYMid meet"
             className="pointer-events-none absolute inset-0 h-full w-full"
           >
-            {/* Connecting lines */}
+            {/* ── Background: all OTHER lots' closed polygons from localStorage ── */}
+            {Object.entries(allTraces)
+              .filter(([id, t]) => id !== selectedId && t.closed && t.points.length >= 3)
+              .map(([id, t]) => {
+                const bgPts = t.points.map((p) => `${p.x},${p.y}`).join(" ");
+                const bgCx = t.points.reduce((s, p) => s + p.x, 0) / t.points.length;
+                const bgCy = t.points.reduce((s, p) => s + p.y, 0) / t.points.length;
+                return (
+                  <g key={`bg-${id}`}>
+                    <polygon
+                      points={bgPts}
+                      fill="rgba(52,211,153,0.3)"
+                      stroke="#059669"
+                      strokeWidth="0.2"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                    <text
+                      x={bgCx}
+                      y={bgCy}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fontSize="1.8"
+                      fill="#059669"
+                      fontWeight="bold"
+                      className="select-none"
+                    >
+                      {id}
+                    </text>
+                  </g>
+                );
+              })}
+
+            {/* ── Active polygon: current lot ─────────────────────────────── */}
             {points.length >= 2 &&
               (closed ? (
-                <polygon
-                  points={svgPointsStr}
-                  fill="rgba(239,68,68,0.15)"
-                  stroke="#ef4444"
-                  strokeWidth="0.25"
-                  vectorEffect="non-scaling-stroke"
-                />
+                <g>
+                  <polygon
+                    points={svgPointsStr}
+                    fill="rgba(52,211,153,0.3)"
+                    stroke="#059669"
+                    strokeWidth="0.25"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                  <text
+                    x={centroidX}
+                    y={centroidY}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fontSize="2"
+                    fill="#059669"
+                    fontWeight="bold"
+                    className="select-none"
+                  >
+                    {selectedId}
+                  </text>
+                </g>
               ) : (
                 <polyline
                   points={svgPointsStr}
@@ -372,21 +426,21 @@ function TraceCanvas() {
                 />
               ))}
 
-            {/* Dots + labels — r≈4px at standard viewport; number stays visible beside dot */}
+            {/* ── Vertex dots + numbers — r≈1.2px (30% of previous 4px) ──── */}
             {points.map((p, i) => (
               <g key={i}>
                 <circle
                   cx={p.x}
                   cy={p.y}
-                  r="0.47"
+                  r="0.14"
                   fill="#ef4444"
                   stroke="white"
-                  strokeWidth="0.12"
+                  strokeWidth="0.08"
                   vectorEffect="non-scaling-stroke"
                 />
                 <text
-                  x={p.x + 0.63}
-                  y={p.y - 0.45}
+                  x={p.x + 0.25}
+                  y={p.y - 0.3}
                   fontSize="2"
                   fill="white"
                   fontWeight="bold"

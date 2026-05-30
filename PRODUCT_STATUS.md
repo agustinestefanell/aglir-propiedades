@@ -21,7 +21,7 @@ Ultima actualizacion: 2026-05-30 — OE 001
 
 | Feature | Estado | Evidencia | Pendiente |
 |---|---|---|---|
-| Dataset lotes — metadata m2/solar/area | Partial | 58 lotes en `src/data/lots.ts` (manzanas 2,3,6,8,9) | Auditar manzanas 1,4,5,7; verificar recuento manzana 6 solar 14 |
+| Dataset lotes — metadata m2/solar/area | Partial | 90 lotes: M2(1-18), M3(1-12), M4(6-14+22-24), M6(1-19), M7(1-10), M8(4-17), M9(1-5) | Auditar areas reales de M2(1-5), M3(1-5), M4, M7; verificar M6 solar 14 |
 | Precios reales | Broken | `precio_contado: 0` en todos los lotes | Cargar precios reales cuando se definan |
 | Poligonos SVG trazados | Broken | `polygon: []` en todos los lotes | Trazar con `/admin/trace`, pegar en `lots.ts` |
 | Solicitudes de visita mock | Partial | 4 registros en `visitRequests.ts` con IDs de lotes validos | Solo para probar admin; no persisten |
@@ -62,12 +62,13 @@ Ultima actualizacion: 2026-05-30 — OE 001
 | Feature | Estado | Evidencia | Pendiente |
 |---|---|---|---|
 | Acceso restringido a desarrollo | Closed | Guard `NODE_ENV !== "development"` | — |
-| Plano a pantalla completa con zoom/pan | Closed | Mismo patron que `InteractivePlan` | — |
-| Click agrega vertice numerado | Closed | Punto rojo (r≈4px) + label numerico + polilinea | Probar alineacion con contenido real del plano |
-| Dropdown con 58 IDs de lotes | Closed | Importa `lots` de `src/data/lots.ts` | — |
-| Cerrar poligono + copiar al clipboard | Closed | `navigator.clipboard.writeText`; zoom/pan no se resetea con ninguna accion de boton | — |
-| Persistencia de trazados en localStorage | Closed | `aglir_trace_polygons` — sobrevive refresh y reinicio del servidor; restaura por lote | — |
-| Calculo de coordenadas SVG correcto | Partial | Formula implementada; alineacion no verificada sobre plano real | Verificar que los puntos de los bordes del plano correspondan a `x=0,y=0` y `x=100,y=70.72` |
+| Plano a pantalla completa con zoom/pan | Closed | Solo movimiento manual; ningun sistema toca `tf` | — |
+| Click agrega vertice numerado | Closed | Punto rojo r≈1.2px + label numerico; polyline en abierto | Probar alineacion con plano real |
+| Dropdown con 90 IDs de lotes | Closed | 90 lotes en orden (M2-M9); sin "(0 m²)" en placeholder | — |
+| Cerrar poligono con verde + label ID | Closed | fill rgba(52,211,153,0.3) + stroke #059669 + label centrado | — |
+| Fondo con todos los cerrados | Closed | `allTraces` state — todos los lotes cerrados del localStorage visibles como verde | — |
+| Persistencia en localStorage | Closed | `aglir_trace_polygons` — sobrevive refresh y reinicio; restaura por lote | — |
+| Calculo de coordenadas SVG correcto | Partial | Formula implementada; alineacion no verificada sobre plano real | Verificar bordes: x=0,y=0 y x=100,y=70.72 |
 
 ---
 

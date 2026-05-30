@@ -225,21 +225,21 @@ type User = {         // guardado en localStorage["aglir_user"]
 
 ## 7. Dataset de terrenos — `src/data/lots.ts`
 
-58 lotes reales auditados desde el plano del padron 11223:
+90 lotes en dataset:
 
-| Manzana | Solares | Cantidad |
-|---|---|---|
-| 2 | 6 al 18 | 13 |
-| 3 | 6 al 12 | 7 |
-| 6 | 1 al 19 (excepto 14) | 18 |
-| 8 | 4 al 17 | 14 |
-| 9 | 1 al 5 | 5 |
-| **Total** | | **57** lotes |
+| Manzana | Solares | Cantidad | Estado de areas |
+|---|---|---|---|
+| 2 | 1-18 | 18 | s.1-5 placeholder 0; s.6-18 auditados |
+| 3 | 1-12 | 12 | s.1-5 placeholder 0; s.6-12 auditados |
+| 4 | 6-14, 22-24 | 12 | todos placeholder 0 |
+| 6 | 1-19 | 19 | todos auditados (verificar s.14 vs plano) |
+| 7 | 1-10 | 10 | todos placeholder 0 |
+| 8 | 4-17 | 14 | todos auditados |
+| 9 | 1-5 | 5 | todos auditados |
+| **Total** | | **90** | |
 
-Nota: el recuento en codigo es 58 porque el script de manzana 6 incluye solar 14 con area 752.64 aunque el plano lo omite como E.LIBRE. Verificar al trazar.
-
-- Manzanas 1, 4, 5, 7 excluidas: areas no auditadas suficientemente.
-- Manzana 9 solar 6: excluida (figura como E. LIBRE).
+- Manzana 9 solar 6: excluida (E. LIBRE).
+- Manzanas 1 y 5: excluidas, no se conocen sus solares de venta aun.
 - `precio_contado` y `precio_financiado`: `0` en todos (placeholder tecnico).
 - `polygon`: `[]` en todos (pendiente de trazado con `/admin/trace`).
 - Todos los lotes inicializados con `estado: "disponible"`.
@@ -278,7 +278,7 @@ Sin persistencia backend. Las solicitudes creadas viven en estado React de la se
 ## 10. Admin — flujo operativo
 
 ```
-/admin carga: AdminLotStatusManager (58 lotes) + AdminCalendarView + AdminVisitList
+/admin carga: AdminLotStatusManager (90 lotes) + AdminCalendarView + AdminVisitList
 
 AdminLotStatusManager:
   → Busqueda texto → filtro de cards
@@ -312,10 +312,12 @@ AdminVisitList:
 
 ## 12. Herramienta de trazado — `/admin/trace`
 
-- Carga `plano-11223.png` a pantalla completa con zoom/pan.
-- Click en imagen agrega vertice (punto rojo numerado).
-- Lineas de conexion entre vertices; al "Cerrar poligono" cierra la forma.
-- Dropdown con los 58 IDs de lotes.
+- Carga `plano-11223.png` a pantalla completa con zoom/pan (solo manual — ningun sistema mueve el viewport).
+- Click en imagen agrega vertice (punto rojo r≈1.2px con numero al lado).
+- Lineas de conexion en rojo mientras abierto; al "Cerrar poligono" cambia a verde esmeralda (fill 0.3 opacity) + label con ID del lote centrado en el centroide.
+- Dropdown con los 90 IDs de lotes en orden (no muestra "(0 m²)" en lotes sin auditar).
+- Todos los lotes cerrados guardados se muestran como poligonos verdes de fondo al cargar la pagina.
+- Persistencia en `localStorage["aglir_trace_polygons"]` — estructura `Record<lotId, {points, closed}>`.
 - "Copiar" → clipboard: `[{"x":45.23,"y":32.11},...]`.
 - Sistema de coordenadas: igual que `LotPolygon` → `x∈[0,100]`, `y∈[0,70.72]`.
 - El array se pega en el campo `polygon` del lote correspondiente en `src/data/lots.ts`.
