@@ -29,3 +29,8 @@ export type VisitRequest = {
   comentario?: string;
   estado: VisitStatus;
 };
+
+export type User = {
+  nombre: string;
+  whatsapp: string;
+};

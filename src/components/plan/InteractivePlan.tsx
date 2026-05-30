@@ -1,115 +1,276 @@
 "use client";
 
-import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Lot } from "@/types";
-import { LotBottomSheet } from "./LotBottomSheet";
+import { LotDetailPanel } from "./LotDetailPanel";
 import { LotPolygon } from "./LotPolygon";
 
-type InteractivePlanProps = {
+type Props = {
   lots: Lot[];
   selectedLot: Lot | null;
   onSelectLot: (lot: Lot | null) => void;
   onSchedule: () => void;
   showLotDetails?: boolean;
+  isAdmin?: boolean;
 };
+
+type Tf = { scale: number; x: number; y: number };
 
 export function InteractivePlan({
   lots,
   selectedLot,
   onSelectLot,
   onSchedule,
-  showLotDetails = true
-}: InteractivePlanProps) {
-  const [planImageReady, setPlanImageReady] = useState(false);
-  const drawableLots = lots.filter((lot) => lot.polygon.length >= 3);
+  showLotDetails = true,
+  isAdmin = false,
+}: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [tf, setTf] = useState<Tf>({ scale: 1, x: 0, y: 0 });
+  const [planReady, setPlanReady] = useState(false);
+
+  const isDragging = useRef(false);
+  const dragMoved = useRef(false);
+  const lastPointer = useRef({ x: 0, y: 0 });
+  const lastTouchDist = useRef<number | null>(null);
+  const lastTouchMid = useRef<{ x: number; y: number } | null>(null);
+
+  const drawableLots = lots.filter((l) => l.polygon.length >= 3);
 
   useEffect(() => {
-    const image = new window.Image();
-    image.onload = () => setPlanImageReady(true);
-    image.onerror = () => setPlanImageReady(false);
-    image.src = "/plan/plano-11223.png";
+    const img = new window.Image();
+    img.onload = () => setPlanReady(true);
+    img.onerror = () => setPlanReady(false);
+    img.src = "/plan/plano-11223.png";
   }, []);
 
+  const clamp = useCallback((scale: number, x: number, y: number): Tf => {
+    const el = containerRef.current;
+    if (!el) return { scale, x, y };
+    const s = Math.min(6, Math.max(1, scale));
+    return {
+      scale: s,
+      x: Math.min(0, Math.max(el.clientWidth * (1 - s), x)),
+      y: Math.min(0, Math.max(el.clientHeight * (1 - s), y)),
+    };
+  }, []);
+
+  // Guard against lot selection during drag
+  function handleLotSelect(lot: Lot) {
+    if (dragMoved.current) {
+      dragMoved.current = false;
+      return;
+    }
+    onSelectLot(lot);
+  }
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    function onWheel(e: WheelEvent) {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 1 / 0.84 : 0.84;
+      const rect = el!.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      setTf((prev) => {
+        const ns = prev.scale * factor;
+        return clamp(ns, cx - (cx - prev.x) * (ns / prev.scale), cy - (cy - prev.y) * (ns / prev.scale));
+      });
+    }
+
+    function onMouseDown(e: MouseEvent) {
+      isDragging.current = true;
+      dragMoved.current = false;
+      lastPointer.current = { x: e.clientX, y: e.clientY };
+      el!.style.cursor = "grabbing";
+    }
+
+    function onMouseMove(e: MouseEvent) {
+      if (!isDragging.current) return;
+      const dx = e.clientX - lastPointer.current.x;
+      const dy = e.clientY - lastPointer.current.y;
+      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) dragMoved.current = true;
+      lastPointer.current = { x: e.clientX, y: e.clientY };
+      setTf((prev) => clamp(prev.scale, prev.x + dx, prev.y + dy));
+    }
+
+    function onMouseUp() {
+      isDragging.current = false;
+      el!.style.cursor = "grab";
+    }
+
+    function onTouchStart(e: TouchEvent) {
+      if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastTouchDist.current = Math.hypot(dx, dy);
+        lastTouchMid.current = {
+          x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+          y: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+        };
+      } else if (e.touches.length === 1) {
+        dragMoved.current = false;
+        lastPointer.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      e.preventDefault();
+      if (e.touches.length === 2 && lastTouchDist.current !== null && lastTouchMid.current !== null) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const newDist = Math.hypot(dx, dy);
+        const newMid = {
+          x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+          y: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+        };
+        const ratio = newDist / lastTouchDist.current;
+        const rect = el!.getBoundingClientRect();
+        const cx = lastTouchMid.current.x - rect.left;
+        const cy = lastTouchMid.current.y - rect.top;
+        const panDx = newMid.x - lastTouchMid.current.x;
+        const panDy = newMid.y - lastTouchMid.current.y;
+        setTf((prev) => {
+          const ns = prev.scale * ratio;
+          return clamp(ns, cx - (cx - prev.x) * (ns / prev.scale) + panDx, cy - (cy - prev.y) * (ns / prev.scale) + panDy);
+        });
+        lastTouchDist.current = newDist;
+        lastTouchMid.current = newMid;
+      } else if (e.touches.length === 1) {
+        const dx = e.touches[0].clientX - lastPointer.current.x;
+        const dy = e.touches[0].clientY - lastPointer.current.y;
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) dragMoved.current = true;
+        lastPointer.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        setTf((prev) => clamp(prev.scale, prev.x + dx, prev.y + dy));
+      }
+    }
+
+    function onTouchEnd() {
+      lastTouchDist.current = null;
+      lastTouchMid.current = null;
+    }
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd);
+
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [clamp]);
+
+  const panelVisible = showLotDetails && selectedLot;
+
   return (
-    <section className="grid gap-4 md:grid-cols-[minmax(0,1fr)_360px]">
-      <div className="relative min-h-[58vh] overflow-hidden rounded-md border border-stone-200 bg-stone-100 shadow-sm md:min-h-[680px]">
-        {planImageReady ? (
-          <Image
-            src="/plan/plano-11223.png"
-            alt="Plano de terrenos Aglir Propiedades"
-            fill
-            sizes="(min-width: 768px) calc(100vw - 420px), 100vw"
-            className="object-contain"
-            priority
-          />
-        ) : (
-          <div className="absolute inset-0 grid place-items-center bg-[linear-gradient(90deg,#e7e1d2_1px,transparent_1px),linear-gradient(#e7e1d2_1px,transparent_1px)] bg-[size:28px_28px] p-6 text-center">
-            <div>
-              <p className="text-base font-bold text-ink">Placeholder del plano 11223</p>
-              <p className="mt-2 max-w-xs text-sm leading-6 text-stone-700">
-                Colocar la imagen real en public/plan/plano-11223.png.
-              </p>
-            </div>
-          </div>
-        )}
-
-        <svg
-          viewBox="0 0 100 100"
-          preserveAspectRatio="xMidYMid meet"
-          className="absolute inset-0 h-full w-full touch-pan-x touch-pan-y"
-          role="img"
-          aria-label="Plano interactivo con terrenos clickeables"
+    <section
+      className={`grid gap-4 ${panelVisible ? "md:grid-cols-[1fr_300px]" : ""}`}
+    >
+      {/* ── Plan container ─────────────────────────────────────────── */}
+      <div
+        ref={containerRef}
+        className="relative overflow-hidden rounded-md border border-stone-200 bg-stone-100 shadow-sm select-none touch-none"
+        style={{
+          minHeight: panelVisible ? "46vh" : "56vh",
+          cursor: "grab",
+        }}
+      >
+        {/* Zoomable layer */}
+        <div
+          style={{
+            transform: `translate(${tf.x}px,${tf.y}px) scale(${tf.scale})`,
+            transformOrigin: "0 0",
+            width: "100%",
+            height: "100%",
+            willChange: "transform",
+            position: "relative",
+          }}
         >
-          {drawableLots.map((lot) => (
-            <LotPolygon
-              key={lot.id}
-              lot={lot}
-              selected={selectedLot?.id === lot.id}
-              onSelect={onSelectLot}
+          {planReady ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src="/plan/plano-11223.png"
+              alt="Plano fraccionamiento 11223"
+              draggable={false}
+              className="h-full w-full object-contain"
             />
-          ))}
-        </svg>
+          ) : (
+            <div className="h-full w-full bg-[linear-gradient(90deg,#e7e1d2_1px,transparent_1px),linear-gradient(#e7e1d2_1px,transparent_1px)] bg-[size:28px_28px]" />
+          )}
 
-        <div className="absolute left-3 top-3 rounded-md bg-white/95 px-3 py-2 text-xs font-semibold text-stone-700 shadow-sm">
-          Tocá un solar para ver detalles
+          <svg
+            viewBox="0 0 100 70.72"
+            preserveAspectRatio="xMidYMid meet"
+            className="absolute inset-0 h-full w-full"
+            aria-label="Plano interactivo de lotes"
+          >
+            {drawableLots.map((lot) => (
+              <LotPolygon
+                key={lot.id}
+                lot={lot}
+                selected={selectedLot?.id === lot.id}
+                onSelect={handleLotSelect}
+                forceClickable={isAdmin}
+              />
+            ))}
+          </svg>
         </div>
 
-        <div className="absolute bottom-3 left-3 right-3 flex flex-wrap gap-2 rounded-md bg-white/95 p-2 text-[11px] font-bold text-stone-700 shadow-sm sm:right-auto">
-          <span className="inline-flex items-center gap-1">
-            <span className="h-3 w-3 rounded-sm border border-stone-500 bg-white" />
+        {/* ── Fixed overlays (no zoom) ───────────────────────────── */}
+        <div className="pointer-events-none absolute left-3 top-3 rounded-md bg-white/90 px-2.5 py-1.5 text-[11px] font-semibold text-stone-600 shadow-sm">
+          {drawableLots.length === 0
+            ? "Plano pendiente de trazado"
+            : isAdmin
+              ? "Seleccioná un solar"
+              : "Tocá un solar disponible"}
+        </div>
+
+        {/* Legend */}
+        <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap gap-2 rounded-md bg-white/90 px-2.5 py-1.5 text-[10px] font-bold text-stone-700 shadow-sm">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-sm border border-stone-500 bg-transparent" />
             Disponible
           </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="h-3 w-3 rounded-sm border border-amber-500 bg-amber-200" />
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-sm bg-emerald-500" />
             Reservado
           </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="h-3 w-3 rounded-sm border border-amber-800 bg-amber-400" />
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-sm bg-yellow-400 border border-yellow-500" />
             Vendido
           </span>
         </div>
+
+        {/* Reset zoom */}
+        {tf.scale > 1.05 && (
+          <button
+            type="button"
+            onClick={() => setTf({ scale: 1, x: 0, y: 0 })}
+            className="absolute right-3 top-3 rounded-md bg-white/90 px-2.5 py-1.5 text-[11px] font-bold text-stone-700 shadow-sm hover:bg-white"
+          >
+            ↺ Zoom
+          </button>
+        )}
       </div>
 
-      {showLotDetails ? (
-        <>
-          <div className="hidden md:block">
-            <LotBottomSheet
-              lot={selectedLot}
-              onClose={() => onSelectLot(null)}
-              onSchedule={onSchedule}
-            />
-          </div>
-
-          <div className="md:hidden">
-            <LotBottomSheet
-              lot={selectedLot}
-              onClose={() => onSelectLot(null)}
-              onSchedule={onSchedule}
-            />
-          </div>
-        </>
-      ) : null}
+      {/* ── Detail panel (no cierra el plano) ─────────────────────── */}
+      {panelVisible && (
+        <LotDetailPanel
+          lot={selectedLot}
+          onClose={() => onSelectLot(null)}
+          onSchedule={onSchedule}
+        />
+      )}
     </section>
   );
 }

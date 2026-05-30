@@ -1,125 +1,109 @@
-# handoff.md - Historial operativo del proyecto Aglir Propiedades
+# handoff.md — Historial operativo del proyecto Aglir Propiedades
 
-## 2026-05-29 - Infraestructura documental minima
+Cada entrada registra una OE completada. El objetivo es que cualquier sesion nueva pueda retomar el trabajo sin depender de conversaciones anteriores.
 
-### Contexto
+---
 
-Proyecto web Aglir Propiedades creado como MVP inmobiliario mobile-first para venta de terrenos mediante plano interactivo.
+## OE 000 — Setup inicial y construccion del MVP
 
-### Estado previo
+**Fecha:** 2026-05-29 al 2026-05-30
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Setup + Feature
 
-Repo inicial ya creado con Next.js, TypeScript, Tailwind, pagina publica, admin mock, datos mock y helper WhatsApp.
+### Que se construyo
 
-### Accion ejecutada
+Todo el proyecto desde cero, en las siguientes fases:
 
-Creacion de infraestructura documental minima:
+#### Fase 1 — Scaffold inicial (commit `44be750`)
 
-- AISyncPlans.md
-- CodingWorkshop.md
-- PromtsOperativos.md
-- handoff.md
-- PRODUCT_STATUS.md
+- Next.js 14 + TypeScript + Tailwind CSS + App Router.
+- Estructura base de carpetas `src/app`, `src/components`, `src/data`, `src/lib`, `src/types`.
+- Tipos compartidos: `Lot`, `VisitRequest`, `LotStatus`, `VisitStatus`, `PolygonPoint`.
+- Dataset mock inicial de lotes.
+- Componentes iniciales: `InteractivePlan`, `LotPolygon`, `LotBottomSheet`, `VisitRequestForm`.
+- Admin mock: `AdminVisitList`, `AdminCalendarView`, `WhatsAppAcceptButton`.
+- Helper `buildWhatsAppUrl`.
+- Paleta Tailwind: soil, ink, leaf, paper.
 
-### Evidencia
+#### Fase 2 — Admin mobile de estados comerciales (commit `2d1ff45`)
 
-Commit inicial existente:
-`44be750 Initial MVP for Aglir Propiedades interactive lots website`
+- `AdminLotStatusManager` + `AdminLotStatusCard`.
+- El admin puede marcar terrenos como disponible / reservado / vendido en modo local.
+- Plano integrado en el admin (`showLotDetails=false`).
+- Vista de solicitudes agrupadas por dia (`AdminCalendarView`).
+- Documentacion inicial: `handoff.md`, `PRODUCT_STATUS.md`, `AISyncPlans.md`, `CodingWorkshop.md`, `PromtsOperativos.md`, `DECISIONS.md`.
 
-Commit documental:
-`Create project documentation infrastructure`
+#### Fase 3 — Metadata real de 58 lotes (commit `bc62130`)
 
-### Pendientes inmediatos
+- `src/data/lots.ts` reemplazado con los 58 lotes reales auditados desde el plano del padron 11223.
+- Manzanas: 2 (sol.6-18), 3 (sol.6-12), 6 (sol.1-19 ex.14), 8 (sol.4-17), 9 (sol.1-5).
+- Manzana 9 solar 6 excluida: E. LIBRE.
+- IDs estables: `m{manzana}-s{solar}`.
+- Todos con `estado: "disponible"`, `polygon: []`, `precio_contado: 0`.
 
-- Crear remoto GitHub en cuenta `arenaglirsas@gmail.com`.
-- Hacer push.
-- Conectar Vercel.
-- Exportar plano real a `public/plan/plano-11223.png`.
-- Trazar primeros terrenos reales.
-- Probar en smartphone.
+#### Fase 4 — Plano interactivo completo, flujo de agenda y admin mejorado (sin commit aun)
 
-## 2026-05-29 - Admin mobile para estados comerciales de terrenos
+- **Zoom/pan** en el plano: rueda del mouse, drag, pinch de 2 dedos. Max 6x. Guard `dragMoved` para diferenciar tap de drag.
+- **Colores correctos de estados**: disponible = sin relleno/borde gris, reservado = verde esmeralda, vendido = amarillo.
+- **`LotDetailPanel`**: panel lateral que no cierra el plano. Mobile = debajo del plano, desktop = columna derecha.
+- **`VisitBookingModal`**: flujo en 2 pasos (registro Nombre+WA → fecha/hora). WhatsApp como identificador de sesion persistido en `localStorage["aglir_user"]`.
+- **`formatContactName`**: formato `AP-{tel}{Nombre}` para la agenda del admin.
+- **`isAdmin` prop** en `InteractivePlan`: cuando true, todos los lotes son seleccionables.
+- Colores admin corregidos: reservado = verde, vendido = amarillo (antes ambos eran amber).
+- Mock data de visitas corregida para usar IDs de lotes validos.
 
-### Contexto
+#### Fase 5 — Imagenes y herramienta de trazado (sin commit aun)
 
-El proyecto ya cuenta con deploy real en Vercel: `https://aglir-propiedades.vercel.app`. El admin necesitaba operar desde smartphone para marcar terrenos como disponibles, reservados o vendidos sin editar codigo.
+- PDF `11223-NB-V01-M02 S-V.pdf` convertido a PNG con PyMuPDF a 200 DPI.
+- Resultado: `public/plan/plano-11223.png` (4682x3311 px, 1.6 MB).
+- Logo copiado a `public/logo.jpg`.
+- `viewBox` del SVG actualizado a `"0 0 100 70.72"` para alinear con aspect ratio real del plano (4682/3311).
+- `fontSize` de labels de solar actualizado a `"2"` (proporcional al nuevo viewBox).
+- `/admin/trace` creado: herramienta de trazado de poligonos (solo `NODE_ENV=development`).
 
-### Estado previo
+### Estado al cierre de OE 000
 
-El plano publico ya renderizaba lotes clickeables con datos mock. El admin solo mostraba solicitudes de visita mock y no tenia gestion de estados comerciales.
+- Build TypeScript: limpio (`tsc --noEmit` sin errores).
+- Rutas: `/`, `/admin`, `/admin/trace`.
+- Plano real presente: `public/plan/plano-11223.png`.
+- Poligonos SVG: pendientes de trazar (todos `polygon: []`).
+- Precios: pendientes (`precio_contado: 0`).
 
-### Accion ejecutada
+### Archivos del repo al cierre
 
-Implementacion de gestion mobile/local de estados comerciales:
+Ver `AglirPlans.md` para la lista completa actualizada.
 
-- `src/components/admin/AdminLotStatusManager.tsx`
-- `src/components/admin/AdminLotStatusCard.tsx`
-- `src/app/admin/page.tsx`
-- `src/components/plan/InteractivePlan.tsx`
-- `src/components/plan/LotPolygon.tsx`
-- `AISyncPlans.md`
-- `PRODUCT_STATUS.md`
-- `handoff.md`
-- `DECISIONS.md`
+---
 
-### Estado posterior
+## OE 001 — Infraestructura documental minima
 
-`/admin` muestra una seccion mobile-first con cards, busqueda por manzana/solar, acciones rapidas para disponible/reservado/vendido, nota de modo demo/local y un plano admin que refleja visualmente los estados. El plano publico conserva seleccion, ficha, formulario y leyenda de estados.
+**Fecha:** 2026-05-30
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Documentacion
 
-### Commit
+### Objetivo
 
-`Add mobile admin lot status management`
-
-### Pendientes
-
-- Persistir estados en base de datos.
-- Agregar control de acceso admin.
-- Colocar plano real en `public/plan/plano-11223.png`.
-- Trazar terrenos reales y cargar precios reales.
-- Probar flujo en smartphone real.
-
-## 2026-05-30 - Carga de metadata real parcial de lotes
-
-### Contexto
-
-Se cargo la metadata Manzana / Solar / Area m2 auditada desde el plano del padron 11223 para que la ficha publica, el Admin y el futuro vinculo con poligonos consuman datos estructurados.
-
-### Estado previo
-
-`src/data/lots.ts` contenia pocos lotes mock con precios de ejemplo y algunos poligonos iniciales. La metadata real por manzana y solar todavia no estaba cargada.
+Leer el repositorio completo y escribir los 5 archivos del protocolo reflejando el estado real del proyecto.
 
 ### Accion ejecutada
 
-Reemplazo de los datos mock por 58 lotes auditados:
+- **`AglirPlans.md`** creado: arquitectura completa real (reemplaza `AISyncPlans.md` que queda como obsoleto).
+- **`CodingWorkshop.md`** actualizado: primera entrada real — error de casing en Windows vs Linux/Vercel (riesgo latente, solucion pendiente).
+- **`PromtsOperativos.md`** reescrito: reglas base, formato de OE, regla documental, remote URL real, reglas de trazado y WhatsApp.
+- **`handoff.md`** reescrito: OE 000 documenta todo el trabajo previo; OE 001 documenta esta sesion documental.
+- **`PRODUCT_STATUS.md`** reescrito: estado real de cada feature hoy.
 
-- Manzana 2: solares 6 a 18.
-- Manzana 3: solares 6 a 12.
-- Manzana 6: solares 1 a 19.
-- Manzana 8: solares 4 a 17.
-- Manzana 9: solares 1 a 5.
+### Notas
 
-Todos los lotes quedaron inicialmente como `disponible`, con precios en `0` como placeholder tecnico y observacion de metadata auditada con poligono pendiente.
+- `AISyncPlans.md` queda en repo como archivo obsoleto. No eliminar sin OE especifica.
+- Remote URL real: `https://github.com/agustinestefanell/aglir-propiedades.git` (difiere del que tenia documentado el PRODUCT_STATUS.md anterior que decia `arenaglirsas-33`).
+- Archivos huerfanos identificados: `LotBottomSheet.tsx`, `VisitRequestForm.tsx` — pendientes de limpieza en OE futura.
 
-### Exclusiones
+### Pendientes al cerrar esta OE
 
-- Manzana 9 Solar 6 no se cargo porque figura como E. LIBRE.
-- Manzanas 1, 4, 5 y 7 quedan pendientes porque sus areas no estan suficientemente auditadas en esta etapa.
-
-### Archivos tocados
-
-- `src/data/lots.ts`
-- `src/components/plan/InteractivePlan.tsx`
-- `AISyncPlans.md`
-- `PRODUCT_STATUS.md`
-- `handoff.md`
-- `DECISIONS.md`
-
-### Commit
-
-`Load audited lot metadata from plan`
-
-### Pendientes
-
-- Auditar manzanas 1, 4, 5 y 7.
-- Trazar poligonos definitivos y vincularlos a ids estables.
+- Trazar los 58 poligonos con `/admin/trace`.
+- Auditar manzanas 1, 4, 5, 7.
 - Cargar precios reales.
-- Persistir metadata en base de datos futura.
+- Limpiar archivos huerfanos.
+- Conectar persistencia real.
+- Verificar casing de imports en Linux (ver CodingWorkshop.md).

@@ -1,21 +1,90 @@
-# PRODUCT_STATUS.md - Estado real de features
+# PRODUCT_STATUS.md — Estado real de features
 
-Estados permitidos: Closed / Partial / UI-only / Deferred / Broken / Needs Review
+Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-| Area | Feature | Estado | Evidencia | Pendiente |
-| --- | --- | --- | --- | --- |
-| Proyecto base | Next.js + TypeScript + Tailwind + App Router | Closed | Next.js + build OK + commit inicial `44be750` | Mantener build antes de cada push |
-| Deploy | Vercel production deployment | Closed | https://aglir-propiedades.vercel.app | Colocar plano real y conectar futuras features |
-| Metadata de terrenos | Dataset inicial Manzana/Solar/Area m2 | Partial | `src/data/lots.ts` contiene lotes auditados de manzanas 2, 3, 6, 8 y 9 | Auditar manzanas 1, 4, 5 y 7; trazar poligonos definitivos; cargar precios reales |
-| Pagina publica `/` | Experiencia publica de terrenos | Partial | Ruta existente y funcional | Plano real, poligonos reales, precios reales |
-| Plano interactivo | Plano con poligonos clickeables | Partial | Componente `InteractivePlan` + datos mock | Colocar plano real y trazar terrenos definitivos |
-| Plano interactivo | Visualizacion por estado comercial | Partial | Poligonos reflejan disponible/reservado/vendido | Plano real, trazado definitivo y persistencia |
-| Ficha de terreno mobile | Bottom sheet de lote seleccionado | Partial | `LotBottomSheet` existente | Prueba visual real en smartphone |
-| Formulario de visita | Solicitud de visita por lote | Partial | Formulario con validacion mock/local | Persistencia real |
-| Admin `/admin` | Panel operativo de visitas | Partial | Ruta admin + visitas mock | Autenticacion, persistencia real, calendario real o integracion posterior |
-| Admin | Gestion mobile de estados comerciales de terrenos | Partial | UI admin permite cambiar estado local/mock | Persistencia real en base de datos y control de acceso admin |
-| WhatsApp human-in-the-loop | Mensaje preparado para aceptar visita | Partial | Helper `buildWhatsAppUrl` y boton aceptar | Prueba con numero real y flujo operativo real |
-| Google Calendar | Integracion de calendario | Deferred | No implementado por decision de fase | OE especifica futura |
-| Supabase / backend | Persistencia y backend | Deferred | No implementado por decision de fase | OE especifica futura |
-| Login admin | Acceso protegido al admin | Deferred | No implementado por decision de fase | OE especifica futura |
-| GitHub remoto | Repo remoto del proyecto | Closed | `origin` apunta a `https://github.com/arenaglirsas-33/aglir-propiedades.git` | Mantener uso exclusivo de cuenta Aglir |
+Ultima actualizacion: 2026-05-30 — OE 001
+
+---
+
+## Infraestructura
+
+| Feature | Estado | Evidencia | Pendiente |
+|---|---|---|---|
+| Next.js 14 + TypeScript + Tailwind + App Router | Closed | `next build` OK, `tsc --noEmit` limpio | Verificar build en Linux antes de cada push |
+| Deploy Vercel | Closed | https://aglir-propiedades.vercel.app | Re-deploy con cambios de OE 000 fase 4-5 (sin push aun) |
+| GitHub remoto | Closed | origin → `agustinestefanell/aglir-propiedades.git` | — |
+| Logo en public/ | Closed | `public/logo.jpg` presente | Integrar en layout.tsx |
+
+---
+
+## Datos
+
+| Feature | Estado | Evidencia | Pendiente |
+|---|---|---|---|
+| Dataset lotes — metadata m2/solar/area | Partial | 58 lotes en `src/data/lots.ts` (manzanas 2,3,6,8,9) | Auditar manzanas 1,4,5,7; verificar recuento manzana 6 solar 14 |
+| Precios reales | Broken | `precio_contado: 0` en todos los lotes | Cargar precios reales cuando se definan |
+| Poligonos SVG trazados | Broken | `polygon: []` en todos los lotes | Trazar con `/admin/trace`, pegar en `lots.ts` |
+| Solicitudes de visita mock | Partial | 4 registros en `visitRequests.ts` con IDs de lotes validos | Solo para probar admin; no persisten |
+
+---
+
+## Pagina publica `/`
+
+| Feature | Estado | Evidencia | Pendiente |
+|---|---|---|---|
+| Imagen real del plano | Closed | `public/plan/plano-11223.png` (4682x3311 px) | — |
+| Plano con zoom/pan (rueda + drag + pinch) | Closed | `InteractivePlan` con eventos nativos, max 6x | Probar en smartphone real |
+| Colores de estados en plano | Closed | disponible=sin relleno, reservado=verde, vendido=amarillo | — |
+| SVG alineado con plano (viewBox correcto) | Closed | `viewBox="0 0 100 70.72"` == aspect ratio 4682/3311 | — |
+| Poligonos clickeables sobre plano | Broken | Todos `polygon:[]`, ningun poligono se dibuja | Requiere trazado |
+| Panel lateral de detalle (sin cerrar plano) | Partial | `LotDetailPanel` funcional | Pendiente probar con poligonos reales |
+| Flujo de agenda (registro + booking) | Partial | `VisitBookingModal` 2 pasos, localStorage session | Sin persistencia backend; horario siempre "a confirmar" |
+| Persistencia de solicitudes de visita | Broken | Solo en estado React de la sesion (se pierde al recargar) | Requiere backend |
+
+---
+
+## Panel admin `/admin`
+
+| Feature | Estado | Evidencia | Pendiente |
+|---|---|---|---|
+| Gestion de estados comerciales (local) | Partial | `AdminLotStatusManager` + `AdminLotStatusCard` — cambios locales por sesion | Persistencia real en backend |
+| Busqueda de lotes por manzana/solar | Closed | Filtro de texto en `AdminLotStatusManager` | — |
+| Vista de solicitudes mock | Partial | `AdminVisitList` con datos de `visitRequests.ts` | Conectar con solicitudes reales |
+| Vista por dia (calendario simple) | Partial | `AdminCalendarView` con datos mock agrupados por fecha | Conectar con solicitudes reales |
+| WhatsApp human-in-the-loop | Partial | `buildWhatsAppUrl` + apertura de `wa.me/...` | Probar con numero real |
+| Formato de contacto AP-{tel}{Nombre} | Closed | `formatContactName` en `whatsapp.ts`, visible en `WhatsAppAcceptButton` | Probar flujo real |
+| Autenticacion admin | Deferred | No implementado | OE especifica futura |
+
+---
+
+## Herramienta de trazado `/admin/trace`
+
+| Feature | Estado | Evidencia | Pendiente |
+|---|---|---|---|
+| Acceso restringido a desarrollo | Closed | Guard `NODE_ENV !== "development"` | — |
+| Plano a pantalla completa con zoom/pan | Closed | Mismo patron que `InteractivePlan` | — |
+| Click agrega vertice numerado | Closed | Punto rojo + label + polilinea | Probar alineacion con contenido real del plano |
+| Dropdown con 58 IDs de lotes | Closed | Importa `lots` de `src/data/lots.ts` | — |
+| Cerrar poligono + copiar al clipboard | Closed | `navigator.clipboard.writeText` | — |
+| Calculo de coordenadas SVG correcto | Partial | Formula implementada; alineacion no verificada sobre plano real | Verificar que los puntos de los bordes del plano correspondan a `x=0,y=0` y `x=100,y=70.72` |
+
+---
+
+## Diferidos
+
+| Feature | Estado | Nota |
+|---|---|---|
+| Backend / Supabase | Deferred | Requiere OE especifica |
+| Login admin | Deferred | Requiere OE especifica |
+| Google Calendar | Deferred | Requiere OE especifica |
+| Georreferenciacion real | Deferred | No es objetivo del MVP |
+
+---
+
+## Archivos huerfanos (pendientes de limpieza)
+
+| Archivo | Situacion | Accion pendiente |
+|---|---|---|
+| `src/components/plan/LotBottomSheet.tsx` | Reemplazado por `LotDetailPanel.tsx`; no importado en ningun lugar | Eliminar en OE de limpieza |
+| `src/components/visits/VisitRequestForm.tsx` | Reemplazado por `VisitBookingModal.tsx`; no importado en ningun lugar | Eliminar en OE de limpieza |
+| `AISyncPlans.md` | Reemplazado por `AglirPlans.md` | Eliminar o archivar en OE de limpieza |
