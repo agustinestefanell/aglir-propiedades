@@ -55,6 +55,8 @@ function TraceCanvas() {
   const [copied, setCopied] = useState(false);
   // All saved traces for background display (other lots' closed polygons)
   const [allTraces, setAllTraces] = useState<StoredTraces>({});
+  const [exportText, setExportText] = useState("");
+  const [exportCopied, setExportCopied] = useState(false);
 
   // Load all traces from localStorage on mount — shows previously closed polygons
   useEffect(() => {
@@ -260,6 +262,43 @@ function TraceCanvas() {
     setSelectedId(id);
   }
 
+  function buildPolygonMap(): string {
+    const closed = Object.entries(allTraces)
+      .filter(([, t]) => t.closed && t.points.length >= 3)
+      .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }));
+
+    if (closed.length === 0) return "// Sin polígonos cerrados en localStorage";
+
+    const date = new Date().toISOString().split("T")[0];
+    const entries = closed
+      .map(([id, t]) => `  "${id}": ${JSON.stringify(t.points)},`)
+      .join("\n");
+
+    return [
+      `// Exportado desde /admin/trace — ${date} — ${closed.length} polígonos`,
+      `// 1. Pegar en src/data/lots.ts antes de "export const lots"`,
+      `// 2. En el map, cambiar:  polygon: []`,
+      `//    por:                 polygon: polygonMap[\`m\${manzana}-s\${solar}\`] ?? []`,
+      ``,
+      `const polygonMap: Record<string, { x: number; y: number }[]> = {`,
+      entries,
+      `};`,
+    ].join("\n");
+  }
+
+  function handleExport() {
+    const text = buildPolygonMap();
+    setExportText(text);
+    navigator.clipboard.writeText(text).then(() => {
+      setExportCopied(true);
+      setTimeout(() => setExportCopied(false), 2000);
+    });
+  }
+
+  const closedCount = Object.values(allTraces).filter(
+    (t) => t.closed && t.points.length >= 3,
+  ).length;
+
   const svgPointsStr = points.map((p) => `${p.x},${p.y}`).join(" ");
   const centroidX = points.length > 0 ? points.reduce((s, p) => s + p.x, 0) / points.length : 0;
   const centroidY = points.length > 0 ? points.reduce((s, p) => s + p.y, 0) / points.length : 0;
@@ -276,12 +315,16 @@ function TraceCanvas() {
           onChange={(e) => handleSelectLot(e.target.value)}
           className="max-w-[220px] rounded bg-stone-700 px-2 py-1.5 text-white"
         >
-          {lots.map((lot) => (
-            <option key={lot.id} value={lot.id}>
-              {lot.id} · M{lot.manzana} S{lot.solar}
-              {lot.area_m2 > 0 ? ` (${lot.area_m2} m²)` : ""}
-            </option>
-          ))}
+          {lots.map((lot) => {
+            const trace = allTraces[lot.id];
+            const indicator = trace?.closed ? "✓ " : trace?.points?.length > 0 ? "· " : "";
+            return (
+              <option key={lot.id} value={lot.id}>
+                {indicator}{lot.id} · M{lot.manzana} S{lot.solar}
+                {lot.area_m2 > 0 ? ` (${lot.area_m2} m²)` : ""}
+              </option>
+            );
+          })}
         </select>
 
         <span className="tabular-nums text-stone-400">{points.length} pts</span>
@@ -310,6 +353,15 @@ function TraceCanvas() {
           className="rounded bg-stone-700 px-3 py-1.5 font-semibold hover:bg-stone-600"
         >
           Limpiar
+        </button>
+
+        <button
+          type="button"
+          onClick={handleExport}
+          disabled={closedCount === 0}
+          className="rounded bg-violet-700 px-3 py-1.5 font-semibold hover:bg-violet-600 disabled:opacity-40"
+        >
+          {exportCopied ? "✓ Copiado" : `Exportar todo (${closedCount})`}
         </button>
 
         {tf.scale > 1.05 && (
@@ -459,16 +511,47 @@ function TraceCanvas() {
         </div>
       </div>
 
-      {/* ── Output ──────────────────────────────────────────────────── */}
+      {/* ── Output: lote activo ─────────────────────────────────────── */}
       {points.length > 0 && (
         <div
           className="border-t border-stone-700 bg-stone-950 px-4 py-3"
-          style={{ maxHeight: "22vh", overflowY: "auto" }}
+          style={{ maxHeight: "18vh", overflowY: "auto" }}
         >
           <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-stone-400">
             {selectedId} · {points.length} puntos{closed ? " · Cerrado ✓" : " · Abierto"}
           </p>
           <code className="block break-all text-xs text-emerald-400">{outputJson}</code>
+        </div>
+      )}
+
+      {/* ── Output: export completo ──────────────────────────────────── */}
+      {exportText && (
+        <div
+          className="border-t border-violet-800 bg-stone-950 px-4 py-3"
+          style={{ maxHeight: "30vh", overflowY: "auto" }}
+        >
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wide text-violet-400">
+              Export → lots.ts · {closedCount} polígonos
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleExport}
+                className="rounded bg-violet-700 px-2.5 py-1 text-xs font-semibold hover:bg-violet-600"
+              >
+                {exportCopied ? "✓ Copiado" : "Copiar"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setExportText("")}
+                className="rounded bg-stone-700 px-2.5 py-1 text-xs font-semibold hover:bg-stone-600"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+          <pre className="whitespace-pre-wrap break-all text-xs text-violet-300">{exportText}</pre>
         </div>
       )}
     </main>

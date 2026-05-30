@@ -64,7 +64,8 @@ Ultima actualizacion: 2026-05-30 — OE 001
 | Acceso restringido a desarrollo | Closed | Guard `NODE_ENV !== "development"` | — |
 | Plano a pantalla completa con zoom/pan | Closed | Solo movimiento manual; ningun sistema toca `tf` | — |
 | Click agrega vertice numerado | Closed | Punto rojo r≈1.2px + label numerico; polyline en abierto | Probar alineacion con plano real |
-| Dropdown con 90 IDs de lotes | Closed | 90 lotes en orden (M2-M9); sin "(0 m²)" en placeholder | — |
+| Dropdown con 90 IDs de lotes + indicadores | Closed | ✓/· prefix segun estado en localStorage; sin "(0 m²)" en placeholder | — |
+| Exportar trazados a lots.ts | Closed | Boton "Exportar todo (N)" genera `polygonMap` listo para pegar; copia al clipboard + panel de previa | — |
 | Cerrar poligono con verde + label ID | Closed | fill rgba(52,211,153,0.3) + stroke #059669 + label centrado | — |
 | Fondo con todos los cerrados | Closed | `allTraces` state — todos los lotes cerrados del localStorage visibles como verde | — |
 | Persistencia en localStorage | Closed | `aglir_trace_polygons` — sobrevive refresh y reinicio; restaura por lote | — |

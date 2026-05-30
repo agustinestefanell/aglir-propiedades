@@ -192,8 +192,70 @@ Refinar la herramienta de trazado y ampliar el dataset de lotes.
 - `src/data/lots.ts`
 - `handoff.md`, `PRODUCT_STATUS.md`, `AglirPlans.md` (actualizados)
 
-### Pendientes
+### Pendientes de OE 005
 
 - Auditar areas reales de manzanas 2 (s.1-5), 3 (s.1-5), 4 (s.6-14 + 22-24) y 7 (s.1-10).
 - Trazar los 90 poligonos con `/admin/trace`.
 - Verificar alineacion visual del trazado sobre el plano real.
+
+---
+
+## OE 006 — Exportar trazados de localStorage a lots.ts
+
+**Fecha:** 2026-05-30
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Feature — herramienta de desarrollo
+
+### Objetivo
+
+Cerrar el gap entre localStorage y lots.ts: los poligonos trazados en /admin/trace deben poder exportarse al codigo fuente con un click.
+
+### Accion ejecutada
+
+**Indicadores en dropdown:**
+- `✓ ` prefijo para lotes con poligono cerrado en localStorage.
+- `· ` prefijo para lotes con puntos sin cerrar.
+- Sin prefijo para lotes sin traza.
+- Lee `allTraces` (ya existia en estado) — sin overhead adicional.
+
+**Boton "Exportar todo (N)" en controls bar:**
+- Violeta, muestra el conteo de poligonos cerrados.
+- Deshabilitado si no hay poligonos cerrados.
+- Al hacer click: genera el bloque de texto, lo copia al clipboard Y abre el panel de export.
+- Feedback: cambia a "✓ Copiado" por 2 segundos.
+
+**Panel de export (fondo de pantalla):**
+- Aparece al hacer click en "Exportar todo".
+- Muestra el texto completo en `<pre>` con color violeta.
+- Boton "Copiar" propio para re-copiar sin regenerar.
+- Boton "✕" para cerrar el panel.
+
+**Formato del output generado:**
+```typescript
+// Exportado desde /admin/trace — YYYY-MM-DD — N poligonos
+// 1. Pegar en src/data/lots.ts antes de "export const lots"
+// 2. En el map, cambiar:  polygon: []
+//    por:                 polygon: polygonMap[`m${manzana}-s${solar}`] ?? []
+
+const polygonMap: Record<string, { x: number; y: number }[]> = {
+  "m2-s6": [{x: 45.23, y: 32.11}, ...],
+  "m3-s7": [{x: 52.1, y: 28.4}, ...],
+};
+```
+- Entradas ordenadas por ID (numericamente).
+- El usuario solo pega el bloque y cambia una linea en el map.
+
+**Funcion `buildPolygonMap()`:**
+- Lee `allTraces` del estado (ya sincronizado con localStorage).
+- Filtra solo los cerrados con >= 3 puntos.
+- Ordena por ID con `localeCompare({ numeric: true })`.
+
+### Archivos tocados
+
+- `src/app/admin/trace/page.tsx`
+- `handoff.md`, `PRODUCT_STATUS.md` (actualizados)
+
+### Pendientes
+
+- Trazar los 90 poligonos, exportar y pegar en lots.ts.
+- Verificar que el `polygonMap` funciona correctamente en el build.
