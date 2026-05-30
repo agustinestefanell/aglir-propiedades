@@ -255,7 +255,56 @@ const polygonMap: Record<string, { x: number; y: number }[]> = {
 - `src/app/admin/trace/page.tsx`
 - `handoff.md`, `PRODUCT_STATUS.md` (actualizados)
 
-### Pendientes
+### Pendientes de OE 006
 
 - Trazar los 90 poligonos, exportar y pegar en lots.ts.
 - Verificar que el `polygonMap` funciona correctamente en el build.
+
+---
+
+## OE 007 — Fix crítico: persistencia de polígonos en /admin/trace
+
+**Fecha:** 2026-05-30
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Bug fix crítico
+
+### Problema
+
+Al hacer "Limpiar" en `/admin/trace`, los polígonos cerrados guardados desaparecían del plano y se borraban de localStorage. Un polígono que tomó 30+ clicks de trabajo se perdía con un solo click de reset.
+
+### Causa raiz
+
+Ver CodingWorkshop.md — `useEffect([selectedId, points, closed])` genérico que llamaba `saveTrace()` ante cualquier cambio, incluyendo el reset que dejaba `points=[]` y `closed=false`, destruyendo el polígono guardado.
+
+### Solucion aplicada
+
+**Separación de ciclos de vida en dos localStorage keys:**
+
+`aglir_trace_polygons` — permanente, solo polígonos cerrados (`Record<string, Point[]>`)
+- Escrito ÚNICAMENTE en `handleClosePolygon`
+- Nunca tocado por reset
+
+`aglir_trace_draft` — efímero, un solo borrador activo (`{id, points}`)
+- Auto-guardado mientras se traza
+- Borrado en `handleNuevo` (renombrado de "Limpiar")
+
+**Cambios de componente:**
+- Eliminado `useEffect([selectedId, points, closed])` genérico (causa raiz del bug)
+- `handleClosePolygon`: guarda explícitamente en `aglir_trace_polygons` + actualiza `allClosed` state
+- `handleNuevo` (ex "Limpiar"): limpia `points`, `isClosed`, draft — NUNCA toca los polígonos cerrados
+- `allTraces` renombrado a `allClosed: Record<string, Point[]>` — solo almacena permanentes
+- `closed: boolean` renombrado a `isClosed: boolean` — más descriptivo
+- Migración transparente del formato antiguo `{points, closed}` → `Point[]` en `loadClosed()`
+- Restauracion de borrador al cambiar lote: primero busca cerrado, luego borrador guardado
+
+### Archivos tocados
+
+- `src/app/admin/trace/page.tsx`
+- `CodingWorkshop.md` (causa raiz y solucion)
+- `handoff.md`, `PRODUCT_STATUS.md` (actualizados)
+
+### Pendientes
+
+- Trazar los 90 polígonos.
+- Probar el flujo completo: trazar → cerrar → "Nuevo" → confirmar que el polígono verde persiste.
+- Exportar y pegar en lots.ts, verificar build.

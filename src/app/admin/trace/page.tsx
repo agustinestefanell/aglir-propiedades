@@ -3,34 +3,76 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { lots } from "@/data/lots";
 
-// Coordinate space matches the plan image: 4682×3311 px → normalized to 100×70.72
+// SVG coordinate space: 4682×3311 px → normalized to 100×70.72
 const SVG_W = 100;
 const SVG_H = 70.72;
-const LS_KEY = "aglir_trace_polygons";
+
+// localStorage keys — separated by lifecycle
+const CLOSED_KEY = "aglir_trace_polygons"; // Record<lotId, Point[]> — permanent closed polys
+const DRAFT_KEY = "aglir_trace_draft";     // {id, points} — single active in-progress draft
 
 type Point = { x: number; y: number };
 type Tf = { scale: number; x: number; y: number };
-type LotTrace = { points: Point[]; closed: boolean };
-type StoredTraces = Record<string, LotTrace>;
 
-function loadTraces(): StoredTraces {
+// ── localStorage helpers ────────────────────────────────────────────
+
+function loadClosed(): Record<string, Point[]> {
   try {
-    const raw = localStorage.getItem(LS_KEY);
-    return raw ? (JSON.parse(raw) as StoredTraces) : {};
+    const raw = localStorage.getItem(CLOSED_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const result: Record<string, Point[]> = {};
+    for (const [id, val] of Object.entries(parsed)) {
+      if (Array.isArray(val) && val.length >= 3) {
+        // New format: val is Point[]
+        result[id] = val as Point[];
+      } else if (val && typeof val === "object" && !Array.isArray(val)) {
+        // Old format migration: {points: Point[], closed: boolean}
+        const old = val as { points?: Point[]; closed?: boolean };
+        if (old.closed && old.points && old.points.length >= 3) {
+          result[id] = old.points;
+        }
+      }
+    }
+    return result;
   } catch {
     return {};
   }
 }
 
-function saveTrace(id: string, points: Point[], closed: boolean) {
+function saveClosed(id: string, pts: Point[]): Record<string, Point[]> {
   try {
-    const all = loadTraces();
-    all[id] = { points, closed };
-    localStorage.setItem(LS_KEY, JSON.stringify(all));
+    const all = loadClosed();
+    all[id] = pts;
+    localStorage.setItem(CLOSED_KEY, JSON.stringify(all));
+    return all;
   } catch {
-    // localStorage unavailable (SSR, private mode)
+    return {};
   }
 }
+
+function loadDraft(id: string): Point[] | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw) as { id: string; points: Point[] };
+    return d.id === id && d.points?.length > 0 ? d.points : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(id: string, pts: Point[]) {
+  try {
+    if (pts.length > 0) {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ id, points: pts }));
+    } else {
+      localStorage.removeItem(DRAFT_KEY);
+    }
+  } catch {}
+}
+
+// ── Page guard ──────────────────────────────────────────────────────
 
 export default function TracePage() {
   if (process.env.NODE_ENV !== "development") {
@@ -45,42 +87,55 @@ export default function TracePage() {
   return <TraceCanvas />;
 }
 
+// ── Main canvas component ───────────────────────────────────────────
+
 function TraceCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
-  // No system action modifies tf — viewport movement is 100% manual (wheel, drag, pinch)
+  // No system action modifies tf — viewport movement is 100% manual
   const [tf, setTf] = useState<Tf>({ scale: 1, x: 0, y: 0 });
   const [selectedId, setSelectedId] = useState(lots[0]?.id ?? "m2-s1");
+
+  // Active draft state — separate lifecycle from closed polygons
   const [points, setPoints] = useState<Point[]>([]);
-  const [closed, setClosed] = useState(false);
+  const [isClosed, setIsClosed] = useState(false);
   const [copied, setCopied] = useState(false);
-  // All saved traces for background display (other lots' closed polygons)
-  const [allTraces, setAllTraces] = useState<StoredTraces>({});
+
+  // Permanent closed polygons — never overwritten by reset
+  const [allClosed, setAllClosed] = useState<Record<string, Point[]>>({});
+
+  // Export panel
   const [exportText, setExportText] = useState("");
   const [exportCopied, setExportCopied] = useState(false);
 
-  // Load all traces from localStorage on mount — shows previously closed polygons
+  // ── Restore on lot change ─────────────────────────────────────────
+  // Loads ALL closed polygons (for background) and restores this lot's state.
+  // Kept as a single effect to avoid the race condition where the persist
+  // effect fires with stale state before restore completes.
   useEffect(() => {
-    setAllTraces(loadTraces());
-  }, []);
+    const closed = loadClosed();
+    setAllClosed(closed);
 
-  // Restore saved trace whenever the selected lot changes
-  useEffect(() => {
-    const saved = loadTraces()[selectedId];
-    if (saved) {
-      setPoints(saved.points);
-      setClosed(saved.closed);
+    const closedPts = closed[selectedId];
+    if (closedPts && closedPts.length >= 3) {
+      setPoints(closedPts);
+      setIsClosed(true);
     } else {
-      setPoints([]);
-      setClosed(false);
+      const draft = loadDraft(selectedId);
+      setPoints(draft ?? []);
+      setIsClosed(false);
     }
     setCopied(false);
   }, [selectedId]);
 
-  // Persist to localStorage + sync allTraces for background display
+  // ── Auto-save in-progress draft ───────────────────────────────────
+  // Only runs for non-closed, non-empty drafts.
+  // Never touches the closed polygon store.
   useEffect(() => {
-    saveTrace(selectedId, points, closed);
-    setAllTraces((prev) => ({ ...prev, [selectedId]: { points, closed } }));
-  }, [selectedId, points, closed]);
+    if (isClosed) return;
+    saveDraft(selectedId, points);
+  }, [selectedId, points, isClosed]);
+
+  // ── Zoom / pan event listeners ────────────────────────────────────
 
   const isDragging = useRef(false);
   const dragMoved = useRef(false);
@@ -208,8 +263,10 @@ function TraceCanvas() {
     };
   }, [clamp]);
 
+  // ── Click to add vertex ────────────────────────────────────────────
+
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
-    if (dragMoved.current || closed) {
+    if (dragMoved.current || isClosed) {
       dragMoved.current = false;
       return;
     }
@@ -238,9 +295,15 @@ function TraceCanvas() {
     ]);
   }
 
-  // None of these handlers touch `tf` — viewport stays exactly where it is.
+  // ── Action handlers — none touch tf ───────────────────────────────
+
   function handleClosePolygon() {
-    if (points.length >= 3) setClosed(true);
+    if (points.length < 3) return;
+    setIsClosed(true);
+    // Explicit save — only place where closed polygons are written to localStorage
+    const updated = saveClosed(selectedId, points);
+    setAllClosed(updated);
+    saveDraft(selectedId, []); // clear draft now that it's closed
   }
 
   function handleCopy() {
@@ -251,11 +314,14 @@ function TraceCanvas() {
     });
   }
 
-  function handleReset() {
+  // "Nuevo" — clears active draft only; allClosed and closed polygon in
+  // localStorage are NEVER touched. The green background polygon persists.
+  function handleNuevo() {
     setPoints([]);
-    setClosed(false);
+    setIsClosed(false);
     setCopied(false);
-    // tf is intentionally NOT reset here — zoom/pan must survive Limpiar
+    saveDraft(selectedId, []); // clear draft
+    // tf intentionally NOT reset
   }
 
   function handleSelectLot(id: string) {
@@ -263,25 +329,23 @@ function TraceCanvas() {
   }
 
   function buildPolygonMap(): string {
-    const closed = Object.entries(allTraces)
-      .filter(([, t]) => t.closed && t.points.length >= 3)
+    const entries = Object.entries(allClosed)
+      .filter(([, pts]) => pts.length >= 3)
       .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }));
 
-    if (closed.length === 0) return "// Sin polígonos cerrados en localStorage";
+    if (entries.length === 0) return "// Sin polígonos cerrados en localStorage";
 
     const date = new Date().toISOString().split("T")[0];
-    const entries = closed
-      .map(([id, t]) => `  "${id}": ${JSON.stringify(t.points)},`)
-      .join("\n");
+    const rows = entries.map(([id, pts]) => `  "${id}": ${JSON.stringify(pts)},`).join("\n");
 
     return [
-      `// Exportado desde /admin/trace — ${date} — ${closed.length} polígonos`,
+      `// Exportado desde /admin/trace — ${date} — ${entries.length} polígonos`,
       `// 1. Pegar en src/data/lots.ts antes de "export const lots"`,
       `// 2. En el map, cambiar:  polygon: []`,
       `//    por:                 polygon: polygonMap[\`m\${manzana}-s\${solar}\`] ?? []`,
       ``,
       `const polygonMap: Record<string, { x: number; y: number }[]> = {`,
-      entries,
+      rows,
       `};`,
     ].join("\n");
   }
@@ -295,14 +359,15 @@ function TraceCanvas() {
     });
   }
 
-  const closedCount = Object.values(allTraces).filter(
-    (t) => t.closed && t.points.length >= 3,
-  ).length;
+  // ── Derived values ─────────────────────────────────────────────────
 
   const svgPointsStr = points.map((p) => `${p.x},${p.y}`).join(" ");
   const centroidX = points.length > 0 ? points.reduce((s, p) => s + p.x, 0) / points.length : 0;
   const centroidY = points.length > 0 ? points.reduce((s, p) => s + p.y, 0) / points.length : 0;
   const outputJson = JSON.stringify(points.map((p) => ({ x: p.x, y: p.y })));
+  const closedCount = Object.values(allClosed).filter((pts) => pts.length >= 3).length;
+
+  // ── Render ─────────────────────────────────────────────────────────
 
   return (
     <main className="flex h-screen flex-col bg-stone-950 text-white">
@@ -316,8 +381,9 @@ function TraceCanvas() {
           className="max-w-[220px] rounded bg-stone-700 px-2 py-1.5 text-white"
         >
           {lots.map((lot) => {
-            const trace = allTraces[lot.id];
-            const indicator = trace?.closed ? "✓ " : trace?.points?.length > 0 ? "· " : "";
+            const isClosed_ = Boolean(allClosed[lot.id]);
+            const isActiveDraft = lot.id === selectedId && points.length > 0 && !isClosed;
+            const indicator = isClosed_ ? "✓ " : isActiveDraft ? "· " : "";
             return (
               <option key={lot.id} value={lot.id}>
                 {indicator}{lot.id} · M{lot.manzana} S{lot.solar}
@@ -332,7 +398,7 @@ function TraceCanvas() {
         <button
           type="button"
           onClick={handleClosePolygon}
-          disabled={points.length < 3 || closed}
+          disabled={points.length < 3 || isClosed}
           className="rounded bg-emerald-700 px-3 py-1.5 font-semibold hover:bg-emerald-600 disabled:opacity-40"
         >
           Cerrar polígono
@@ -349,10 +415,10 @@ function TraceCanvas() {
 
         <button
           type="button"
-          onClick={handleReset}
+          onClick={handleNuevo}
           className="rounded bg-stone-700 px-3 py-1.5 font-semibold hover:bg-stone-600"
         >
-          Limpiar
+          Nuevo
         </button>
 
         <button
@@ -374,7 +440,7 @@ function TraceCanvas() {
           </button>
         )}
 
-        {closed && (
+        {isClosed && (
           <span className="rounded-full bg-emerald-800 px-2.5 py-0.5 text-xs font-bold text-emerald-200">
             Cerrado ✓
           </span>
@@ -412,13 +478,13 @@ function TraceCanvas() {
             preserveAspectRatio="xMidYMid meet"
             className="pointer-events-none absolute inset-0 h-full w-full"
           >
-            {/* ── Background: all OTHER lots' closed polygons from localStorage ── */}
-            {Object.entries(allTraces)
-              .filter(([id, t]) => id !== selectedId && t.closed && t.points.length >= 3)
-              .map(([id, t]) => {
-                const bgPts = t.points.map((p) => `${p.x},${p.y}`).join(" ");
-                const bgCx = t.points.reduce((s, p) => s + p.x, 0) / t.points.length;
-                const bgCy = t.points.reduce((s, p) => s + p.y, 0) / t.points.length;
+            {/* ── Background: ALL closed polygons (including selectedId) ── */}
+            {Object.entries(allClosed)
+              .filter(([id]) => id !== selectedId)
+              .map(([id, pts]) => {
+                const bgPts = pts.map((p) => `${p.x},${p.y}`).join(" ");
+                const bgCx = pts.reduce((s, p) => s + p.x, 0) / pts.length;
+                const bgCy = pts.reduce((s, p) => s + p.y, 0) / pts.length;
                 return (
                   <g key={`bg-${id}`}>
                     <polygon
@@ -444,9 +510,9 @@ function TraceCanvas() {
                 );
               })}
 
-            {/* ── Active polygon: current lot ─────────────────────────────── */}
+            {/* ── Active polygon: current lot ─────────────────────────── */}
             {points.length >= 2 &&
-              (closed ? (
+              (isClosed ? (
                 <g>
                   <polygon
                     points={svgPointsStr}
@@ -478,7 +544,7 @@ function TraceCanvas() {
                 />
               ))}
 
-            {/* ── Vertex dots + numbers — r≈1.2px (30% of previous 4px) ──── */}
+            {/* ── Vertex dots + numbers ─────────────────────────────── */}
             {points.map((p, i) => (
               <g key={i}>
                 <circle
@@ -518,7 +584,7 @@ function TraceCanvas() {
           style={{ maxHeight: "18vh", overflowY: "auto" }}
         >
           <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-stone-400">
-            {selectedId} · {points.length} puntos{closed ? " · Cerrado ✓" : " · Abierto"}
+            {selectedId} · {points.length} puntos{isClosed ? " · Cerrado ✓" : " · Abierto"}
           </p>
           <code className="block break-all text-xs text-emerald-400">{outputJson}</code>
         </div>

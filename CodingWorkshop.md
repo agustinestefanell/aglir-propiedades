@@ -111,3 +111,49 @@ Pendiente:
 ### Leccion
 
 En Windows: cuando `npx create-next-app <nombre>` crea el directorio, NTFS almacena el casing exacto del argumento. Si luego se accede con diferente casing (ej: `Aglir` vs `aglir`), `process.cwd()` y `fs.realpathSync.native` divergen y webpack carga React dos veces. Regla: siempre usar la misma casing con que se creó el proyecto, o aplicar el rename permanente antes de empezar a desarrollar.
+
+---
+
+## 2026-05-30 - useEffect genérico sobreescribe polígonos cerrados al resetear (trace tool)
+
+### Problema
+
+Al hacer clic en "Limpiar" (ahora "Nuevo") en `/admin/trace`, un polígono cerrado guardado en localStorage era borrado y dejaba de mostrarse en el plano.
+
+### Causa raiz
+
+La arquitectura usaba un `useEffect([selectedId, points, closed])` que llamaba `saveTrace()` ante CUALQUIER cambio de estado, incluyendo el reset. Cuando `handleReset` ejecutaba `setPoints([])` y `setClosed(false)`, el efecto disparaba `saveTrace(id, [], false)`, sobreescribiendo el polígono cerrado con estado vacío. React no ofrece un mecanismo para distinguir "estado cambiado por el usuario" de "estado limpiado intencionalmente" dentro de un efecto genérico.
+
+```
+handleReset() → setPoints([]) + setClosed(false)
+  → useEffect fires → saveTrace(selectedId, [], false)
+  → localStorage[selectedId] = {points: [], closed: false}  ← BUG
+  → setAllTraces(prev => {...prev, [id]: {points: [], closed: false}})
+  → green background polygon disappears
+```
+
+### Consecuencia
+
+Cada vez que el usuario usaba "Limpiar", perdía el trabajo trazado si el polígono ya estaba cerrado. Los polígonos cerrados no sobrevivían al ciclo limpiar→nuevo trazado.
+
+### Solucion final
+
+Separación de ciclos de vida en dos stores independientes:
+
+1. **`aglir_trace_polygons`** (permanente): solo contiene polígonos cerrados (`Record<string, Point[]>`). Se escribe ÚNICAMENTE en `handleClosePolygon`, nunca en reset.
+
+2. **`aglir_trace_draft`** (efímero): contiene el borrador activo en curso (`{id, points}`). Se escribe en el auto-save effect, se borra en `handleNuevo` (renombrado de "Limpiar").
+
+3. Eliminado el `useEffect([selectedId, points, closed])` genérico que causaba el bug.
+
+4. `handleNuevo` (ex "Limpiar") limpia el borrador activo pero nunca toca `aglir_trace_polygons`.
+
+5. Migración transparente del formato antiguo `{points, closed}` → nuevo `Point[]` en `loadClosed()`.
+
+### Commit
+
+`[ver OE 007]`
+
+### Leccion
+
+Nunca usar un `useEffect` genérico de "persistir todo lo que cambia" cuando hay múltiples operaciones (guardar vs resetear) que deben comportarse diferente. El reset intencional siempre debe ser explícito, no como efecto secundario de un cambio de estado. Separar el ciclo de vida de datos permanentes del de datos efímeros desde el diseño.
