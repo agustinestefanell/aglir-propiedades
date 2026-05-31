@@ -1,0 +1,13 @@
+{
+  "name": "Aglir Propiedades",
+  "short_name": "Aglir",
+  "description": "Gestión de terrenos Barros Blancos",
+  "start_url": "/gestion",
+  "display": "standalone",
+  "background_color": "#f5f4f0",
+  "theme_color": "#1a6b45",
+  "icons": [
+    { "src": "/logo.jpg", "sizes": "192x192", "type": "image/jpeg" },
+    { "src": "/logo.jpg", "sizes": "512x512", "type": "image/jpeg" }
+  ]
+}

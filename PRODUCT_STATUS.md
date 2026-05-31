@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-05-31 — OE 023
+Ultima actualizacion: 2026-05-31 — OE 024
 
 ---
 
@@ -93,6 +93,8 @@ Ultima actualizacion: 2026-05-31 — OE 023
 |---|---|---|
 | Backend / Supabase | Closed | `@supabase/supabase-js@2.106.2` instalado; `src/lib/supabase.ts` con env vars; tablas `lot_states` + `visit_requests` integradas (OE 023) |
 | Login admin | Deferred | Requiere OE especifica |
+| PWA instalable | Closed | `manifest.json`, `sw.js`, `ServiceWorkerRegister` — instalable en Android/iOS desde Chrome (OE 024) |
+| Notificaciones push | Closed | Web Push API + VAPID + Supabase `push_subscriptions` — notifica al admin al agendar visita (OE 024) |
 | Google Calendar | Deferred | Requiere OE especifica |
 | Georreferenciacion real | Deferred | No es objetivo del MVP |
 

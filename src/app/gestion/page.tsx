@@ -26,6 +26,27 @@ export default function GestionPage() {
     setUser(username);
   }
 
+  useEffect(() => {
+    if (!user) return;
+    async function subscribePush() {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") return;
+      const reg = await navigator.serviceWorker.ready;
+      const existing = await reg.pushManager.getSubscription();
+      const sub = existing ?? await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      });
+      await fetch("/api/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription: sub }),
+      });
+    }
+    subscribePush().catch(() => {});
+  }, [user]);
+
   function handleLogout() {
     sessionStorage.removeItem(SESSION_KEY);
     setUser(null);

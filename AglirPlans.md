@@ -25,6 +25,7 @@ Reemplaza a `AISyncPlans.md`. Documento tecnico de referencia del proyecto. Se a
 | TypeScript | 5.7.2 |
 | Tailwind CSS | 3.4.17 |
 | @supabase/supabase-js | 2.106.2 |
+| web-push | latest |
 | App Router | src/app |
 
 Sin Google Calendar. Sin login real (Supabase Auth pendiente).
@@ -68,6 +69,10 @@ src/
     whatsapp.ts       — buildWhatsAppUrl + formatContactName
     lotStates.ts      — useLotStates() hook: lee/escribe en Supabase lot_states + suscripción realtime
     supabase.ts       — cliente Supabase (env vars NEXT_PUBLIC_SUPABASE_URL / PUBLISHABLE_KEY)
+
+  app/api/push/
+    subscribe/route.ts — POST: guarda PushSubscription en Supabase push_subscriptions
+    notify/route.ts    — POST: envía Web Push a todos los suscriptores (runtime=nodejs, VAPID)
 
   types/
     index.ts          — tipos compartidos: Lot, VisitRequest, User, etc.

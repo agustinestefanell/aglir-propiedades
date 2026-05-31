@@ -87,6 +87,16 @@ export function VisitBookingModal({ lot, onClose, onSubmit }: Props) {
       return;
     }
 
+    fetch("/api/push/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: "Nueva visita solicitada",
+        body: `M${lot.manzana} S${lot.solar} · ${user.nombre}`,
+        url: "/gestion",
+      }),
+    }).catch(() => {});
+
     onSubmit({ nombre: user.nombre, whatsapp: user.whatsapp, lotId: lot.id, fecha, hora });
     setStep("done");
   }

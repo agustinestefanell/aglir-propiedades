@@ -998,3 +998,64 @@ El plano es portrait (vertical/angosto) pero el contenedor ocupaba 100% del anch
 - Verificar en Supabase: solicitud de visita aparece en tabla `visit_requests`.
 - Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
 - Cargar precios reales.
+
+---
+
+## OE 024 — PWA + notificaciones push para admin
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Feature — PWA + Web Push
+
+### Cambios ejecutados
+
+**P1 — PWA:**
+- `public/manifest.json`: name, short_name, start_url=/gestion, display=standalone, theme=#1a6b45.
+- `public/sw.js`: service worker — maneja eventos `push` (showNotification) y `notificationclick` (openWindow /gestion).
+- `src/components/ServiceWorkerRegister.tsx`: componente "use client" que registra `sw.js` en `useEffect`.
+- `src/app/layout.tsx`: importa `Viewport` de next, agrega `manifest: "/manifest.json"`, `themeColor: "#1a6b45"`, monta `<ServiceWorkerRegister />`.
+
+**P2 — Web Push:**
+- `npm install web-push @types/web-push`.
+- VAPID keys generadas con `web-push.generateVAPIDKeys()` — guardadas en `.env.local` (excluido de git):
+  - `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (pública, usada en cliente)
+  - `VAPID_PRIVATE_KEY` (privada, solo servidor)
+  - `VAPID_SUBJECT=mailto:arenaglirsas@gmail.com`
+- `src/app/api/push/subscribe/route.ts`: POST — recibe subscription del browser, inserta en `push_subscriptions`.
+- `src/app/api/push/notify/route.ts`: POST (`runtime=nodejs`) — recibe title/body/url, fetcha todas las subscripciones, llama `webpush.sendNotification`. Elimina subscripciones expiradas (status 410).
+- `src/app/gestion/page.tsx`: `useEffect([user])` — cuando el admin loguea, pide permiso de notificaciones, obtiene/crea suscripción push, POST a `/api/push/subscribe`.
+- `src/components/visits/VisitBookingModal.tsx`: después del insert exitoso en Supabase, fire-and-forget fetch a `/api/push/notify`.
+
+**P3 — Tabla Supabase:**
+El usuario debe ejecutar en Supabase SQL Editor:
+```sql
+create table push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  subscription jsonb not null,
+  created_at timestamptz default now()
+);
+alter table push_subscriptions enable row level security;
+create policy "service role only" on push_subscriptions for all using (true);
+```
+
+### Variables de entorno a agregar en Vercel Dashboard
+
+```
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=BEmsngDhIOaHLpt5AsqKNaib_zfeVa2LJ0vQLnfXAVMB0k6BZJFK6mCGCkL1UTC39LY3iaKj5-A9qYce6A6lib4
+VAPID_PRIVATE_KEY=dmHIAQSUqEhnYLnUjTGiOZssuUrkigqh388SzBVjV3w
+VAPID_SUBJECT=mailto:arenaglirsas@gmail.com
+```
+(Más las de OE 023: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`)
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio.
+
+### Pendientes al cerrar OE 024
+
+- Ejecutar SQL de `push_subscriptions` en Supabase (acción manual).
+- Agregar variables VAPID en Vercel Dashboard (acción manual).
+- Verificar en Chrome mobile: aparece "Agregar a pantalla de inicio".
+- Verificar flujo completo: visita agendada → notificación push en dispositivo admin.
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Cargar precios reales.
