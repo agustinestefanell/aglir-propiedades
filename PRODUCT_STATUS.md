@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-05-31 — OE 018
+Ultima actualizacion: 2026-05-31 — OE 019
 
 ---
 
@@ -34,8 +34,8 @@ Ultima actualizacion: 2026-05-31 — OE 018
 | Feature | Estado | Evidencia | Pendiente |
 |---|---|---|---|
 | Imagen real del plano | Closed | `public/plan/plano-11223.png` (2897×4496 px, portrait, OE 016) | — |
-| Plano con zoom/pan (rueda + drag + pinch) | Closed | `InteractivePlan` con eventos nativos, max 6x | Probar en smartphone real |
-| Plano ancho completo (sin márgenes laterales) | Closed | `InteractivePlan` fuera del container max-w-6xl — validado Playwright 390 y 1280px | — |
+| Plano con zoom/pan (rueda + drag + pinch) | Closed | `InteractivePlan` con eventos nativos, max 8x | Probar en smartphone real |
+| Contenedor smartphone 430px centrado | Closed | `InteractivePlan` wrapeado en `max-w-[430px] mx-auto`; fondo bg-paper en desktop fuera del contenedor | — |
 | Colores de estados en plano | Closed | disponible=sin relleno, reservado=verde, vendido=amarillo | — |
 | SVG unificado con imagen (un solo SVG) | Closed | `<svg viewBox="0 0 100 155.20">` con `<image>` adentro — imagen portrait completa, sin crop | — |
 | Números SVG sobre lotes | Closed | Eliminados de `LotPolygon.tsx` — el plano original tiene los números impresos | — |

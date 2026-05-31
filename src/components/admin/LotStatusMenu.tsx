@@ -39,7 +39,7 @@ export function LotStatusMenu({ lot, onChangeStatus, onClose }: Props) {
     <>
       <div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} />
 
-      <aside className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl bg-white px-5 pt-4 pb-8 shadow-2xl">
+      <aside className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-50 rounded-t-2xl bg-white px-5 pt-4 pb-8 shadow-2xl">
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-stone-200" />
 
         <div className="mb-4 flex items-start justify-between gap-3">

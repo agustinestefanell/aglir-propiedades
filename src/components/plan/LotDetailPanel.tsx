@@ -27,15 +27,14 @@ export function LotDetailPanel({ lot, onClose, onSchedule }: Props) {
   const cfg = statusConfig[lot.estado];
 
   return (
-    // Mobile: fixed bottom sheet — overlay sobre el plano
-    // Desktop (md+): sticky en la columna derecha del grid
+    // Bottom sheet centrado en 430px — idéntico en mobile y desktop
     <aside className="
-      fixed bottom-0 left-0 right-0 z-30
-      md:sticky md:top-14 md:bottom-auto md:left-auto md:right-auto md:z-10 md:self-start
+      fixed bottom-0 left-1/2 z-30
+      w-full max-w-[430px] -translate-x-1/2
       flex flex-col gap-3
-      border-t border-stone-200 md:border md:rounded-md
-      bg-white px-5 pt-4 pb-6 md:p-5
-      shadow-[0_-4px_16px_rgba(0,0,0,0.08)] md:shadow-sm
+      rounded-t-xl border-t border-stone-200
+      bg-white px-5 pt-4 pb-6
+      shadow-[0_-4px_16px_rgba(0,0,0,0.08)]
     ">
       <div className="flex items-start justify-between gap-3">
         <div>

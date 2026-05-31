@@ -39,7 +39,7 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="px-4 pt-4 pb-3">
+      <div className="mx-auto w-full max-w-[430px] px-4 pt-4 pb-3">
         <h1 className="text-center text-2xl font-black leading-tight text-ink md:text-3xl">
           Terrenos en Barros Blancos
         </h1>

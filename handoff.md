@@ -806,3 +806,47 @@ Los polígonos trazados anteriormente en `localStorage["aglir_trace_polygons"]` 
 - Persistir cambios de estado en backend real.
 - Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
 - Cargar precios reales.
+
+---
+
+## OE 019 — Contenedor smartphone 430px
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** UI — layout
+
+### Problema
+
+El plano es portrait (vertical/angosto) pero el contenedor ocupaba 100% del ancho de pantalla. En desktop el plano real quedaba en ~309px centrado en 1280px, con mucho espacio vacío lateral, y el zoom se escapaba horizontalmente.
+
+### Cambios ejecutados
+
+**C1 — `InteractivePlan.tsx` — wrapper 430px:**
+- `<section>` con optional 2-column grid reemplazado por `<div className="mx-auto w-full max-w-[430px]">`.
+- El plano queda contenido en 430px centrado. En desktop el fondo `bg-paper` de la página ocupa el resto.
+- `height: "60vh"` → `height: "80vh"` — más espacio vertical para la imagen portrait.
+- El `overflow-hidden` del contenedor impide que el zoom se escape fuera del 430px.
+
+**C2 — `LotDetailPanel.tsx` — bottom sheet centrado:**
+- Eliminado el modo desktop `md:sticky md:top-14 md:self-start` (ya no hay grid).
+- Nueva posición en todos los tamaños: `fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-30`.
+- Agregado `rounded-t-xl` para acabado de bottom sheet flotante centrado.
+
+**C3 — `LotStatusMenu.tsx` — bottom sheet centrado:**
+- `fixed bottom-0 left-0 right-0` → `fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px]`.
+- El backdrop (inset-0) sigue siendo full-screen.
+
+**C4 — `page.tsx` — título y leyenda centrados:**
+- `<div className="px-4 pt-4 pb-3">` → `<div className="mx-auto w-full max-w-[430px] px-4 pt-4 pb-3">`.
+- El bloque de título + leyenda queda alineado con el plano (mismos 430px).
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio, sin errores.
+
+### Pendientes al cerrar OE 019
+
+- **CRÍTICO:** Limpiar localStorage y retrazar los 90 polígonos con `/admin/trace`.
+- Persistir cambios de estado en backend real.
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Cargar precios reales.

@@ -191,20 +191,17 @@ export function InteractivePlan({
   const panelVisible = showLotDetails && selectedLot;
 
   // Nueva imagen 2897×4496 (portrait). Ratio: 4496/2897×100 = 155.20.
-  // viewBox cubre toda la imagen — sin crop lateral (orientación portrait no tiene carátula lateral).
-  // ATENCIÓN: polígonos trazados sobre imagen anterior (landscape 70.72) requieren re-trazado.
   const VIEW = "0 0 100 155.20";
 
   return (
-    <section
-      className={panelVisible ? "md:grid md:grid-cols-[1fr_300px] md:items-start md:gap-4" : ""}
-    >
+    // Contenedor smartphone: máx 430px centrado. El zoom queda confinado dentro.
+    <div className="mx-auto w-full max-w-[430px]">
       {/* ── Plan container ─────────────────────────────────────────── */}
       <div
         ref={containerRef}
         className="relative overflow-hidden bg-stone-100 select-none touch-none"
         style={{
-          height: "60vh",
+          height: "80vh",
           cursor: "grab",
         }}
       >
@@ -272,6 +269,6 @@ export function InteractivePlan({
           onSchedule={onSchedule}
         />
       )}
-    </section>
+    </div>
   );
 }

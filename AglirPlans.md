@@ -117,18 +117,15 @@ public/
 
 Props: `lots`, `selectedLot`, `onSelectLot`, `onSchedule`, `showLotDetails?`, `isAdmin?`
 
-- Renderiza un único `<svg viewBox="0 0 78 70.72">` que contiene un `<image>` del plano + los polígonos SVG en el mismo espacio de coordenadas.
-- El `viewBox` recorta la carátula derecha del A3 (x:[78,100]); la planilla de coordenadas izquierda (x:[0,34]) queda visible. Lote más a la derecha: m9-s5 en x=73.75 — margen seguro de 4.25 unidades.
-- La imagen (`/plan/plano-11223.png`) se coloca en `x="0" y="0" width="100" height="70.72"` — espacio de coordenadas completo; el viewBox hace el clip lateral.
-- Si la imagen no carga, muestra un `<rect>` de color de fondo como placeholder.
-- Implementa zoom/pan con rueda del mouse, drag y pinch de dos dedos (max 6x).
+- Renderiza un único `<svg viewBox="0 0 100 155.20">` que contiene un `<image>` del plano + los polígonos SVG en el mismo espacio de coordenadas. Imagen portrait completa, sin crop lateral.
+- La imagen (`/plan/plano-11223.png`) se coloca en `x="0" y="0" width="100" height="155.20"`. Si no carga, muestra un `<rect>` placeholder.
+- Implementa zoom/pan con rueda del mouse, drag y pinch de dos dedos (max 8x).
+- `clamp` con letterbox-awareness: calcula el offset real del SVG (`xMidYMid meet`) y acota el translate al contenido real, no al contenedor. Evita que el plano se escape en desktop wide.
 - Guard `dragMoved` evita que un drag dispare selección de lote.
 - Cuando `showLotDetails=false` (admin), no renderiza `LotDetailPanel`.
 - Cuando `isAdmin=true`, todos los lotes son clickeables independientemente del estado.
-- Muestra leyenda de estados y botón de reset de zoom.
-- Sin borde, sin rounded — ocupa ancho completo de su contenedor.
-- Contenedor usa `height: "60vh"` (no `minHeight`) para que el SVG se constraja correctamente.
-- viewBox `"0 0 100 155.20"` — imagen portrait completa, sin crop lateral. El norte y la escala quedan visibles en la parte superior derecha de la imagen.
+- Botón reset zoom visible cuando scale > 1.05.
+- **Contenedor smartphone (OE 019):** envuelto en `max-w-[430px] mx-auto`. El plano ocupa máximo 430px centrado en pantalla. En desktop, el fondo de la página (bg-paper) ocupa el resto. Contenedor usa `height: "80vh"`.
 - Sin overlays: ni leyenda ni hint flotando sobre el plan. Ambos viven en las páginas que consumen el componente.
 
 ### `LotPolygon`
@@ -147,8 +144,7 @@ Props: `lot`, `selected`, `onSelect`, `forceClickable?`
 Props: `lot`, `onClose`, `onSchedule`
 
 - Badge de estado, Manzana, Solar, m² (muestra "—" si area=0), botón "Agendar visita".
-- Mobile: `fixed bottom-0 left-0 right-0 z-30` — bottom sheet fijo, superpuesto sobre el plano.
-- Desktop (md+): `sticky top-14 self-start` en columna derecha del grid — sigue visible al hacer scroll.
+- Bottom sheet centrado en 430px en todos los tamaños: `fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-30` (OE 019 — eliminado el modo sticky de columna derecha).
 - Botón "Agendar visita" siempre visible sin scroll (deshabilitado si no disponible).
 - Nota "Horario a confirmar · Te contactamos por WhatsApp" fija bajo el botón.
 
