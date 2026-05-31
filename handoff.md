@@ -1100,3 +1100,30 @@ VAPID_SUBJECT=mailto:arenaglirsas@gmail.com
 - Verificar que login persiste al cerrar y reabrir browser.
 - Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
 - Cargar precios reales.
+
+---
+
+## OE 026 — Verificación columna lot_id en lotStates.ts
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Verificación — sin cambios de código
+
+### Resultado
+
+Lectura completa de `src/lib/lotStates.ts`. Las tres referencias a la columna de Supabase ya usan `lot_id` correctamente:
+- Línea 9: `.select("lot_id, estado")`
+- Línea 13: `result[row.lot_id as string]`
+- Línea 19: `.upsert({ lot_id: id, estado: status })`
+
+La suscripción realtime (líneas 28–35) opera a nivel de tabla sin referenciar columnas — correcto.
+
+No se realizaron cambios al código. `tsc --noEmit`: limpio.
+
+### Pendientes al cerrar OE 026
+
+- Verificar que Supabase acepta el upsert (permisos RLS en tabla `lot_states`).
+- Ejecutar SQL de `push_subscriptions` en Supabase (acción manual).
+- Agregar variables VAPID + Supabase en Vercel Dashboard (acción manual).
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Cargar precios reales.
