@@ -34,10 +34,26 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-6xl px-4 pt-5 pb-4 md:pt-8 md:pb-5">
-        <h1 className="text-3xl font-black leading-tight text-ink md:text-4xl">
+      <div className="px-4 pt-5 pb-3 md:pt-8 md:pb-4">
+        <h1 className="text-center text-2xl font-black leading-tight text-ink md:text-3xl">
           Terrenos en Barros Blancos
         </h1>
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-stone-600">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-sm border border-stone-500 bg-transparent" />
+            <span className="font-semibold">Disponible</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-sm bg-emerald-500" />
+            <span className="font-semibold">Reservado</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-sm border border-yellow-500 bg-yellow-400" />
+            <span className="font-semibold">Vendido</span>
+          </span>
+          <span className="text-stone-400">·</span>
+          <span>Tocá un solar disponible</span>
+        </div>
       </div>
 
       <InteractivePlan

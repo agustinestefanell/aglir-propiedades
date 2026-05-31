@@ -147,7 +147,7 @@ export function InteractivePlan({
       } else if (e.touches.length === 1) {
         const dx = e.touches[0].clientX - lastPointer.current.x;
         const dy = e.touches[0].clientY - lastPointer.current.y;
-        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) dragMoved.current = true;
+        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) dragMoved.current = true;
         lastPointer.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         setTf((prev) => clamp(prev.scale, prev.x + dx, prev.y + dy));
       }
@@ -179,10 +179,8 @@ export function InteractivePlan({
 
   const panelVisible = showLotDetails && selectedLot;
 
-  // viewBox crops the A3 document to the lot area, hiding the cadastral
-  // table block that occupies the left portion of the plan image.
-  // Lots span roughly x:[38,74] y:[13,65] in the 0-100 / 0-70.72 space.
-  const VIEW = "34 10 52 60";
+  // Full A3 plan — no crop. Coordinate table visible on left.
+  const VIEW = "0 0 100 70.72";
 
   return (
     <section
@@ -228,12 +226,6 @@ export function InteractivePlan({
             ) : (
               <rect x="0" y="0" width="100" height="70.72" fill="#e7e1d2" />
             )}
-            {/* Covers the coordinate table printed on the left side of the
-                A3 document. Table extends to x≈42; rect to x=44 gives margin.
-                pointerEvents=none so clicks pass through to lot polygons. */}
-            {planReady && (
-              <rect x="0" y="0" width="44" height="70.72" fill="white" pointerEvents="none" />
-            )}
             {drawableLots.map((lot) => (
               <LotPolygon
                 key={lot.id}
@@ -245,33 +237,6 @@ export function InteractivePlan({
               />
             ))}
           </svg>
-        </div>
-
-        {/* ── Fixed overlays (no zoom) ───────────────────────────── */}
-        {!panelVisible && (
-          <div className="pointer-events-none absolute left-3 top-3 rounded-md bg-white/90 px-2.5 py-1.5 text-[11px] font-semibold text-stone-600 shadow-sm">
-            {drawableLots.length === 0
-              ? "Plano pendiente de trazado"
-              : isAdmin
-                ? "Seleccioná un solar"
-                : "Tocá un solar disponible"}
-          </div>
-        )}
-
-        {/* Legend */}
-        <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap gap-2 rounded-md bg-white/90 px-2.5 py-1.5 text-[10px] font-bold text-stone-700 shadow-sm">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm border border-stone-500 bg-transparent" />
-            Disponible
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm bg-emerald-500" />
-            Reservado
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm bg-yellow-400 border border-yellow-500" />
-            Vendido
-          </span>
         </div>
 
         {/* Reset zoom */}

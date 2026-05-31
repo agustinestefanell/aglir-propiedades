@@ -127,8 +127,8 @@ Props: `lots`, `selectedLot`, `onSelectLot`, `onSchedule`, `showLotDetails?`, `i
 - Muestra leyenda de estados y botón de reset de zoom.
 - Sin borde, sin rounded — ocupa ancho completo de su contenedor.
 - Contenedor usa `height: "60vh"` (no `minHeight`) para que el SVG se constraja correctamente.
-- Un `<rect fill="white" width="44" pointerEvents="none">` oculta la tabla de coordenadas del A3 (x:[0,44]).
-- Hint "Tocá un solar disponible" se oculta cuando el panel de detalle está abierto.
+- viewBox `"0 0 100 70.72"` — plan completo, sin recorte. La tabla de coordenadas del A3 queda visible a la izquierda.
+- Sin overlays: ni leyenda ni hint flotando sobre el plan. Ambos viven en las páginas que consumen el componente.
 
 ### `LotPolygon`
 

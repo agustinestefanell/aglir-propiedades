@@ -568,3 +568,41 @@ Dos pasos a ejecutar en terminal local:
 
 - Reemplazar credenciales hardcodeadas por Supabase Auth.
 - Persistir cambios de estado en DB.
+
+---
+
+## OE 014 — Fix plano roto + layout vertical mobile
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Bug fix + UI
+
+### Problemas resueltos
+
+**1 — Plano cortado (viewBox revertido) `InteractivePlan.tsx`:**
+- `const VIEW = "34 10 52 60"` → `"0 0 100 70.72"`. Plan completo visible. Tabla de coordenadas queda a la izquierda (sin ocultar).
+- Eliminado el `<rect fill="white" width="44">` que tapaba la tabla.
+
+**2 — Rótulo eliminado del plan `InteractivePlan.tsx`:**
+- Eliminado overlay absoluto con "Tocá un solar disponible" / "Seleccioná un solar".
+- Eliminada la leyenda (Disponible/Reservado/Vendido) que era un overlay absoluto en la esquina inferior del plan.
+- El plan ahora no tiene ningún texto flotante encima.
+
+**3 — Layout vertical público `page.tsx`:**
+- H1 centrado: `text-center`.
+- Fila flex centrada debajo del H1: leyenda (□ Disponible / ■ Reservado / ■ Vendido) + "·" + "Tocá un solar disponible".
+- Todo en fila `flex-wrap justify-center`.
+
+**4 — Click en lote disponible reparado:**
+- El viewBox cropped causaba desalineación entre imagen y polígonos SVG. Al revertir a full viewBox, los polígonos coinciden con lo que el usuario ve.
+- Umbral `dragMoved` en touch: 4px → 10px para tolerar movimiento natural del dedo.
+- Validado: click en polígono → bottom sheet "Disponible / Manzana 2 / Agendar visita".
+
+**5 — Admin sin leyenda `gestion/page.tsx`:**
+- Al eliminar los overlays de `InteractivePlan`, el admin queda con solo header + plano.
+
+### Archivos tocados
+
+- `src/components/plan/InteractivePlan.tsx`
+- `src/app/page.tsx`
+- `handoff.md`, `PRODUCT_STATUS.md`, `AglirPlans.md` (actualizados)
