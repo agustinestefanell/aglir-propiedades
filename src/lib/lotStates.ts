@@ -16,7 +16,10 @@ async function fetchOverrides(): Promise<Record<string, LotStatus>> {
 }
 
 async function upsertState(id: string, status: LotStatus): Promise<void> {
-  await supabase.from(TABLE).upsert({ lot_id: id, estado: status });
+  const { error } = await supabase
+    .from(TABLE)
+    .upsert({ lot_id: id, estado: status }, { onConflict: "lot_id" });
+  if (error) console.error("Error guardando estado:", error);
 }
 
 export function useLotStates(): [Lot[], (id: string, status: LotStatus) => void] {

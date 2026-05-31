@@ -1127,3 +1127,30 @@ No se realizaron cambios al código. `tsc --noEmit`: limpio.
 - Agregar variables VAPID + Supabase en Vercel Dashboard (acción manual).
 - Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
 - Cargar precios reales.
+
+---
+
+## OE 027 — Fix upsert lot_states: onConflict + error handling
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Bug fix
+
+### Cambio ejecutado
+
+**`src/lib/lotStates.ts` — `upsertState()`:**
+- Agregado `{ onConflict: "lot_id" }` al upsert — sin esto Supabase no sabía qué columna usar como clave de conflicto y fallaba silenciosamente.
+- Agregado manejo de error explícito: `const { error } = await ...` + `if (error) console.error(...)`.
+- Ahora si el upsert falla (RLS, red, etc.) el error aparece en la consola del browser.
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio.
+
+### Pendientes al cerrar OE 027
+
+- Verificar en Supabase que RLS permite upsert desde anon key en `lot_states`.
+- Ejecutar SQL de `push_subscriptions` en Supabase (acción manual).
+- Agregar variables VAPID + Supabase en Vercel Dashboard (acción manual).
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Cargar precios reales.
