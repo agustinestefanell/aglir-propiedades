@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { InteractivePlan } from "@/components/plan/InteractivePlan";
 import { VisitBookingModal } from "@/components/visits/VisitBookingModal";
-import { lots } from "@/data/lots";
+import { useLotStates } from "@/lib/lotStates";
 import type { Lot, VisitRequest } from "@/types";
 
 export default function Home() {
+  const [lots] = useLotStates();
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null);
   const [bookingLot, setBookingLot] = useState<Lot | null>(null);
   const [, setRequests] = useState<VisitRequest[]>([]);
@@ -27,18 +28,22 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-paper pb-8">
       <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/95 px-4 py-3 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <a href="/" className="text-base font-black text-ink">
-            Aglir Propiedades
-          </a>
+        <div className="mx-auto flex max-w-6xl items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.jpg"
+            alt="Aglir Propiedades"
+            className="h-8 w-8 rounded-sm object-cover"
+          />
+          <span className="text-base font-black text-ink">Aglir Propiedades</span>
         </div>
       </header>
 
-      <div className="px-4 pt-5 pb-3 md:pt-8 md:pb-4">
+      <div className="px-4 pt-4 pb-3">
         <h1 className="text-center text-2xl font-black leading-tight text-ink md:text-3xl">
           Terrenos en Barros Blancos
         </h1>
-        <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-stone-600">
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-xs text-stone-600">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-3 w-3 rounded-sm border border-stone-500 bg-transparent" />
             <span className="font-semibold">Disponible</span>

@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-05-31 — OE 014
+Ultima actualizacion: 2026-05-31 — OE 016
 
 ---
 
@@ -23,7 +23,7 @@ Ultima actualizacion: 2026-05-31 — OE 014
 |---|---|---|---|
 | Dataset lotes — metadata m2/solar/area | Partial | 90 lotes: M2(1-18), M3(1-12), M4(6-14+22-24), M6(1-19), M7(1-10), M8(4-17), M9(1-5) | Auditar areas reales de M2(1-5), M3(1-5), M4, M7; verificar M6 solar 14 |
 | Precios reales | Broken | `precio_contado: 0` en todos los lotes | Cargar precios reales cuando se definan |
-| Polígonos SVG trazados | Closed | 90 polígonos en `polygonMap` de `lots.ts`; 180 elementos `<polygon>` confirmados en DOM | — |
+| Polígonos SVG trazados | Broken | 90 polígonos en `polygonMap` pero trazados sobre imagen anterior (landscape); desalineados con nueva imagen portrait | Re-trazar los 90 polígonos con `/admin/trace` sobre la nueva imagen |
 | Observaciones de lotes | Closed | `area_m2 === 0` → "Pendiente de auditoría de área.", resto → "" | — |
 | Solicitudes de visita mock | Partial | 4 registros en `visitRequests.ts` con IDs de lotes validos | Solo para probar admin; no persisten |
 
@@ -33,20 +33,21 @@ Ultima actualizacion: 2026-05-31 — OE 014
 
 | Feature | Estado | Evidencia | Pendiente |
 |---|---|---|---|
-| Imagen real del plano | Closed | `public/plan/plano-11223.png` (4682x3311 px) | — |
+| Imagen real del plano | Closed | `public/plan/plano-11223.png` (2897×4496 px, portrait, OE 016) | — |
 | Plano con zoom/pan (rueda + drag + pinch) | Closed | `InteractivePlan` con eventos nativos, max 6x | Probar en smartphone real |
 | Plano ancho completo (sin márgenes laterales) | Closed | `InteractivePlan` fuera del container max-w-6xl — validado Playwright 390 y 1280px | — |
 | Colores de estados en plano | Closed | disponible=sin relleno, reservado=verde, vendido=amarillo | — |
-| SVG unificado con imagen (un solo SVG) | Closed | `<svg viewBox="34 10 52 60">` con `<image>` adentro — imagen y polígonos en mismo espacio de coordenadas | — |
+| SVG unificado con imagen (un solo SVG) | Closed | `<svg viewBox="0 0 100 155.20">` con `<image>` adentro — imagen portrait completa, sin crop | — |
 | Números SVG sobre lotes | Closed | Eliminados de `LotPolygon.tsx` — el plano original tiene los números impresos | — |
 | Polígonos clickeables sobre plano | Closed | 90 polígonos trazados, click abre LotDetailPanel — validado Playwright | — |
-| Tabla de coordenadas A3 ocultada | Closed | `<rect fill="white" width="44">` cubre la tabla en SVG; lotes M4 visibles como contornos sobre fondo blanco | — |
-| Carátula derecha del A3 | Partial | Sigue visible — requiere editar PNG fuente | Editar PNG fuente |
+| Tabla de coordenadas A3 visible | Closed | Visible en viewBox izquierdo (x:[0,34]); no se suprime — el plano la muestra intencionalmente | — |
+| Carátula derecha del A3 | Closed | Nueva imagen portrait sin carátula lateral separada — todo el contenido está integrado en la imagen | — |
 | Panel lateral — desktop sticky | Closed | `position:sticky top:56px width:300px` — validado Playwright | — |
 | Panel — mobile bottom sheet | Closed | `position:fixed bottom:0` — superpuesto sobre plano, validado Playwright | — |
 | Botón "Agendar visita" siempre visible | Closed | Bottom sheet fijo — botón en viewport sin scroll | — |
-| Flujo de agenda (registro + booking) | Partial | `VisitBookingModal` 2 pasos, localStorage session | Sin persistencia backend; horario siempre "a confirmar" |
+| Flujo de agenda (registro + booking) | Partial | `VisitBookingModal` 2 pasos, localStorage session; confirmación "Solicitud enviada." | Sin persistencia backend; horario siempre "a confirmar" |
 | Persistencia de solicitudes de visita | Broken | Solo en estado React de la sesion (se pierde al recargar) | Requiere backend |
+| Lotes no disponibles bloqueados | Closed | `LotDetailPanel` muestra "Este terreno no está disponible." + botón deshabilitado para reservado/vendido | — |
 
 ---
 
@@ -60,9 +61,11 @@ Ultima actualizacion: 2026-05-31 — OE 014
 | Vista por dia (calendario simple) | Partial | `AdminCalendarView` con datos mock agrupados por fecha | Conectar con solicitudes reales |
 | WhatsApp human-in-the-loop | Partial | `buildWhatsAppUrl` + apertura de `wa.me/...` | Probar con numero real |
 | Formato de contacto AP-{tel}{Nombre} | Closed | `formatContactName` en `whatsapp.ts`, visible en `WhatsAppAcceptButton` | Probar flujo real |
-| Login admin (`/gestion`) | Closed | `LoginScreen` con credenciales hardcodeadas, sessionStorage — validado Playwright | Migrar a Supabase Auth |
-| Cambio de estado desde plano (admin) | Closed | Double-click/double-tap → `LotStatusMenu` flotante; color cambia inmediatamente | Persistir en DB |
+| Login admin (`/gestion`) | Closed | `LoginScreen` con credenciales hardcodeadas, sessionStorage | Migrar a Supabase Auth |
+| Cambio de estado desde plano (admin) | Closed | Single-tap → `LotStatusMenu` bottom sheet; color cambia inmediatamente en ambas páginas vía localStorage | Persistir en DB |
+| Sincronización Admin ↔ Público | Closed | `useLotStates` hook + `localStorage["aglir_lot_states"]` — fuente única de verdad; `focus` event re-carga en multitab | Reemplazar con backend |
 | URL admin no predecible | Closed | `/gestion` en lugar de `/admin`; botón Admin eliminado del header público | — |
+| Logo Aglir en header | Closed | `public/logo.jpg` integrado en ambas páginas (`img` h-8 w-8) | — |
 
 ---
 

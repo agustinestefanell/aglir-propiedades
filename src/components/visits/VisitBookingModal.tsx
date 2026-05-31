@@ -198,10 +198,9 @@ export function VisitBookingModal({ lot, onClose, onSubmit }: Props) {
         {step === "done" && (
           <div className="grid gap-5">
             <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">
-              <p className="font-bold">¡Solicitud registrada!</p>
+              <p className="font-bold">Solicitud enviada.</p>
               <p className="mt-1">
-                Aglir Propiedades te contactará por WhatsApp para confirmar el horario de
-                la visita a Manzana {lot.manzana}, Solar {lot.solar}.
+                Nos comunicaremos por WhatsApp para confirmar la visita.
               </p>
             </div>
             <button type="button" onClick={onClose} className={primaryCls}>

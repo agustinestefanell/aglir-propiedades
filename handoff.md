@@ -606,3 +606,125 @@ Dos pasos a ejecutar en terminal local:
 - `src/components/plan/InteractivePlan.tsx`
 - `src/app/page.tsx`
 - `handoff.md`, `PRODUCT_STATUS.md`, `AglirPlans.md` (actualizados)
+
+---
+
+## OE 015 — Mobile-first: sincronización Admin↔Público + recorte plano + logo + bottom sheets
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Feature + UI/UX mobile-first
+
+### Cambios ejecutados
+
+**C1 — `src/lib/lotStates.ts` (nuevo):**
+- Hook `useLotStates()` — fuente única de verdad para el estado comercial de lotes.
+- Lee/escribe en `localStorage["aglir_lot_states"]` (`Record<lotId, LotStatus>`).
+- `baseLots` de `lots.ts` es inmutable; los estados del localStorage actúan como overlay.
+- Evento `focus` re-sincroniza al volver al tab (soporte multitab básico).
+- Retorna `[lots, changeStatus]`.
+
+**C2 — Recorte lateral derecho (`InteractivePlan.tsx`):**
+- `VIEW` cambiado de `"0 0 100 70.72"` → `"0 0 78 70.72"`.
+- Lote más a la derecha: m9-s5 en x=73.75 → margen seguro de 4.25 unidades.
+- Elimina del encuadre: carátula derecha (norte, rótulo, información marginal).
+- Mantiene: planilla de coordenadas izquierda (x:[0,34]) + todos los lotes.
+- No distorsiona la imagen ni desalinea polígonos (origen permanece en 0,0).
+
+**C3 — `LotStatusMenu.tsx` convertido a bottom sheet:**
+- Eliminado el popup flotante posicionado por coordenadas de click (position x,y).
+- Nuevo diseño: `fixed bottom-0 left-0 right-0` + backdrop + handle bar + info del lote + 3 opciones.
+- Eliminado prop `position`. Compatible con interacción móvil.
+
+**C4 — Single-click en admin (`gestion/page.tsx`):**
+- Eliminado `onLotDoubleClick` / double-tap. Un solo tap abre el bottom sheet de estado.
+- `handleSelectLot(lot)` busca el lote en `lots[]` (con overrides aplicados) y abre `LotStatusMenu`.
+- `handleChangeStatus` actualiza tanto `changeStatus(id, status)` como `selectedLot` local para reflejo inmediato del checkmark.
+
+**C5 — Logo en ambas páginas:**
+- `public/logo.jpg` integrado en header de `page.tsx` y `gestion/page.tsx` (`<img> h-8 w-8`).
+- Header admin: 2 filas — logo + ADMIN badge + Salir / leyenda de estados.
+- Header público: logo + nombre, compacto.
+
+**C6 — `LotDetailPanel.tsx` — lotes no disponibles:**
+- Rama `lot.estado !== "disponible"`: muestra "Este terreno no está disponible." en recuadro stone-50 + botón disabled "No disponible".
+- Rama `disponible`: botón "Agendar visita" + nota de confirmación (sin cambio).
+
+**C7 — `VisitBookingModal.tsx` — texto de confirmación:**
+- Step 3: "¡Solicitud registrada!" → "Solicitud enviada." / "Nos comunicaremos por WhatsApp para confirmar la visita."
+
+**C8 — `page.tsx` y `gestion/page.tsx` usan `useLotStates()`:**
+- Eliminado import estático de `lots` en ambas páginas.
+- Estado comercial compartido: cambio en admin → se ve en público al navegar o al hacer focus en la pestaña.
+
+### Archivos tocados
+
+- `src/lib/lotStates.ts` (nuevo)
+- `src/components/plan/InteractivePlan.tsx`
+- `src/components/admin/LotStatusMenu.tsx`
+- `src/components/plan/LotDetailPanel.tsx`
+- `src/components/visits/VisitBookingModal.tsx`
+- `src/app/page.tsx`
+- `src/app/gestion/page.tsx`
+- `handoff.md`, `PRODUCT_STATUS.md`, `AglirPlans.md` (actualizados)
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio, sin errores.
+
+### Pendientes al cerrar OE 015
+
+- Persistir cambios de estado en backend real (Supabase u otro) — actualmente solo en localStorage.
+- Push a GitHub (sigue pendiente de OE 009).
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Cargar precios reales.
+
+---
+
+## OE 016 — Sustitución de imagen base del plano
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Infra — reemplazo de asset
+
+### Cambios ejecutados
+
+**C1 — Imagen reemplazada:**
+- Copiado: `IMAGENES DE PROYECTO/11223-NB-V01-M02 S-V copia.png` → `public/plan/plano-11223.png`
+- Anterior: 4682×3311 px, landscape, ratio h/w = 70.72%
+- Nueva: 2897×4496 px, **portrait**, ratio h/w = 155.20%
+
+**C2 — ViewBox actualizado (`InteractivePlan.tsx`):**
+- `VIEW`: `"0 0 78 70.72"` (OE 015) → `"0 0 100 155.20"` (nuevo ratio, sin crop lateral)
+- `<image height>`: `"70.72"` → `"155.20"`
+- `<rect height>` (fallback): `"70.72"` → `"155.20"`
+- Sin crop lateral: la imagen portrait no tiene carátula en el lado derecho.
+
+**C3 — Documentación actualizada:**
+- `AglirPlans.md` §3, §8 — nuevas dimensiones, nuevo ratio, advertencia de re-trazado.
+- `PRODUCT_STATUS.md` — "Polígonos SVG trazados" cambiado a **Broken**.
+
+### Diagnóstico crítico — polígonos desalineados
+
+Los 90 polígonos en `lots.ts/polygonMap` fueron trazados sobre la imagen anterior (landscape 4682×3311, sistema y∈[0,70.72]). La nueva imagen tiene orientación portrait con dimensiones y aspect ratio completamente distintos. Los polígonos aparecen en el DOM pero sus coordenadas no coinciden con los lotes reales en la nueva imagen.
+
+**Acción requerida:** Re-trazar los 90 polígonos con `/admin/trace` (herramienta solo disponible en `NODE_ENV=development`) sobre la nueva imagen, exportar y reemplazar `polygonMap` en `lots.ts`.
+
+### Archivos tocados
+
+- `public/plan/plano-11223.png` (reemplazado)
+- `src/components/plan/InteractivePlan.tsx`
+- `handoff.md`, `PRODUCT_STATUS.md`, `AglirPlans.md` (actualizados)
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio, sin errores.
+
+### Pendientes al cerrar OE 016
+
+- **CRÍTICO:** Re-trazar los 90 polígonos sobre la nueva imagen portrait con `/admin/trace`.
+- Verificar en smartphone real que la nueva imagen carga y se ve correctamente.
+- Persistir cambios de estado en backend real.
+- Push a GitHub.
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Cargar precios reales.

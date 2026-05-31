@@ -179,8 +179,10 @@ export function InteractivePlan({
 
   const panelVisible = showLotDetails && selectedLot;
 
-  // Full A3 plan — no crop. Coordinate table visible on left.
-  const VIEW = "0 0 100 70.72";
+  // Nueva imagen 2897×4496 (portrait). Ratio: 4496/2897×100 = 155.20.
+  // viewBox cubre toda la imagen — sin crop lateral (orientación portrait no tiene carátula lateral).
+  // ATENCIÓN: polígonos trazados sobre imagen anterior (landscape 70.72) requieren re-trazado.
+  const VIEW = "0 0 100 155.20";
 
   return (
     <section
@@ -220,11 +222,11 @@ export function InteractivePlan({
                 x="0"
                 y="0"
                 width="100"
-                height="70.72"
+                height="155.20"
                 preserveAspectRatio="xMidYMid meet"
               />
             ) : (
-              <rect x="0" y="0" width="100" height="70.72" fill="#e7e1d2" />
+              <rect x="0" y="0" width="100" height="155.20" fill="#e7e1d2" />
             )}
             {drawableLots.map((lot) => (
               <LotPolygon

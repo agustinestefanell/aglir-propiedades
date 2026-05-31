@@ -65,13 +65,14 @@ src/
 
   lib/
     whatsapp.ts       — buildWhatsAppUrl + formatContactName
+    lotStates.ts      — useLotStates() hook: carga/persiste estados en localStorage["aglir_lot_states"]
 
   types/
     index.ts          — tipos compartidos: Lot, VisitRequest, User, etc.
 
 public/
   plan/
-    plano-11223.png   — plano catastral real (4682x3311 px, 1.6 MB, PDF convertido)
+    plano-11223.png   — plano catastral real (2897x4496 px, portrait, OE 016; anterior era 4682x3311 landscape)
   logo.jpg            — logo Aglir Propiedades
 ```
 
@@ -116,9 +117,9 @@ public/
 
 Props: `lots`, `selectedLot`, `onSelectLot`, `onSchedule`, `showLotDetails?`, `isAdmin?`
 
-- Renderiza un único `<svg viewBox="34 10 52 60">` que contiene un `<image>` del plano + los polígonos SVG en el mismo espacio de coordenadas.
-- El `viewBox` recorta la vista al área de lotes (x:[34,86], y:[10,70]), ocultando parcialmente el cuadro de superficies del lado izquierdo del documento A3.
-- La imagen (`/plan/plano-11223.png`) se coloca en `x="0" y="0" width="100" height="70.72"` — espacio de coordenadas completo; el viewBox hace el clip.
+- Renderiza un único `<svg viewBox="0 0 78 70.72">` que contiene un `<image>` del plano + los polígonos SVG en el mismo espacio de coordenadas.
+- El `viewBox` recorta la carátula derecha del A3 (x:[78,100]); la planilla de coordenadas izquierda (x:[0,34]) queda visible. Lote más a la derecha: m9-s5 en x=73.75 — margen seguro de 4.25 unidades.
+- La imagen (`/plan/plano-11223.png`) se coloca en `x="0" y="0" width="100" height="70.72"` — espacio de coordenadas completo; el viewBox hace el clip lateral.
 - Si la imagen no carga, muestra un `<rect>` de color de fondo como placeholder.
 - Implementa zoom/pan con rueda del mouse, drag y pinch de dos dedos (max 6x).
 - Guard `dragMoved` evita que un drag dispare selección de lote.
@@ -127,7 +128,7 @@ Props: `lots`, `selectedLot`, `onSelectLot`, `onSchedule`, `showLotDetails?`, `i
 - Muestra leyenda de estados y botón de reset de zoom.
 - Sin borde, sin rounded — ocupa ancho completo de su contenedor.
 - Contenedor usa `height: "60vh"` (no `minHeight`) para que el SVG se constraja correctamente.
-- viewBox `"0 0 100 70.72"` — plan completo, sin recorte. La tabla de coordenadas del A3 queda visible a la izquierda.
+- viewBox `"0 0 100 155.20"` — imagen portrait completa, sin crop lateral. El norte y la escala quedan visibles en la parte superior derecha de la imagen.
 - Sin overlays: ni leyenda ni hint flotando sobre el plan. Ambos viven en las páginas que consumen el componente.
 
 ### `LotPolygon`
@@ -169,6 +170,17 @@ Props: `initialLots`
 - Busqueda por texto (manzana, solar).
 - Plano admin (showLotDetails=false, isAdmin=true) + grilla de cards.
 - Sincroniza estado seleccionado entre plano y cards.
+
+### `LotStatusMenu`
+
+Props: `lot`, `onChangeStatus`, `onClose`
+
+- Bottom sheet fijo mobile-first: `fixed bottom-0 left-0 right-0 z-50`, rounded-t-2xl.
+- Backdrop `fixed inset-0 z-40` cierra al hacer click fuera.
+- 3 opciones (radio visual): En venta / Reservado / Vendido con dots de color.
+- Opción activa marcada con ✓ y fondo destacado.
+- Muestra Manzana, Solar, m² del lote seleccionado.
+- Reemplazó el popup flotante de coordenadas (position x,y) de OE 012.
 
 ### `AdminLotStatusCard`
 
@@ -262,11 +274,12 @@ type User = {         // guardado en localStorage["aglir_user"]
 
 ## 8. Sistema de coordenadas del plano SVG
 
-- Imagen: `public/plan/plano-11223.png` — 4682×3311 px (A3 apaisado, 200 DPI).
-- `viewBox` del SVG: `"0 0 100 70.72"` (proporcional: 3311/4682 × 100 = 70.72).
-- Esto garantiza que image y SVG tienen identico letterboxing con `preserveAspectRatio="xMidYMid meet"`, alineando poligonos pixel-perfect con el contenido del plano.
-- Coordenadas de poligonos: `x ∈ [0, 100]`, `y ∈ [0, 70.72]`.
-- Herramienta para obtenerlas: `/admin/trace` (solo en desarrollo).
+- Imagen: `public/plan/plano-11223.png` — 2897×4496 px (portrait, OE 016).
+- `viewBox` del SVG: `"0 0 100 155.20"` (proporcional: 4496/2897 × 100 = 155.20).
+- Esto garantiza que image y SVG tienen idéntico aspecto ratio con `preserveAspectRatio="xMidYMid meet"`, permitiendo alinear polígonos pixel-perfect con el contenido del plano.
+- Coordenadas de polígonos nuevos: `x ∈ [0, 100]`, `y ∈ [0, 155.20]`.
+- **ATENCIÓN — pendiente crítico:** Los 90 polígonos en `polygonMap` de `lots.ts` fueron trazados sobre la imagen anterior (landscape 4682×3311, y∈[0,70.72]). Deben ser re-trazados completos con `/admin/trace` sobre la nueva imagen para recuperar la alineación.
+- Herramienta para obtener coordenadas: `/admin/trace` (solo en desarrollo).
 
 ---
 
@@ -364,7 +377,7 @@ AdminVisitList:
 
 ## 15. Pendientes tecnicos
 
-- ~~Trazar los 90 polígonos con `/admin/trace` y cargar en `lots.ts`.~~ — Completado OE 008.
+- ~~Trazar los 90 polígonos con `/admin/trace` y cargar en `lots.ts`.~~ — Completado OE 008. **INVALIDADO OE 016** — imagen base reemplazada, requiere re-trazado completo.
 - Auditar manzanas 1, 4, 5 y 7.
 - Cargar precios reales.
 - Eliminar archivos huerfanos: `LotBottomSheet.tsx`, `VisitRequestForm.tsx`.

@@ -5,78 +5,87 @@ import type { Lot, LotStatus } from "@/types";
 const OPTIONS: {
   value: LotStatus;
   label: string;
-  dot: string;
+  dotCls: string;
   activeCls: string;
 }[] = [
   {
     value: "disponible",
     label: "En venta",
-    dot: "bg-stone-400",
-    activeCls: "bg-stone-100 text-stone-900",
+    dotCls: "bg-transparent border border-stone-400",
+    activeCls: "bg-stone-100 font-bold text-stone-900",
   },
   {
     value: "reservado",
     label: "Reservado",
-    dot: "bg-emerald-500",
-    activeCls: "bg-emerald-50 text-emerald-900",
+    dotCls: "bg-emerald-500",
+    activeCls: "bg-emerald-50 font-bold text-emerald-900",
   },
   {
     value: "vendido",
     label: "Vendido",
-    dot: "bg-yellow-400",
-    activeCls: "bg-yellow-50 text-yellow-900",
+    dotCls: "bg-yellow-400",
+    activeCls: "bg-yellow-50 font-bold text-yellow-900",
   },
 ];
 
 type Props = {
   lot: Lot;
-  position: { x: number; y: number };
   onChangeStatus: (status: LotStatus) => void;
   onClose: () => void;
 };
 
-export function LotStatusMenu({ lot, position, onChangeStatus, onClose }: Props) {
-  const safeX =
-    typeof window !== "undefined"
-      ? Math.min(position.x, window.innerWidth - 180)
-      : position.x;
-  const safeY =
-    typeof window !== "undefined"
-      ? Math.min(position.y, window.innerHeight - 160)
-      : position.y;
-
+export function LotStatusMenu({ lot, onChangeStatus, onClose }: Props) {
   return (
     <>
-      <div className="fixed inset-0 z-40" onClick={onClose} />
+      <div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} />
 
-      <div
-        className="fixed z-50 min-w-[160px] rounded-lg bg-white py-1 shadow-2xl"
-        style={{ top: safeY, left: safeX }}
-      >
-        <p className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">
-          M{lot.manzana} · S{lot.solar}
-        </p>
+      <aside className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl bg-white px-5 pt-4 pb-8 shadow-2xl">
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-stone-200" />
 
-        {OPTIONS.map((opt) => {
-          const isActive = lot.estado === opt.value;
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => onChangeStatus(opt.value)}
-              className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition ${
-                isActive
-                  ? `${opt.activeCls} font-bold`
-                  : "text-stone-700 hover:bg-stone-50"
-              }`}
-            >
-              <span className={`h-2 w-2 flex-shrink-0 rounded-full ${opt.dot}`} />
-              {opt.label}
-              {isActive && <span className="ml-auto text-[10px] text-stone-400">✓</span>}
-            </button>
-          );
-        })}
-      </div>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
+              Estado del terreno
+            </p>
+            <h2 className="mt-0.5 text-lg font-black text-ink">
+              Manzana {lot.manzana} · Solar {lot.solar}
+            </h2>
+            {lot.area_m2 > 0 && (
+              <p className="text-sm text-stone-500">{lot.area_m2} m²</p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="min-h-9 min-w-9 rounded-md border border-stone-200 text-stone-500 hover:bg-stone-50"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="grid gap-2">
+          {OPTIONS.map((opt) => {
+            const isActive = lot.estado === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onChangeStatus(opt.value)}
+                className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm transition ${
+                  isActive ? opt.activeCls : "text-stone-700 hover:bg-stone-50"
+                }`}
+              >
+                <span className={`h-4 w-4 flex-shrink-0 rounded-sm ${opt.dotCls}`} />
+                <span>{opt.label}</span>
+                {isActive && (
+                  <span className="ml-auto text-xs font-bold text-stone-400">✓</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </aside>
     </>
   );
 }

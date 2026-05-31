@@ -69,19 +69,32 @@ export function LotDetailPanel({ lot, onClose, onSchedule }: Props) {
         </dd>
       </dl>
 
-      <button
-        type="button"
-        onClick={onSchedule}
-        disabled={lot.estado !== "disponible"}
-        className="min-h-12 w-full rounded-md bg-leaf px-5 py-3 text-base font-bold text-white shadow-sm transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-stone-300 disabled:text-stone-500"
-      >
-        {lot.estado === "disponible" ? "Agendar visita" : "No disponible"}
-      </button>
-
-      {lot.estado === "disponible" && (
-        <p className="text-center text-xs leading-5 text-stone-500">
-          Horario a confirmar · Te contactamos por WhatsApp
-        </p>
+      {lot.estado === "disponible" ? (
+        <>
+          <button
+            type="button"
+            onClick={onSchedule}
+            className="min-h-12 w-full rounded-md bg-leaf px-5 py-3 text-base font-bold text-white shadow-sm transition hover:bg-emerald-800"
+          >
+            Agendar visita
+          </button>
+          <p className="text-center text-xs leading-5 text-stone-500">
+            Horario a confirmar · Te contactamos por WhatsApp
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="rounded-md bg-stone-50 px-4 py-3 text-center text-sm font-semibold text-stone-600">
+            Este terreno no está disponible.
+          </p>
+          <button
+            type="button"
+            disabled
+            className="min-h-12 w-full rounded-md bg-stone-300 px-5 py-3 text-base font-bold text-stone-500 cursor-not-allowed"
+          >
+            No disponible
+          </button>
+        </>
       )}
     </aside>
   );
