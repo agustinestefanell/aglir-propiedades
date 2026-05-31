@@ -1298,3 +1298,31 @@ El campo `observaciones` se auto-corrige: la lógica `area_m2 === 0 ? "Pendiente
 - Cargar precios reales.
 - Agregar variables VAPID + Supabase en Vercel Dashboard (acción manual).
 - Verificar M6 solar 14 vs plano.
+
+---
+
+## OE 032 — Fix definitivo supabaseUrl (verificación + redeploy)
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Verificación + redeploy
+
+### Diagnóstico
+
+Lectura de ambos archivos confirma que el fix de OE 029 ya está aplicado en disco:
+- `subscribe/route.ts`: `createClient` dentro del handler `POST` ✓
+- `notify/route.ts`: `createClient` + `setVapidDetails` dentro del handler `POST` ✓
+
+El error en Vercel se debía a que el deploy usaba el commit `2029e7e` (OE 025), anterior al fix. Vercel no había triggerado un nuevo deploy para los commits OE 026–031. Este commit fuerza un nuevo deploy con el código correcto.
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio.
+- Sin cambios de código — solo commit para forzar redeploy en Vercel.
+
+### Pendientes al cerrar OE 032
+
+- Verificar que el nuevo deploy de Vercel pasa sin `supabaseUrl is required`.
+- Cargar precios reales.
+- Agregar variables VAPID + Supabase en Vercel Dashboard (acción manual).
+- Verificar `created_at` en tabla `visit_requests` de Supabase.
