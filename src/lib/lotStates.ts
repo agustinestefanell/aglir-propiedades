@@ -6,7 +6,8 @@ import { supabase } from "./supabase";
 const TABLE = "lot_states";
 
 async function fetchOverrides(): Promise<Record<string, LotStatus>> {
-  const { data, error } = await supabase.from(TABLE).select("lot_id, estado");
+  const { data, error } = await supabase.from(TABLE).select("*");
+  if (error) console.error("Error cargando estados:", error);
   if (error || !data) return {};
   const result: Record<string, LotStatus> = {};
   for (const row of data) {

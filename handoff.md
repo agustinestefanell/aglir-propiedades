@@ -1154,3 +1154,32 @@ No se realizaron cambios al código. `tsc --noEmit`: limpio.
 - Agregar variables VAPID + Supabase en Vercel Dashboard (acción manual).
 - Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
 - Cargar precios reales.
+
+---
+
+## OE 028 — Fix select lot_states + error logging
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Bug fix
+
+### Cambios ejecutados
+
+**`src/lib/lotStates.ts` — `fetchOverrides()`:**
+- `.select("lot_id, estado")` → `.select("*")` — elimina posible error 400 por parsing de columnas.
+- Agregado `console.error("Error cargando estados:", error)` antes del return vacío — ahora los errores de fetch son visibles en consola.
+
+**`src/lib/supabase.ts` — verificado:**
+- Ya usaba `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` correctamente. Sin cambios.
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio.
+
+### Pendientes al cerrar OE 028
+
+- Verificar en Supabase que RLS permite select y upsert desde anon key en `lot_states`.
+- Ejecutar SQL de `push_subscriptions` en Supabase (acción manual).
+- Agregar variables VAPID + Supabase en Vercel Dashboard (acción manual).
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Cargar precios reales.
