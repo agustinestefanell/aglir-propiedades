@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-05-31 — OE 030
+Ultima actualizacion: 2026-05-31 — OE 031
 
 ---
 
@@ -58,7 +58,7 @@ Ultima actualizacion: 2026-05-31 — OE 030
 | Ruta `/admin` legacy | Closed | Vaciada en OE 017 — devuelve página en blanco; funcionalidad admin real en `/gestion` | — |
 | Gestion de estados comerciales (local) | Partial | `AdminLotStatusManager` + `AdminLotStatusCard` — cambios locales por sesion | Persistencia real en backend |
 | Busqueda de lotes por manzana/solar | Closed | Filtro de texto en `AdminLotStatusManager` | — |
-| Panel de visitas admin | Closed | Sección "Visitas recibidas" en `/gestion` — lee Supabase `visit_requests`, botones WhatsApp y Google Calendar (OE 025) | — |
+| Panel de visitas admin | Closed | Tab "Visitas" en `/gestion` — lista Supabase `visit_requests` con realtime, badge pendientes, botones WhatsApp + Confirmar (OE 031) | — |
 | WhatsApp human-in-the-loop | Partial | `buildWhatsAppUrl` + apertura de `wa.me/...` | Probar con numero real |
 | Formato de contacto AP-{tel}{Nombre} | Closed | `formatContactName` en `whatsapp.ts`, visible en `WhatsAppAcceptButton` | Probar flujo real |
 | Login admin (`/gestion`) | Closed | `LoginScreen` con credenciales hardcodeadas, **localStorage** (persiste entre sesiones) (OE 025) | Migrar a Supabase Auth |

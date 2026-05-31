@@ -103,8 +103,11 @@ public/
 ### `/gestion` — Panel operativo (nuevo)
 
 - URL no predecible para acceso admin.
-- Login guard con `sessionStorage["aglir_gestion_user"]`. Credenciales hardcodeadas: Agustin/Estefanell33, Rodrigo/Surferogalactico33.
-- Flujo: `LoginScreen` → autenticación → header mínimo "Aglir — Admin" + plano + menú de estado flotante.
+- Login guard con `localStorage["aglir_gestion_user"]` (persiste entre sesiones). Credenciales hardcodeadas: Agustin/Estefanell33, Rodrigo/Surferogalactico33.
+- Flujo: `LoginScreen` → autenticación → header con tabs → **Plano** (plano interactivo + LotStatusMenu) / **Visitas** (panel de solicitudes).
+- Tab "Plano": plano interactivo, toque simple en lote → LotStatusMenu para cambiar estado (upsert Supabase).
+- Tab "Visitas": lista `visit_requests` de Supabase ordenada por `created_at` desc. Realtime (`postgres_changes`). Badge con count pendientes. Botones WhatsApp y Confirmar (update estado en Supabase).
+- Botón `🔔 Notif` en header: activa Web Push manualmente si no hay permiso.
 - Interacción: double-click/double-tap en lote → `LotStatusMenu` flotante con 3 opciones (En venta / Reservado / Vendido).
 - Estado local: cambios de estado viven en `useState` de la página (no persisten entre sesiones).
 - Sin cards, sin listas, sin tablas — solo el plano.

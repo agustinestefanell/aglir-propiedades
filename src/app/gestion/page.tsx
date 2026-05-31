@@ -10,6 +10,8 @@ import { supabase } from "@/lib/supabase";
 
 const SESSION_KEY = "aglir_gestion_user";
 
+type Tab = "plano" | "visitas";
+
 type VisitRow = {
   id: string;
   nombre: string;
@@ -30,17 +32,13 @@ function buildWAUrl(v: VisitRow): string {
   return `https://wa.me/${fullPhone}?text=${msg}`;
 }
 
-function buildCalendarUrl(v: VisitRow): string {
-  const [date, time = "09:00"] = v.dia_hora.split(" ");
-  const [y, m, d] = date.split("-");
-  const [h, min] = time.split(":");
-  const pad = (n: string) => n.padStart(2, "0");
-  const start = `${y}${m}${d}T${pad(h)}${pad(min)}00`;
-  const endH = String(Number(h) + 1).padStart(2, "0");
-  const end = `${y}${m}${d}T${endH}${pad(min)}00`;
-  const text = encodeURIComponent(`Visita Aglir M${v.manzana} S${v.solar}`);
-  const details = encodeURIComponent(`Cliente: ${v.nombre} · WA: ${v.whatsapp}`);
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&dates=${start}/${end}`;
+async function fetchVisits(): Promise<VisitRow[]> {
+  const { data, error } = await supabase
+    .from("visit_requests")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) console.error("Error cargando visitas:", error);
+  return (data as VisitRow[]) ?? [];
 }
 
 export default function GestionPage() {
@@ -48,8 +46,13 @@ export default function GestionPage() {
   const [authChecked, setAuthChecked] = useState(false);
   const [lots, changeStatus] = useLotStates();
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>("plano");
   const [visits, setVisits] = useState<VisitRow[]>([]);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
+
+  const pendingCount = visits.filter(
+    (v) => !v.estado || v.estado === "pendiente"
+  ).length;
 
   useEffect(() => {
     const saved = localStorage.getItem(SESSION_KEY);
@@ -87,10 +90,19 @@ export default function GestionPage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("visit_requests")
-      .select("*")
-      .then(({ data }) => setVisits((data as VisitRow[]) ?? []));
+
+    fetchVisits().then(setVisits);
+
+    const channel = supabase
+      .channel("visit_requests_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "visit_requests" },
+        () => { fetchVisits().then(setVisits); }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
 
   function handleLogin(username: string) {
@@ -116,13 +128,27 @@ export default function GestionPage() {
     );
   }
 
+  async function confirmVisit(id: string) {
+    const { error } = await supabase
+      .from("visit_requests")
+      .update({ estado: "confirmada" })
+      .eq("id", id);
+    if (error) {
+      console.error("Error confirmando visita:", error);
+    } else {
+      setVisits((prev) =>
+        prev.map((v) => v.id === id ? { ...v, estado: "confirmada" } : v)
+      );
+    }
+  }
+
   if (!authChecked) return null;
   if (!user) return <LoginScreen onLogin={handleLogin} />;
 
   return (
     <main className="min-h-screen bg-paper pb-10">
       <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/95 backdrop-blur">
-        {/* Row 1: logo + ADMIN + notif button + logout */}
+        {/* Row 1: logo + ADMIN + notif + logout */}
         <div className="mx-auto flex max-w-[430px] items-center justify-between gap-2 px-4 pt-3 pb-2">
           <div className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -159,102 +185,144 @@ export default function GestionPage() {
           </div>
         </div>
 
-        {/* Row 2: legend */}
-        <div className="mx-auto max-w-[430px] px-4 pb-2 mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-stone-600">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm border border-stone-500 bg-transparent" />
-            <span className="font-semibold">Disponible</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500" />
-            <span className="font-semibold">Reservado</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-yellow-400" />
-            <span className="font-semibold">Vendido</span>
-          </span>
-          <span className="text-stone-400">·</span>
-          <span className="text-stone-500">Tocá un solar para cambiar su estado</span>
+        {/* Row 2: tabs */}
+        <div className="mx-auto flex max-w-[430px] gap-0 px-4">
+          <button
+            type="button"
+            onClick={() => setActiveTab("plano")}
+            className={`flex-1 border-b-2 pb-2 text-sm font-bold transition ${
+              activeTab === "plano"
+                ? "border-leaf text-leaf"
+                : "border-transparent text-stone-400 hover:text-stone-600"
+            }`}
+          >
+            Plano
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("visitas")}
+            className={`flex-1 border-b-2 pb-2 text-sm font-bold transition ${
+              activeTab === "visitas"
+                ? "border-leaf text-leaf"
+                : "border-transparent text-stone-400 hover:text-stone-600"
+            }`}
+          >
+            Visitas{pendingCount > 0 && (
+              <span className="ml-1.5 rounded-full bg-leaf px-1.5 py-0.5 text-[10px] font-black text-white">
+                {pendingCount}
+              </span>
+            )}
+          </button>
         </div>
       </header>
 
-      <InteractivePlan
-        lots={lots}
-        selectedLot={selectedLot}
-        onSelectLot={handleSelectLot}
-        onSchedule={() => undefined}
-        showLotDetails={false}
-        isAdmin
-      />
+      {/* ── Tab: Plano ───────────────────────────────────────────────── */}
+      {activeTab === "plano" && (
+        <>
+          {/* Legend */}
+          <div className="mx-auto max-w-[430px] px-4 pt-2 pb-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-stone-600">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm border border-stone-500 bg-transparent" />
+              <span className="font-semibold">Disponible</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500" />
+              <span className="font-semibold">Reservado</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-yellow-400" />
+              <span className="font-semibold">Vendido</span>
+            </span>
+            <span className="text-stone-400">·</span>
+            <span className="text-stone-500">Tocá un solar para cambiar su estado</span>
+          </div>
 
-      {selectedLot && (
-        <LotStatusMenu
-          lot={selectedLot}
-          onChangeStatus={(status) => handleChangeStatus(selectedLot.id, status)}
-          onClose={() => setSelectedLot(null)}
-        />
+          <InteractivePlan
+            lots={lots}
+            selectedLot={selectedLot}
+            onSelectLot={handleSelectLot}
+            onSchedule={() => undefined}
+            showLotDetails={false}
+            isAdmin
+          />
+
+          {selectedLot && (
+            <LotStatusMenu
+              lot={selectedLot}
+              onChangeStatus={(status) => handleChangeStatus(selectedLot.id, status)}
+              onClose={() => setSelectedLot(null)}
+            />
+          )}
+        </>
       )}
 
-      {/* ── Visitas recibidas ───────────────────────────────────────── */}
-      <section className="mx-auto w-full max-w-[430px] px-4 pt-6">
-        <h2 className="mb-3 text-base font-black text-ink">
-          Visitas recibidas{visits.length > 0 && ` (${visits.length})`}
-        </h2>
+      {/* ── Tab: Visitas ─────────────────────────────────────────────── */}
+      {activeTab === "visitas" && (
+        <section className="mx-auto w-full max-w-[430px] px-4 pt-4 pb-6">
+          {visits.length === 0 ? (
+            <p className="pt-8 text-center text-sm text-stone-500">
+              Sin solicitudes aún.
+            </p>
+          ) : (
+            <div className="grid gap-3">
+              {visits.map((v) => (
+                <div
+                  key={v.id}
+                  className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm"
+                >
+                  <div className="mb-3 flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-black text-ink">{v.nombre}</p>
+                      <p className="text-xs text-stone-500">{v.whatsapp}</p>
+                      <p className="mt-1 text-xs font-semibold text-stone-700">
+                        M{v.manzana} · S{v.solar}
+                      </p>
+                      <p className="text-xs text-stone-500">{v.dia_hora}</p>
+                      {v.comentario && (
+                        <p className="mt-1 text-xs italic text-stone-400">{v.comentario}</p>
+                      )}
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                        v.estado === "confirmada"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {v.estado ?? "pendiente"}
+                    </span>
+                  </div>
 
-        {visits.length === 0 ? (
-          <p className="text-sm text-stone-500">Sin solicitudes aún.</p>
-        ) : (
-          <div className="grid gap-3">
-            {visits.map((v) => (
-              <div
-                key={v.id}
-                className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm"
-              >
-                <div className="mb-3 flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-black text-ink">{v.nombre}</p>
-                    <p className="text-xs text-stone-500">{v.whatsapp}</p>
-                    <p className="mt-1 text-xs font-semibold text-stone-700">
-                      M{v.manzana} · S{v.solar} · {v.dia_hora}
-                    </p>
-                    {v.comentario && (
-                      <p className="mt-1 text-xs text-stone-500 italic">{v.comentario}</p>
+                  <div className="flex gap-2">
+                    <a
+                      href={buildWAUrl(v)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 rounded-md bg-[#25D366] py-2 text-center text-xs font-bold text-white"
+                    >
+                      WhatsApp
+                    </a>
+                    {v.estado !== "confirmada" && (
+                      <button
+                        type="button"
+                        onClick={() => confirmVisit(v.id)}
+                        className="flex-1 rounded-md bg-leaf py-2 text-xs font-bold text-white"
+                      >
+                        Confirmar
+                      </button>
+                    )}
+                    {v.estado === "confirmada" && (
+                      <span className="flex flex-1 items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 py-2 text-xs font-bold text-emerald-700">
+                        ✓ Confirmada
+                      </span>
                     )}
                   </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                      v.estado === "confirmada"
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-yellow-100 text-yellow-800"
-                    }`}
-                  >
-                    {v.estado ?? "pendiente"}
-                  </span>
                 </div>
-
-                <div className="flex gap-2">
-                  <a
-                    href={buildWAUrl(v)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 rounded-md bg-[#25D366] py-2 text-center text-xs font-bold text-white"
-                  >
-                    WhatsApp
-                  </a>
-                  <a
-                    href={buildCalendarUrl(v)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 rounded-md border border-stone-300 bg-white py-2 text-center text-xs font-bold text-stone-700"
-                  >
-                    📅 Calendar
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </main>
   );
 }

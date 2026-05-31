@@ -1256,3 +1256,45 @@ El campo `observaciones` se auto-corrige: la lógica `area_m2 === 0 ? "Pendiente
 - Verificar M6 solar 14 vs plano.
 - Agregar variables VAPID + Supabase en Vercel Dashboard (acción manual).
 - Verificar Vercel build sin errores `supabaseUrl`.
+
+---
+
+## OE 031 — Tabs en admin: Plano / Visitas
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Feature — UX admin
+
+### Cambios ejecutados
+
+**`src/app/gestion/page.tsx` — reescrito:**
+
+**C1 — Tabs en header:**
+- Estado `activeTab: "plano" | "visitas"` (default: "plano").
+- Row 2 del header: dos botones tab con `border-b-2 border-leaf` cuando activo.
+- Badge circular en "Visitas" muestra `pendingCount` (visitas donde `estado !== "confirmada"`) cuando > 0.
+
+**C2 — Tab Visitas:**
+- `fetchVisits()`: select `*` de `visit_requests` ordenado por `created_at desc`.
+- Cards con: nombre, whatsapp, M/S, dia_hora, badge estado, botón WhatsApp, botón Confirmar.
+- `confirmVisit(id)`: update `estado = "confirmada"` en Supabase + optimistic update local.
+- Botón Confirmar oculto cuando ya está confirmada; reemplazado por `✓ Confirmada` badge.
+
+**C3 — Realtime visitas:**
+- `useEffect([user])` incluye suscripción `postgres_changes` en tabla `visit_requests` + cleanup `removeChannel`.
+- Al recibir cualquier evento: refetch completo de visitas → badge actualiza automáticamente.
+
+**C4 — Eliminado panel de visitas del tab Plano:**
+- La sección "Visitas recibidas" que estaba debajo del plano fue removida.
+- La leyenda (Disponible/Reservado/Vendido) movida dentro del tab Plano (ya no en header fijo).
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio.
+
+### Pendientes al cerrar OE 031
+
+- Verificar que `visit_requests` tiene columna `created_at` en Supabase (necesaria para ordenar).
+- Cargar precios reales.
+- Agregar variables VAPID + Supabase en Vercel Dashboard (acción manual).
+- Verificar M6 solar 14 vs plano.
