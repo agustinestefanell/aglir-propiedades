@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-05-31 — OE 019
+Ultima actualizacion: 2026-05-31 — OE 020
 
 ---
 
@@ -23,7 +23,7 @@ Ultima actualizacion: 2026-05-31 — OE 019
 |---|---|---|---|
 | Dataset lotes — metadata m2/solar/area | Partial | 90 lotes: M2(1-18), M3(1-12), M4(6-14+22-24), M6(1-19), M7(1-10), M8(4-17), M9(1-5) | Auditar areas reales de M2(1-5), M3(1-5), M4, M7; verificar M6 solar 14 |
 | Precios reales | Broken | `precio_contado: 0` en todos los lotes | Cargar precios reales cuando se definan |
-| Polígonos SVG trazados | Broken | `polygonMap` vaciado en OE 018 (trazados anteriores eran landscape, inválidos); todos los lotes tienen `polygon: []` | Re-trazar los 90 polígonos con `/admin/trace` sobre imagen portrait `y∈[0,155.20]` |
+| Polígonos SVG trazados | Closed | 90 polígonos cargados en OE 020 — coordenadas portrait `y∈[0,155.20]`, trazados por el usuario en `/admin/trace` | Verificar alineación visual en smartphone real |
 | Observaciones de lotes | Closed | `area_m2 === 0` → "Pendiente de auditoría de área.", resto → "" | — |
 | Solicitudes de visita mock | Partial | 4 registros en `visitRequests.ts` con IDs de lotes validos | Solo para probar admin; no persisten |
 

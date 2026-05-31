@@ -846,7 +846,35 @@ El plano es portrait (vertical/angosto) pero el contenedor ocupaba 100% del anch
 
 ### Pendientes al cerrar OE 019
 
-- **CRÍTICO:** Limpiar localStorage y retrazar los 90 polígonos con `/admin/trace`.
+- ~~Retrazar los 90 polígonos~~ — completado en OE 020.
 - Persistir cambios de estado en backend real.
 - Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Cargar precios reales.
+
+---
+
+## OE 020 — Integrar polygonMap retrazado en lots.ts
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Datos
+
+### Cambio ejecutado
+
+**`src/data/lots.ts` — polygonMap reemplazado:**
+- El usuario completó el retrazado de los 90 lotes sobre la imagen portrait (2897×4496) con la herramienta `/admin/trace`.
+- `polygonMap` vacío reemplazado por el bloque exportado desde la herramienta con 90 entradas.
+- Coordenadas en sistema portrait: `x∈[0,100]`, `y∈[0,155.20]`.
+- `polygon: polygonMap[\`m${manzana}-s${solar}\`] ?? []` ya existía en el map — sin cambios al resto del archivo.
+- Distribución: M2(18) + M3(12) + M4(12) + M6(19) + M7(10) + M8(14) + M9(5) = 90.
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio, sin errores.
+
+### Pendientes al cerrar OE 020
+
+- Verificar alineación visual de polígonos en smartphone real.
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Persistir cambios de estado en backend real.
 - Cargar precios reales.

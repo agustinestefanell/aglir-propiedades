@@ -373,7 +373,7 @@ AdminVisitList:
 
 ## 15. Pendientes tecnicos
 
-- **CRÍTICO:** Retrazar los 90 polígonos con `/admin/trace` sobre imagen portrait `y∈[0,155.20]` y pegar en `lots.ts`. OE 018 limpió polygonMap y corrigió SVG_H del trace tool.
+- ~~Retrazar los 90 polígonos~~ — Completado OE 020. 90 polígonos portrait `y∈[0,155.20]` cargados en `lots.ts/polygonMap`.
 - Auditar manzanas 1, 4, 5 y 7.
 - Cargar precios reales.
 - Eliminar archivos huerfanos: `LotBottomSheet.tsx`, `VisitRequestForm.tsx`.
