@@ -110,14 +110,16 @@ public/
 
 Props: `lots`, `selectedLot`, `onSelectLot`, `onSchedule`, `showLotDetails?`, `isAdmin?`
 
-- Carga imagen del plano desde `/plan/plano-11223.png`.
-- Si no existe, muestra fondo de cuadricula como placeholder.
+- Renderiza un único `<svg viewBox="34 10 52 60">` que contiene un `<image>` del plano + los polígonos SVG en el mismo espacio de coordenadas.
+- El `viewBox` recorta la vista al área de lotes (x:[34,86], y:[10,70]), ocultando parcialmente el cuadro de superficies del lado izquierdo del documento A3.
+- La imagen (`/plan/plano-11223.png`) se coloca en `x="0" y="0" width="100" height="70.72"` — espacio de coordenadas completo; el viewBox hace el clip.
+- Si la imagen no carga, muestra un `<rect>` de color de fondo como placeholder.
 - Implementa zoom/pan con rueda del mouse, drag y pinch de dos dedos (max 6x).
-- Guard `dragMoved` evita que un drag dispare seleccion de lote.
-- SVG superpuesto: `viewBox="0 0 100 70.72"` (alineado con aspect ratio 4682x3311 del plano).
+- Guard `dragMoved` evita que un drag dispare selección de lote.
 - Cuando `showLotDetails=false` (admin), no renderiza `LotDetailPanel`.
 - Cuando `isAdmin=true`, todos los lotes son clickeables independientemente del estado.
-- Muestra leyenda de estados y boton de reset de zoom.
+- Muestra leyenda de estados y botón de reset de zoom.
+- Sin borde, sin rounded — ocupa ancho completo de su contenedor.
 
 ### `LotPolygon`
 
@@ -126,8 +128,8 @@ Props: `lot`, `selected`, `onSelect`, `forceClickable?`
 - Renderiza un `<polygon>` SVG por lote.
 - Solo los `disponible` son clickeables (a menos que `forceClickable=true`).
 - Colores: disponible = sin relleno/borde gris, reservado = verde esmeralda, vendido = amarillo.
-- Hits area invisible mas ancha (strokeWidth=7) para facilitar el tap en mobile.
-- Numero de solar como texto centrado en el poligono.
+- Área de hit invisible más ancha (strokeWidth=7) para facilitar el tap en mobile.
+- Sin etiqueta de número — el plano original ya tiene los números impresos en la imagen.
 - Accesible por teclado (Enter / Space).
 
 ### `LotDetailPanel`

@@ -40,23 +40,18 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-6xl px-4 py-5 md:py-8">
-        <section className="mb-5">
-          <h1 className="text-3xl font-black leading-tight text-ink md:text-4xl">
-            Terrenos en Barros Blancos
-          </h1>
-          <p className="mt-1.5 text-base text-stone-600">
-            Fraccionamiento 11223 · Canelones, Uruguay
-          </p>
-        </section>
-
-        <InteractivePlan
-          lots={lots}
-          selectedLot={selectedLot}
-          onSelectLot={setSelectedLot}
-          onSchedule={handleSchedule}
-        />
+      <div className="mx-auto max-w-6xl px-4 pt-5 pb-4 md:pt-8 md:pb-5">
+        <h1 className="text-3xl font-black leading-tight text-ink md:text-4xl">
+          Terrenos en Barros Blancos
+        </h1>
       </div>
+
+      <InteractivePlan
+        lots={lots}
+        selectedLot={selectedLot}
+        onSelectLot={setSelectedLot}
+        onSchedule={handleSchedule}
+      />
 
       {bookingLot && (
         <VisitBookingModal

@@ -388,3 +388,44 @@ Dos pasos a ejecutar en terminal local:
 
 - Crear repo en GitHub y pushear los 9 commits.
 - Verificar que Vercel se reconecta automáticamente tras el push.
+
+---
+
+## OE 010 — Ajustes UI página pública
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** UI
+
+### Cambios ejecutados
+
+**C1 — Subtítulo eliminado (`page.tsx`):**
+- Quitado `<p>Fraccionamiento 11223 · Canelones, Uruguay</p>` debajo del H1.
+
+**C2 — Plano ancho completo (`page.tsx`):**
+- `<InteractivePlan>` movido fuera del `<div className="mx-auto max-w-6xl px-4">`.
+- El título conserva su container con padding; el plano ocupa 100% del viewport.
+- Verificado: `section.x = 0, width = 390` en mobile y `width = 1280` en desktop.
+
+**C3 — Números SVG eliminados (`LotPolygon.tsx`):**
+- Quitado el elemento `<text>` con el número de solar y el cálculo del centroide (cx, cy).
+- Verificado: `document.querySelectorAll('svg text').length = 0`.
+
+**C4 — Recorte de tabla A3 (`InteractivePlan.tsx`):**
+- Arquitectura cambiada: `<img>` + `<svg>` superpuesto → único `<svg viewBox="34 10 52 60">` con `<image>` adentro.
+- El `viewBox` recorta el espacio de coordenadas para mostrar solo la zona de lotes (x:[34,86], y:[10,70]).
+- Mejora parcial: los lotes llenan más pantalla y se oculta la mayor parte del cuadro de superficies.
+- Limitación estructural: el cuadro y los polígonos de M4/M2 comparten coordenadas (x≈38-44). Eliminar completamente el cuadro requiere editar el PNG fuente.
+- La carátula (título, firmas) del lado derecho del A3 también sigue visible por la misma razón.
+
+### Archivos tocados
+
+- `src/app/page.tsx`
+- `src/components/plan/InteractivePlan.tsx`
+- `src/components/plan/LotPolygon.tsx`
+- `handoff.md`, `PRODUCT_STATUS.md`, `AglirPlans.md` (actualizados)
+
+### Pendientes al cerrar OE 010
+
+- Editar `plano-11223.png` para recortar el cuadro de superficies y la carátula — luego re-verificar viewBox (y posiblemente re-trazar polígonos si el crop cambia el espacio de coordenadas).
+- Push a GitHub (pendiente de OE 009).

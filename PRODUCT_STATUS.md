@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-05-30 — OE 008
+Ultima actualizacion: 2026-05-31 — OE 010
 
 ---
 
@@ -35,10 +35,13 @@ Ultima actualizacion: 2026-05-30 — OE 008
 |---|---|---|---|
 | Imagen real del plano | Closed | `public/plan/plano-11223.png` (4682x3311 px) | — |
 | Plano con zoom/pan (rueda + drag + pinch) | Closed | `InteractivePlan` con eventos nativos, max 6x | Probar en smartphone real |
+| Plano ancho completo (sin márgenes laterales) | Closed | `InteractivePlan` fuera del container max-w-6xl — validado Playwright 390 y 1280px | — |
 | Colores de estados en plano | Closed | disponible=sin relleno, reservado=verde, vendido=amarillo | — |
-| SVG alineado con plano (viewBox correcto) | Closed | `viewBox="0 0 100 70.72"` == aspect ratio 4682/3311 | — |
+| SVG unificado con imagen (un solo SVG) | Closed | `<svg viewBox="34 10 52 60">` con `<image>` adentro — imagen y polígonos en mismo espacio de coordenadas | — |
+| Números SVG sobre lotes | Closed | Eliminados de `LotPolygon.tsx` — el plano original tiene los números impresos | — |
 | Polígonos clickeables sobre plano | Closed | 90 polígonos trazados, click abre LotDetailPanel — validado Playwright | — |
-| Panel lateral de detalle (sin cerrar plano) | Partial | `LotDetailPanel` funcional | Pendiente probar con poligonos reales |
+| Recorte de tabla A3 (cuadro superficies) | Partial | viewBox "34 10 52 60" mejora la vista pero cuadro y lotes M4/M2 comparten coordenadas — recorte completo requiere editar el PNG | Editar PNG fuente |
+| Panel lateral de detalle (sin cerrar plano) | Closed | `LotDetailPanel` funcional — validado con polígonos reales | — |
 | Flujo de agenda (registro + booking) | Partial | `VisitBookingModal` 2 pasos, localStorage session | Sin persistencia backend; horario siempre "a confirmar" |
 | Persistencia de solicitudes de visita | Broken | Solo en estado React de la sesion (se pierde al recargar) | Requiere backend |
 

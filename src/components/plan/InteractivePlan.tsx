@@ -172,6 +172,11 @@ export function InteractivePlan({
 
   const panelVisible = showLotDetails && selectedLot;
 
+  // viewBox crops the A3 document to the lot area, hiding the cadastral
+  // table block that occupies the left portion of the plan image.
+  // Lots span roughly x:[38,74] y:[13,65] in the 0-100 / 0-70.72 space.
+  const VIEW = "34 10 52 60";
+
   return (
     <section
       className={`grid gap-4 ${panelVisible ? "md:grid-cols-[1fr_300px]" : ""}`}
@@ -179,7 +184,7 @@ export function InteractivePlan({
       {/* ── Plan container ─────────────────────────────────────────── */}
       <div
         ref={containerRef}
-        className="relative overflow-hidden rounded-md border border-stone-200 bg-stone-100 shadow-sm select-none touch-none"
+        className="relative overflow-hidden bg-stone-100 select-none touch-none"
         style={{
           minHeight: panelVisible ? "46vh" : "56vh",
           cursor: "grab",
@@ -193,27 +198,29 @@ export function InteractivePlan({
             width: "100%",
             height: "100%",
             willChange: "transform",
-            position: "relative",
           }}
         >
-          {planReady ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src="/plan/plano-11223.png"
-              alt="Plano fraccionamiento 11223"
-              draggable={false}
-              className="h-full w-full object-contain"
-            />
-          ) : (
-            <div className="h-full w-full bg-[linear-gradient(90deg,#e7e1d2_1px,transparent_1px),linear-gradient(#e7e1d2_1px,transparent_1px)] bg-[size:28px_28px]" />
-          )}
-
+          {/* Single SVG: plan image + polygons share the same coordinate space.
+              viewBox clips to the lot area; the <image> fills the full 100×70.72
+              space so polygons align pixel-perfect with the underlying plan. */}
           <svg
-            viewBox="0 0 100 70.72"
+            viewBox={VIEW}
             preserveAspectRatio="xMidYMid meet"
-            className="absolute inset-0 h-full w-full"
+            className="block h-full w-full"
             aria-label="Plano interactivo de lotes"
           >
+            {planReady ? (
+              <image
+                href="/plan/plano-11223.png"
+                x="0"
+                y="0"
+                width="100"
+                height="70.72"
+                preserveAspectRatio="xMidYMid meet"
+              />
+            ) : (
+              <rect x="0" y="0" width="100" height="70.72" fill="#e7e1d2" />
+            )}
             {drawableLots.map((lot) => (
               <LotPolygon
                 key={lot.id}

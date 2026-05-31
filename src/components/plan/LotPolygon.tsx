@@ -25,8 +25,6 @@ const strokeClass: Record<LotStatus, string> = {
 export function LotPolygon({ lot, selected, onSelect, forceClickable }: LotPolygonProps) {
   const isClickable = forceClickable || lot.estado === "disponible";
   const points = lot.polygon.map((p) => `${p.x},${p.y}`).join(" ");
-  const cx = lot.polygon.reduce((s, p) => s + p.x, 0) / lot.polygon.length;
-  const cy = lot.polygon.reduce((s, p) => s + p.y, 0) / lot.polygon.length;
 
   function handleKeyDown(e: KeyboardEvent<SVGGElement>) {
     if (!isClickable) return;
@@ -69,16 +67,6 @@ export function LotPolygon({ lot, selected, onSelect, forceClickable }: LotPolyg
           vectorEffect="non-scaling-stroke"
         />
       )}
-      <text
-        x={cx}
-        y={cy}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        className="pointer-events-none select-none fill-stone-700 font-bold"
-        fontSize="2"
-      >
-        {lot.solar}
-      </text>
     </g>
   );
 }
