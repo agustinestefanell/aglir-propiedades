@@ -27,7 +27,16 @@ export function LotDetailPanel({ lot, onClose, onSchedule }: Props) {
   const cfg = statusConfig[lot.estado];
 
   return (
-    <aside className="flex flex-col gap-4 rounded-md border border-stone-200 bg-white p-5 shadow-sm">
+    // Mobile: fixed bottom sheet — overlay sobre el plano
+    // Desktop (md+): sticky en la columna derecha del grid
+    <aside className="
+      fixed bottom-0 left-0 right-0 z-30
+      md:sticky md:top-14 md:bottom-auto md:left-auto md:right-auto md:z-10 md:self-start
+      flex flex-col gap-3
+      border-t border-stone-200 md:border md:rounded-md
+      bg-white px-5 pt-4 pb-6 md:p-5
+      shadow-[0_-4px_16px_rgba(0,0,0,0.08)] md:shadow-sm
+    ">
       <div className="flex items-start justify-between gap-3">
         <div>
           <span
@@ -35,7 +44,7 @@ export function LotDetailPanel({ lot, onClose, onSchedule }: Props) {
           >
             {cfg.label}
           </span>
-          <h2 className="mt-2 text-xl font-black text-ink">
+          <h2 className="mt-1.5 text-xl font-black text-ink">
             Manzana {lot.manzana}
           </h2>
           <p className="text-sm font-semibold text-stone-600">Solar {lot.solar}</p>
@@ -55,26 +64,25 @@ export function LotDetailPanel({ lot, onClose, onSchedule }: Props) {
           Superficie
         </dt>
         <dd className="mt-1 text-3xl font-black text-ink">
-          {lot.area_m2} <span className="text-xl font-bold text-stone-500">m²</span>
+          {lot.area_m2 > 0 ? lot.area_m2 : "—"}{" "}
+          <span className="text-xl font-bold text-stone-500">m²</span>
         </dd>
       </dl>
 
-      <div className="mt-auto">
-        <button
-          type="button"
-          onClick={onSchedule}
-          disabled={lot.estado !== "disponible"}
-          className="min-h-12 w-full rounded-md bg-leaf px-5 py-3 text-base font-bold text-white shadow-sm transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-stone-300 disabled:text-stone-500"
-        >
-          {lot.estado === "disponible" ? "Agendar visita" : "No disponible"}
-        </button>
+      <button
+        type="button"
+        onClick={onSchedule}
+        disabled={lot.estado !== "disponible"}
+        className="min-h-12 w-full rounded-md bg-leaf px-5 py-3 text-base font-bold text-white shadow-sm transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-stone-300 disabled:text-stone-500"
+      >
+        {lot.estado === "disponible" ? "Agendar visita" : "No disponible"}
+      </button>
 
-        {lot.estado === "disponible" && (
-          <p className="mt-2 text-center text-xs leading-5 text-stone-500">
-            Horario a confirmar · Te contactamos por WhatsApp
-          </p>
-        )}
-      </div>
+      {lot.estado === "disponible" && (
+        <p className="text-center text-xs leading-5 text-stone-500">
+          Horario a confirmar · Te contactamos por WhatsApp
+        </p>
+      )}
     </aside>
   );
 }

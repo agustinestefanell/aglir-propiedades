@@ -120,6 +120,9 @@ Props: `lots`, `selectedLot`, `onSelectLot`, `onSchedule`, `showLotDetails?`, `i
 - Cuando `isAdmin=true`, todos los lotes son clickeables independientemente del estado.
 - Muestra leyenda de estados y botón de reset de zoom.
 - Sin borde, sin rounded — ocupa ancho completo de su contenedor.
+- Contenedor usa `height: "60vh"` (no `minHeight`) para que el SVG se constraja correctamente.
+- Un `<rect fill="white" width="44" pointerEvents="none">` oculta la tabla de coordenadas del A3 (x:[0,44]).
+- Hint "Tocá un solar disponible" se oculta cuando el panel de detalle está abierto.
 
 ### `LotPolygon`
 
@@ -136,9 +139,11 @@ Props: `lot`, `selected`, `onSelect`, `forceClickable?`
 
 Props: `lot`, `onClose`, `onSchedule`
 
-- Panel lateral con: badge de estado, Manzana, Solar, m² grande.
-- Boton "Agendar visita" (deshabilitado si no disponible).
-- No cierra el plano: en mobile aparece debajo del plano, en desktop a la derecha (grid de dos columnas).
+- Badge de estado, Manzana, Solar, m² (muestra "—" si area=0), botón "Agendar visita".
+- Mobile: `fixed bottom-0 left-0 right-0 z-30` — bottom sheet fijo, superpuesto sobre el plano.
+- Desktop (md+): `sticky top-14 self-start` en columna derecha del grid — sigue visible al hacer scroll.
+- Botón "Agendar visita" siempre visible sin scroll (deshabilitado si no disponible).
+- Nota "Horario a confirmar · Te contactamos por WhatsApp" fija bajo el botón.
 
 ### `VisitBookingModal`
 

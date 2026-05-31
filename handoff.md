@@ -427,5 +427,52 @@ Dos pasos a ejecutar en terminal local:
 
 ### Pendientes al cerrar OE 010
 
-- Editar `plano-11223.png` para recortar el cuadro de superficies y la carátula — luego re-verificar viewBox (y posiblemente re-trazar polígonos si el crop cambia el espacio de coordenadas).
+- Editar `plano-11223.png` para recortar la carátula del lado derecho del A3.
 - Push a GitHub (pendiente de OE 009).
+
+---
+
+## OE 011 — Ajustes UI panel derecho y tabla izquierda
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** UI
+
+### Cambios ejecutados
+
+**C1 — Tabla de coordenadas ocultada (`InteractivePlan.tsx`):**
+- `<rect x="0" y="0" width="44" height="70.72" fill="white" pointerEvents="none" />` insertado entre `<image>` y polígonos en el SVG.
+- Cubre x:[0,44] del espacio de coordenadas donde se encuentra la tabla de coordenadas X/Y del plano A3.
+- `pointerEvents="none"` garantiza que los clicks pasen a los polígonos.
+- Los lotes M4 (x:[38.31,44]) muestran fondo blanco en lugar del plano; sus contornos SVG siguen visibles y clickeables.
+
+**C2/C4 — Panel sticky (desktop) y bottom sheet (mobile) (`LotDetailPanel.tsx`):**
+- Mobile: `fixed bottom-0 left-0 right-0 z-30` — superpuesto sobre el plano como bottom sheet.
+- Desktop: `md:sticky md:top-14 md:self-start` — fijo en columna derecha al hacer scroll.
+- Verificado: mobile `position:fixed, bottom:0px`; desktop `position:sticky, top:56px, width:300px`.
+
+**C3 — Botón "Agendar visita" siempre visible:**
+- Con el bottom sheet fijo en mobile, el botón queda en el viewport. Verificado: `top:740, bottom:788` dentro de 844px.
+- Nota "Horario a confirmar" aparece inmediatamente bajo el botón, sin scroll.
+
+**Bug fix — SVG expandía el contenedor en desktop (`InteractivePlan.tsx`):**
+- `minHeight: "60vh"` → `height: "60vh"` en el plan container.
+- Con `minHeight`, el SVG usaba su tamaño intrínseco (ratio viewBox 52:60 → ~1476px en desktop 1280px) y el contenedor se expandía, dejando invisible el 70% inferior del plano. Ahora el SVG se constrae a `height: 100%` de los 60vh del contenedor.
+
+**Mejora adicional (`InteractivePlan.tsx`):**
+- Hint text "Tocá un solar disponible" se oculta cuando el panel está abierto (`!panelVisible`).
+
+**Ajuste cosmético (`LotDetailPanel.tsx`):**
+- `area_m2 === 0` muestra "— m²" en lugar de "0 m²".
+
+### Archivos tocados
+
+- `src/components/plan/InteractivePlan.tsx`
+- `src/components/plan/LotDetailPanel.tsx`
+- `handoff.md`, `PRODUCT_STATUS.md`, `AglirPlans.md` (actualizados)
+
+### Pendientes al cerrar OE 011
+
+- Editar PNG para ocultar la carátula del lado derecho del A3.
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Cargar precios reales.

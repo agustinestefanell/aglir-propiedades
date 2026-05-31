@@ -179,14 +179,14 @@ export function InteractivePlan({
 
   return (
     <section
-      className={`grid gap-4 ${panelVisible ? "md:grid-cols-[1fr_300px]" : ""}`}
+      className={panelVisible ? "md:grid md:grid-cols-[1fr_300px] md:items-start md:gap-4" : ""}
     >
       {/* ── Plan container ─────────────────────────────────────────── */}
       <div
         ref={containerRef}
         className="relative overflow-hidden bg-stone-100 select-none touch-none"
         style={{
-          minHeight: panelVisible ? "46vh" : "56vh",
+          height: "60vh",
           cursor: "grab",
         }}
       >
@@ -221,6 +221,12 @@ export function InteractivePlan({
             ) : (
               <rect x="0" y="0" width="100" height="70.72" fill="#e7e1d2" />
             )}
+            {/* Covers the coordinate table printed on the left side of the
+                A3 document. Table extends to x≈42; rect to x=44 gives margin.
+                pointerEvents=none so clicks pass through to lot polygons. */}
+            {planReady && (
+              <rect x="0" y="0" width="44" height="70.72" fill="white" pointerEvents="none" />
+            )}
             {drawableLots.map((lot) => (
               <LotPolygon
                 key={lot.id}
@@ -234,13 +240,15 @@ export function InteractivePlan({
         </div>
 
         {/* ── Fixed overlays (no zoom) ───────────────────────────── */}
-        <div className="pointer-events-none absolute left-3 top-3 rounded-md bg-white/90 px-2.5 py-1.5 text-[11px] font-semibold text-stone-600 shadow-sm">
-          {drawableLots.length === 0
-            ? "Plano pendiente de trazado"
-            : isAdmin
-              ? "Seleccioná un solar"
-              : "Tocá un solar disponible"}
-        </div>
+        {!panelVisible && (
+          <div className="pointer-events-none absolute left-3 top-3 rounded-md bg-white/90 px-2.5 py-1.5 text-[11px] font-semibold text-stone-600 shadow-sm">
+            {drawableLots.length === 0
+              ? "Plano pendiente de trazado"
+              : isAdmin
+                ? "Seleccioná un solar"
+                : "Tocá un solar disponible"}
+          </div>
+        )}
 
         {/* Legend */}
         <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap gap-2 rounded-md bg-white/90 px-2.5 py-1.5 text-[10px] font-bold text-stone-700 shadow-sm">
