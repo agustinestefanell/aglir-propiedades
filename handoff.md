@@ -1218,5 +1218,41 @@ Vercel fallaba con `supabaseUrl is required` en `/api/push/subscribe`. Causa: am
 - Verificar que Vercel build pasa sin el error `supabaseUrl is required`.
 - Verificar en Supabase que RLS permite operaciones en `push_subscriptions`.
 - Agregar variables VAPID + Supabase en Vercel Dashboard (acción manual).
-- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- ~~Auditar áreas reales de M2, M3, M4, M7~~ — completado OE 030.
 - Cargar precios reales.
+
+---
+
+## OE 030 — Actualizar áreas auditadas en lots.ts
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Datos
+
+### Cambios ejecutados
+
+**`src/data/lots.ts` — `auditedLotRows`:**
+
+| Manzana | Cambios |
+|---|---|
+| M2 s1-s5 | 0 → 404, 405, 405, 402, 402 |
+| M3 s1-s5 | 0 → 567.48, 479.93, 480.15, 179.93, 748.47 |
+| M4 s6-s14, s22-s24 | todos 0 → 544.51, 402, 402, 600, 600, 600, 598.75, 598.53, 598.30, 420, 420, 423.01 |
+| M7 s1-s10 | todos 0 → 420, 420, 417.43, 549.60, 549.60, 549.60, 405.60, 405.60, 400.56, 432 |
+| M8 s10 | 403.8 → 411.70 |
+| M8 s11 | 400.67 → 424.06 |
+| M9 s1 | 594.25 → 495.92 |
+| M9 s2-s5 | 485.04 → 405.72 |
+
+El campo `observaciones` se auto-corrige: la lógica `area_m2 === 0 ? "Pendiente..." : ""` ya no aplica a ningún lote (todos tienen área > 0 ahora). Sin cambios al código de la lógica.
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio.
+
+### Pendientes al cerrar OE 030
+
+- Cargar precios reales.
+- Verificar M6 solar 14 vs plano.
+- Agregar variables VAPID + Supabase en Vercel Dashboard (acción manual).
+- Verificar Vercel build sin errores `supabaseUrl`.

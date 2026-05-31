@@ -257,13 +257,13 @@ type User = {         // guardado en localStorage["aglir_user"]
 
 | Manzana | Solares | Cantidad | Estado de areas |
 |---|---|---|---|
-| 2 | 1-18 | 18 | s.1-5 placeholder 0; s.6-18 auditados |
-| 3 | 1-12 | 12 | s.1-5 placeholder 0; s.6-12 auditados |
-| 4 | 6-14, 22-24 | 12 | todos placeholder 0 |
+| 2 | 1-18 | 18 | todos auditados (OE 030) |
+| 3 | 1-12 | 12 | todos auditados (OE 030) |
+| 4 | 6-14, 22-24 | 12 | todos auditados (OE 030) |
 | 6 | 1-19 | 19 | todos auditados (verificar s.14 vs plano) |
-| 7 | 1-10 | 10 | todos placeholder 0 |
-| 8 | 4-17 | 14 | todos auditados |
-| 9 | 1-5 | 5 | todos auditados |
+| 7 | 1-10 | 10 | todos auditados (OE 030) |
+| 8 | 4-17 | 14 | todos auditados; s.10 y s.11 corregidos OE 030 |
+| 9 | 1-5 | 5 | todos auditados; corregidos OE 030 |
 | **Total** | | **90** | |
 
 - Manzana 9 solar 6: excluida (E. LIBRE).

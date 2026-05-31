@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-05-31 — OE 029
+Ultima actualizacion: 2026-05-31 — OE 030
 
 ---
 
@@ -21,7 +21,7 @@ Ultima actualizacion: 2026-05-31 — OE 029
 
 | Feature | Estado | Evidencia | Pendiente |
 |---|---|---|---|
-| Dataset lotes — metadata m2/solar/area | Partial | 90 lotes: M2(1-18), M3(1-12), M4(6-14+22-24), M6(1-19), M7(1-10), M8(4-17), M9(1-5) | Auditar areas reales de M2(1-5), M3(1-5), M4, M7; verificar M6 solar 14 |
+| Dataset lotes — metadata m2/solar/area | Closed | 90 lotes auditados completos (OE 030): M2, M3, M4, M7 completadas; M8 s10/s11 y M9 corregidas | Verificar M6 s.14 vs plano |
 | Precios reales | Broken | `precio_contado: 0` en todos los lotes | Cargar precios reales cuando se definan |
 | Polígonos SVG trazados | Closed | 90 polígonos cargados en OE 020 — coordenadas portrait `y∈[0,155.20]`, trazados por el usuario en `/admin/trace` | Verificar alineación visual en smartphone real |
 | Observaciones de lotes | Closed | `area_m2 === 0` → "Pendiente de auditoría de área.", resto → "" | — |
