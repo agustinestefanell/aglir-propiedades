@@ -241,7 +241,8 @@ type User = {         // guardado en localStorage["aglir_user"]
 - Manzana 9 solar 6: excluida (E. LIBRE).
 - Manzanas 1 y 5: excluidas, no se conocen sus solares de venta aun.
 - `precio_contado` y `precio_financiado`: `0` en todos (placeholder tecnico).
-- `polygon`: `[]` en todos (pendiente de trazado con `/admin/trace`).
+- `polygon`: polígonos cargados desde `polygonMap` (90 trazados). Lotes sin entrada en el mapa reciben `[]`.
+- `observaciones`: `"Pendiente de auditoría de área."` si `area_m2 === 0`, `""` en caso contrario.
 - Todos los lotes inicializados con `estado: "disponible"`.
 
 ---
@@ -350,7 +351,7 @@ AdminVisitList:
 
 ## 15. Pendientes tecnicos
 
-- Trazar los 58 poligonos con `/admin/trace` y cargar en `lots.ts`.
+- ~~Trazar los 90 polígonos con `/admin/trace` y cargar en `lots.ts`.~~ — Completado OE 008.
 - Auditar manzanas 1, 4, 5 y 7.
 - Cargar precios reales.
 - Eliminar archivos huerfanos: `LotBottomSheet.tsx`, `VisitRequestForm.tsx`.

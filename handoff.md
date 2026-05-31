@@ -308,3 +308,43 @@ Ver CodingWorkshop.md — `useEffect([selectedId, points, closed])` genérico qu
 - Trazar los 90 polígonos.
 - Probar el flujo completo: trazar → cerrar → "Nuevo" → confirmar que el polígono verde persiste.
 - Exportar y pegar en lots.ts, verificar build.
+
+---
+
+## OE 008 — Fix observaciones y validar lots.ts
+
+**Fecha:** 2026-05-30
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Fix + Validación
+
+### Objetivo
+
+Corregir el campo `observaciones` del map en `lots.ts` (ya no era correcto tras cargar los 90 polígonos) y limpiar un punto duplicado en `m3-s1`.
+
+### Acción ejecutada
+
+**Cambio 1 — observaciones corregidas:**
+- `area_m2 === 0` → `"Pendiente de auditoría de área."` (antes decía "Pendiente de auditoria. Area placeholder.")
+- `area_m2 > 0` → `""` (antes decía "Metadata auditada desde plano. Poligono pendiente de trazado." — incorrecto porque los polígonos ya están cargados)
+
+**Cambio 2 — fix punto duplicado m3-s1:**
+- Array original: 6 puntos con `{"x":57.17,"y":63.46}` y `{"x":58.36,"y":63.62}` redundantes.
+- Array corregido: 4 puntos únicos `[{57.9,58.93},{59.46,59.32},{58.38,63.62},{56.87,62.93}]`.
+
+**Validación:**
+- `tsc --noEmit`: limpio, sin errores.
+- Playwright (390×844 mobile): 180 elementos `<polygon>` en DOM, imagen del plano cargada correctamente.
+- Click en polígono → `LotDetailPanel` abre con Manzana, Solar y m².
+- Campo `observaciones` vacío para lotes con área > 0 (correcto).
+
+### Archivos tocados
+
+- `src/data/lots.ts`
+- `handoff.md`, `PRODUCT_STATUS.md`, `AglirPlans.md` (actualizados)
+
+### Pendientes al cerrar OE 008
+
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Cargar precios reales.
+- Limpiar archivos huérfanos.
+- Conectar persistencia real.

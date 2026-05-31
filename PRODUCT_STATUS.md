@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-05-30 — OE 001
+Ultima actualizacion: 2026-05-30 — OE 008
 
 ---
 
@@ -23,7 +23,8 @@ Ultima actualizacion: 2026-05-30 — OE 001
 |---|---|---|---|
 | Dataset lotes — metadata m2/solar/area | Partial | 90 lotes: M2(1-18), M3(1-12), M4(6-14+22-24), M6(1-19), M7(1-10), M8(4-17), M9(1-5) | Auditar areas reales de M2(1-5), M3(1-5), M4, M7; verificar M6 solar 14 |
 | Precios reales | Broken | `precio_contado: 0` en todos los lotes | Cargar precios reales cuando se definan |
-| Poligonos SVG trazados | Broken | `polygon: []` en todos los lotes | Trazar con `/admin/trace`, pegar en `lots.ts` |
+| Polígonos SVG trazados | Closed | 90 polígonos en `polygonMap` de `lots.ts`; 180 elementos `<polygon>` confirmados en DOM | — |
+| Observaciones de lotes | Closed | `area_m2 === 0` → "Pendiente de auditoría de área.", resto → "" | — |
 | Solicitudes de visita mock | Partial | 4 registros en `visitRequests.ts` con IDs de lotes validos | Solo para probar admin; no persisten |
 
 ---
@@ -36,7 +37,7 @@ Ultima actualizacion: 2026-05-30 — OE 001
 | Plano con zoom/pan (rueda + drag + pinch) | Closed | `InteractivePlan` con eventos nativos, max 6x | Probar en smartphone real |
 | Colores de estados en plano | Closed | disponible=sin relleno, reservado=verde, vendido=amarillo | — |
 | SVG alineado con plano (viewBox correcto) | Closed | `viewBox="0 0 100 70.72"` == aspect ratio 4682/3311 | — |
-| Poligonos clickeables sobre plano | Broken | Todos `polygon:[]`, ningun poligono se dibuja | Requiere trazado |
+| Polígonos clickeables sobre plano | Closed | 90 polígonos trazados, click abre LotDetailPanel — validado Playwright | — |
 | Panel lateral de detalle (sin cerrar plano) | Partial | `LotDetailPanel` funcional | Pendiente probar con poligonos reales |
 | Flujo de agenda (registro + booking) | Partial | `VisitBookingModal` 2 pasos, localStorage session | Sin persistencia backend; horario siempre "a confirmar" |
 | Persistencia de solicitudes de visita | Broken | Solo en estado React de la sesion (se pierde al recargar) | Requiere backend |
