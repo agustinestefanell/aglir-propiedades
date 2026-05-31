@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-05-31 — OE 022
+Ultima actualizacion: 2026-05-31 — OE 023
 
 ---
 
@@ -45,8 +45,8 @@ Ultima actualizacion: 2026-05-31 — OE 022
 | Panel lateral — desktop sticky | Closed | `position:sticky top:56px width:300px` — validado Playwright | — |
 | Panel — mobile bottom sheet | Closed | `position:fixed bottom:0` — superpuesto sobre plano, validado Playwright | — |
 | Botón "Agendar visita" siempre visible | Closed | Bottom sheet fijo — botón en viewport sin scroll | — |
-| Flujo de agenda (registro + booking) | Partial | `VisitBookingModal` 2 pasos, localStorage session; confirmación "Solicitud enviada." | Sin persistencia backend; horario siempre "a confirmar" |
-| Persistencia de solicitudes de visita | Broken | Solo en estado React de la sesion (se pierde al recargar) | Requiere backend |
+| Flujo de agenda (registro + booking) | Closed | `VisitBookingModal` 2 pasos; guarda en Supabase `visit_requests`; error visible si falla | — |
+| Persistencia de solicitudes de visita | Closed | Supabase `visit_requests` — persiste entre sesiones (OE 023) | — |
 | Lotes no disponibles bloqueados | Closed | `LotDetailPanel` muestra "Este terreno no está disponible." + botón deshabilitado para reservado/vendido | — |
 
 ---
@@ -63,8 +63,8 @@ Ultima actualizacion: 2026-05-31 — OE 022
 | WhatsApp human-in-the-loop | Partial | `buildWhatsAppUrl` + apertura de `wa.me/...` | Probar con numero real |
 | Formato de contacto AP-{tel}{Nombre} | Closed | `formatContactName` en `whatsapp.ts`, visible en `WhatsAppAcceptButton` | Probar flujo real |
 | Login admin (`/gestion`) | Closed | `LoginScreen` con credenciales hardcodeadas, sessionStorage | Migrar a Supabase Auth |
-| Cambio de estado desde plano (admin) | Closed | Single-tap → `LotStatusMenu` bottom sheet; color cambia inmediatamente en ambas páginas vía localStorage | Persistir en DB |
-| Sincronización Admin ↔ Público | Closed | `useLotStates` hook + `localStorage["aglir_lot_states"]` — fuente única de verdad; `focus` event re-carga en multitab | Reemplazar con backend |
+| Cambio de estado desde plano (admin) | Closed | Single-tap → `LotStatusMenu`; upsert en Supabase `lot_states`; optimistic update inmediato (OE 023) | — |
+| Sincronización Admin ↔ Público | Closed | `useLotStates` con Supabase realtime (`postgres_changes`) — cambios en admin se propagan en tiempo real a la página pública (OE 023) | — |
 | URL admin no predecible | Closed | `/gestion` en lugar de `/admin`; botón Admin eliminado del header público | — |
 | Logo Aglir en header | Closed | `public/logo.jpg` integrado en ambas páginas (`img` h-8 w-8) | — |
 
@@ -91,7 +91,7 @@ Ultima actualizacion: 2026-05-31 — OE 022
 
 | Feature | Estado | Nota |
 |---|---|---|
-| Backend / Supabase | Deferred | Requiere OE especifica |
+| Backend / Supabase | Closed | `@supabase/supabase-js@2.106.2` instalado; `src/lib/supabase.ts` con env vars; tablas `lot_states` + `visit_requests` integradas (OE 023) |
 | Login admin | Deferred | Requiere OE especifica |
 | Google Calendar | Deferred | Requiere OE especifica |
 | Georreferenciacion real | Deferred | No es objetivo del MVP |

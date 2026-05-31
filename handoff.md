@@ -946,5 +946,55 @@ El plano es portrait (vertical/angosto) pero el contenedor ocupaba 100% del anch
 - Verificar que /gestion carga el LoginScreen en el navegador.
 - Verificar alineación visual de polígonos en smartphone real.
 - Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
-- Persistir cambios de estado en backend real.
+- ~~Persistir cambios de estado en backend real~~ — completado OE 023.
+- Cargar precios reales.
+
+---
+
+## OE 023 — Integrar Supabase: persistencia real de estados y visitas
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Backend — integración Supabase
+
+### Cambios ejecutados
+
+**P1 — Instalación:**
+- `npm install @supabase/supabase-js` → v2.106.2.
+
+**P2+P5 — `src/lib/supabase.ts` (nuevo):**
+- Cliente Supabase usando `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+- `.env.local` creado con las credenciales (excluido de git por `.env*` en `.gitignore`).
+
+**P3 — `src/lib/lotStates.ts` reescrito:**
+- Eliminado localStorage completamente.
+- `fetchOverrides()` lee tabla `lot_states` (`lot_id`, `estado`) desde Supabase.
+- `upsertState()` hace upsert en la tabla.
+- `useLotStates()` en `useEffect`: fetch inicial + suscripción realtime `postgres_changes` en tabla `lot_states`. Al recibir cualquier cambio, refetch completo. Retorna canal para cleanup.
+- Flujo: admin cambia estado → `changeStatus()` → optimistic update local → upsert Supabase → evento realtime → página pública refetch → re-render con nuevo estado.
+
+**P4 — `src/components/visits/VisitBookingModal.tsx` actualizado:**
+- Importa `supabase` desde `@/lib/supabase`.
+- `handleSchedule` ahora es `async`.
+- Nuevos estados: `submitting: boolean`, `submitError: string | null`.
+- Al enviar: insert en `visit_requests` con campos `lot_id`, `manzana`, `solar`, `nombre`, `whatsapp`, `dia_hora` (`${fecha} ${hora}`), `comentario`.
+- Si error: muestra mensaje "No se pudo registrar la solicitud. Intentá de nuevo."
+- Botón muestra "Enviando…" mientras `submitting=true` y queda `disabled`.
+- Si éxito: llama `onSubmit()` (local state) y avanza a step "done".
+
+**P6 — Variables en Vercel:**
+- Usuario debe agregar en Vercel Dashboard → Settings → Environment Variables:
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio.
+
+### Pendientes al cerrar OE 023
+
+- Agregar variables de entorno en Vercel Dashboard (acción manual del usuario).
+- Verificar en browser: admin cambia estado → página pública actualiza en tiempo real.
+- Verificar en Supabase: solicitud de visita aparece en tabla `visit_requests`.
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
 - Cargar precios reales.

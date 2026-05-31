@@ -24,9 +24,10 @@ Reemplaza a `AISyncPlans.md`. Documento tecnico de referencia del proyecto. Se a
 | React DOM | 18.3.1 |
 | TypeScript | 5.7.2 |
 | Tailwind CSS | 3.4.17 |
+| @supabase/supabase-js | 2.106.2 |
 | App Router | src/app |
 
-Sin backend. Sin Supabase. Sin Google Calendar. Sin login real.
+Sin Google Calendar. Sin login real (Supabase Auth pendiente).
 
 ---
 
@@ -65,7 +66,8 @@ src/
 
   lib/
     whatsapp.ts       — buildWhatsAppUrl + formatContactName
-    lotStates.ts      — useLotStates() hook: carga/persiste estados en localStorage["aglir_lot_states"]
+    lotStates.ts      — useLotStates() hook: lee/escribe en Supabase lot_states + suscripción realtime
+    supabase.ts       — cliente Supabase (env vars NEXT_PUBLIC_SUPABASE_URL / PUBLISHABLE_KEY)
 
   types/
     index.ts          — tipos compartidos: Lot, VisitRequest, User, etc.

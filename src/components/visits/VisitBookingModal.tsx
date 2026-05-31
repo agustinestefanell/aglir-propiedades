@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import type { Lot, VisitRequest } from "@/types";
+import { supabase } from "@/lib/supabase";
 
 const STORAGE_KEY = "aglir_user";
 
@@ -42,6 +43,8 @@ export function VisitBookingModal({ lot, onClose, onSubmit }: Props) {
   const [whatsapp, setWhatsapp] = useState("");
   const [fecha, setFecha] = useState("");
   const [hora, setHora] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = loadUser();
@@ -61,9 +64,29 @@ export function VisitBookingModal({ lot, onClose, onSubmit }: Props) {
     setStep("schedule");
   }
 
-  function handleSchedule(e: FormEvent) {
+  async function handleSchedule(e: FormEvent) {
     e.preventDefault();
     if (!user) return;
+    setSubmitting(true);
+    setSubmitError(null);
+
+    const { error } = await supabase.from("visit_requests").insert({
+      lot_id: lot.id,
+      manzana: lot.manzana,
+      solar: lot.solar,
+      nombre: user.nombre,
+      whatsapp: user.whatsapp,
+      dia_hora: `${fecha} ${hora}`,
+      comentario: "",
+    });
+
+    setSubmitting(false);
+
+    if (error) {
+      setSubmitError("No se pudo registrar la solicitud. Intentá de nuevo.");
+      return;
+    }
+
     onSubmit({ nombre: user.nombre, whatsapp: user.whatsapp, lotId: lot.id, fecha, hora });
     setStep("done");
   }
@@ -183,12 +206,15 @@ export function VisitBookingModal({ lot, onClose, onSubmit }: Props) {
             <p className="text-xs leading-5 text-stone-500">
               El horario queda a confirmar. Te contactamos por WhatsApp para coordinar.
             </p>
+            {submitError && (
+              <p className="text-sm font-semibold text-red-600">{submitError}</p>
+            )}
             <div className="mt-1 flex gap-3">
               <button type="button" onClick={onClose} className={secondaryCls}>
                 Cancelar
               </button>
-              <button type="submit" className={primaryCls}>
-                Agendar visita
+              <button type="submit" disabled={submitting} className={primaryCls}>
+                {submitting ? "Enviando…" : "Agendar visita"}
               </button>
             </div>
           </form>
