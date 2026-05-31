@@ -15,6 +15,7 @@ type Props = {
 export function LoginScreen({ onLogin }: Props) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(false);
 
   function handleSubmit(e: FormEvent) {
@@ -52,14 +53,24 @@ export function LoginScreen({ onLogin }: Props) {
 
           <label className="grid gap-1.5 text-sm font-bold text-stone-700">
             Contraseña
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => { setPassword(e.target.value); setError(false); }}
-              autoComplete="current-password"
-              required
-              className="min-h-12 rounded-md border border-stone-300 px-4 py-3 text-base outline-none focus:border-leaf focus:ring-2 focus:ring-leaf/20"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setError(false); }}
+                autoComplete="current-password"
+                required
+                className="min-h-12 w-full rounded-md border border-stone-300 px-4 py-3 pr-16 text-base outline-none focus:border-leaf focus:ring-2 focus:ring-leaf/20"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-stone-400 hover:text-stone-700"
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              >
+                {showPassword ? "Ocultar" : "Ver"}
+              </button>
+            </div>
           </label>
 
           {error && (

@@ -917,3 +917,34 @@ El plano es portrait (vertical/angosto) pero el contenedor ocupaba 100% del anch
 - Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
 - Persistir cambios de estado en backend real.
 - Cargar precios reales.
+
+---
+
+## OE 022 — Fix login: mostrar/ocultar contraseña
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** UI — feature mínima
+
+### Cambio ejecutado
+
+**`src/components/admin/LoginScreen.tsx`:**
+- Nuevo estado `showPassword: boolean`.
+- Campo contraseña envuelto en `<div className="relative">`.
+- `type="password"` → `type={showPassword ? "text" : "password"}`.
+- Botón `"Ver"` / `"Ocultar"` posicionado en `absolute right-3 top-1/2 -translate-y-1/2`.
+- `pr-16` en el input para que el texto no quede debajo del botón.
+- `type="button"` en el botón para no disparar el submit del formulario.
+- `aria-label` accesible.
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio.
+
+### Pendientes al cerrar OE 022
+
+- Verificar que /gestion carga el LoginScreen en el navegador.
+- Verificar alineación visual de polígonos en smartphone real.
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Persistir cambios de estado en backend real.
+- Cargar precios reales.
