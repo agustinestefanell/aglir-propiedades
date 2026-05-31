@@ -1183,3 +1183,40 @@ No se realizaron cambios al código. `tsc --noEmit`: limpio.
 - Agregar variables VAPID + Supabase en Vercel Dashboard (acción manual).
 - Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
 - Cargar precios reales.
+
+---
+
+## OE 029 — Fix build: supabaseUrl required en API push routes
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Bug fix — build Vercel
+
+### Problema
+
+Vercel fallaba con `supabaseUrl is required` en `/api/push/subscribe`. Causa: ambas routes importaban el singleton `supabase` de `@/lib/supabase` a nivel de módulo — ese cliente se instancia con `process.env.*` que no están disponibles en build time (solo en runtime).
+
+`notify/route.ts` tenía además `webpush.setVapidDetails()` a nivel de módulo, mismo problema.
+
+### Cambios ejecutados
+
+**`src/app/api/push/subscribe/route.ts`:**
+- Eliminado import del singleton `supabase`.
+- `createClient(...)` movido dentro del handler `POST` — se ejecuta solo en runtime, cuando las env vars están disponibles.
+
+**`src/app/api/push/notify/route.ts`:**
+- Eliminado import del singleton `supabase`.
+- `createClient(...)` movido dentro del handler `POST`.
+- `webpush.setVapidDetails(...)` movido dentro del handler `POST`.
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio.
+
+### Pendientes al cerrar OE 029
+
+- Verificar que Vercel build pasa sin el error `supabaseUrl is required`.
+- Verificar en Supabase que RLS permite operaciones en `push_subscriptions`.
+- Agregar variables VAPID + Supabase en Vercel Dashboard (acción manual).
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Cargar precios reales.
