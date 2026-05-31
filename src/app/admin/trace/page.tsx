@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { lots } from "@/data/lots";
 
-// SVG coordinate space: 4682×3311 px → normalized to 100×70.72
+// SVG coordinate space: 2897×4496 px → normalized to 100×155.20
 const SVG_W = 100;
-const SVG_H = 70.72;
+const SVG_H = 155.20;
 
 // localStorage keys — separated by lifecycle
 const CLOSED_KEY = "aglir_trace_polygons"; // Record<lotId, Point[]> — permanent closed polys

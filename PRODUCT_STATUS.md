@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-05-31 — OE 017
+Ultima actualizacion: 2026-05-31 — OE 018
 
 ---
 
@@ -23,7 +23,7 @@ Ultima actualizacion: 2026-05-31 — OE 017
 |---|---|---|---|
 | Dataset lotes — metadata m2/solar/area | Partial | 90 lotes: M2(1-18), M3(1-12), M4(6-14+22-24), M6(1-19), M7(1-10), M8(4-17), M9(1-5) | Auditar areas reales de M2(1-5), M3(1-5), M4, M7; verificar M6 solar 14 |
 | Precios reales | Broken | `precio_contado: 0` en todos los lotes | Cargar precios reales cuando se definan |
-| Polígonos SVG trazados | Broken | 90 polígonos en `polygonMap` pero trazados sobre imagen anterior (landscape); desalineados con nueva imagen portrait | Re-trazar los 90 polígonos con `/admin/trace` sobre la nueva imagen |
+| Polígonos SVG trazados | Broken | `polygonMap` vaciado en OE 018 (trazados anteriores eran landscape, inválidos); todos los lotes tienen `polygon: []` | Re-trazar los 90 polígonos con `/admin/trace` sobre imagen portrait `y∈[0,155.20]` |
 | Observaciones de lotes | Closed | `area_m2 === 0` → "Pendiente de auditoría de área.", resto → "" | — |
 | Solicitudes de visita mock | Partial | 4 registros en `visitRequests.ts` con IDs de lotes validos | Solo para probar admin; no persisten |
 
@@ -83,7 +83,7 @@ Ultima actualizacion: 2026-05-31 — OE 017
 | Fondo con todos los cerrados | Closed | `allClosed` state — todos los lotes cerrados visibles como fondo verde siempre | — |
 | Persistencia correcta en localStorage | Closed | Dos keys separados: `aglir_trace_polygons` (permanente) + `aglir_trace_draft` (efimero); "Nuevo" nunca borra cerrados | — |
 | Boton "Nuevo" (ex "Limpiar") | Closed | Limpia borrador activo; jamas toca poligonos cerrados | — |
-| Calculo de coordenadas SVG correcto | Partial | Formula implementada; alineacion no verificada sobre plano real | Verificar bordes: x=0,y=0 y x=100,y=70.72 |
+| Calculo de coordenadas SVG correcto | Partial | `SVG_H` corregido a `155.20` en OE 018 — SVG overlay y imagen portrait ahora alinean | Verificar bordes: x=0,y=0 y x=100,y=155.20 al retrazar |
 
 ---
 

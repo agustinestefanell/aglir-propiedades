@@ -48,11 +48,22 @@ export function InteractivePlan({
   const clamp = useCallback((scale: number, x: number, y: number): Tf => {
     const el = containerRef.current;
     if (!el) return { scale, x, y };
-    const s = Math.min(6, Math.max(1, scale));
+    const s = Math.min(8, Math.max(1, scale));
+    const cW = el.clientWidth, cH = el.clientHeight;
+    // viewBox "0 0 100 155.20" with xMidYMid meet → compute letterbox offsets
+    // to bound the actual plan content, not the full container width.
+    let rW: number, rH: number, rX: number, rY: number;
+    if (cW * 155.20 > cH * 100) {
+      rH = cH; rW = cH * 100 / 155.20; rX = (cW - rW) / 2; rY = 0;
+    } else {
+      rW = cW; rH = cW * 155.20 / 100; rX = 0; rY = (cH - rH) / 2;
+    }
+    const minX = cW - (rX + rW) * s, maxX = -rX * s;
+    const minY = cH - (rY + rH) * s, maxY = -rY * s;
     return {
       scale: s,
-      x: Math.min(0, Math.max(el.clientWidth * (1 - s), x)),
-      y: Math.min(0, Math.max(el.clientHeight * (1 - s), y)),
+      x: minX > maxX ? (minX + maxX) / 2 : Math.min(maxX, Math.max(minX, x)),
+      y: minY > maxY ? (minY + maxY) / 2 : Math.min(maxY, Math.max(minY, y)),
     };
   }, []);
 

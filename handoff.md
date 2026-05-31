@@ -763,3 +763,46 @@ Los 90 polígonos en `lots.ts/polygonMap` fueron trazados sobre la imagen anteri
 - Push a GitHub.
 - Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
 - Cargar precios reales.
+
+---
+
+## OE 018 — Revertir viewBox + fix zoom + limpiar polígonos + corregir trace
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Bug fix + preparación retrazado
+
+### Cambios ejecutados
+
+**C1 — viewBox verificado, sin cambio:**
+- `InteractivePlan.tsx` ya tenía `VIEW = "0 0 100 155.20"` e `image height="155.20"`. Correcto.
+
+**C2 — Fix zoom `InteractivePlan.tsx` — clamp con letterbox:**
+- Causa raíz del zoom "bailando": el `clamp` anterior usaba `el.clientWidth` como si el plano llenara el contenedor, pero con `xMidYMid meet` y una imagen portrait, el plano queda letterboxed horizontalmente. En desktop (1280px wide, 60vh alto), el plano real ocupa solo ~309px centrado — el zoom usaba bounds incorrectos y el contenido se escapaba fuera del viewport.
+- Nuevo `clamp`: calcula el offset real de letterboxing (`rW, rH, rX, rY`) y acota el translate al contenido real del SVG. Cuando el contenido es más angosto que el container (escala < ~4x en desktop), bloquea en centro. Cuando supera el container, permite pan en el rango exacto.
+- `min(6, ...)` → `min(8, ...)` — max zoom de 6x a 8x.
+
+**C3 — `src/data/lots.ts` — polygonMap vaciado:**
+- 90 polígonos del trazado anterior (landscape, `y∈[0,70.72]`) eliminados.
+- `polygonMap` reemplazado por `{}`. Todos los lotes quedan con `polygon: []`.
+- El campo `polygon: polygonMap[...] ?? []` sigue en el map — al repoblar polygonMap en `/admin/trace`, basta con pegar el nuevo bloque.
+
+**C4 — `src/app/admin/trace/page.tsx` — SVG_H corregido:**
+- `SVG_H = 70.72` → `SVG_H = 155.20`.
+- Con el valor anterior, el SVG overlay tenía ratio landscape (1.414) mientras la imagen portrait tiene ratio 0.644 — no alineaban. Con `155.20`, ambos tienen el mismo ratio y se alinean pixel-perfect con `xMidYMid meet`.
+- El `viewBox` del SVG overlay y la fórmula de `handleClick` usan `SVG_H` automáticamente.
+
+### Diagnóstico adicional — localStorage
+
+Los polígonos trazados anteriormente en `localStorage["aglir_trace_polygons"]` siguen en el navegador en coordenadas `y∈[0,70.72]`. Al abrir `/admin/trace`, aparecerán como fondo verde pero desalineados con la nueva imagen. Se recomienda limpiar el localStorage antes de retrazar: `localStorage.removeItem("aglir_trace_polygons")`.
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio, sin errores.
+
+### Pendientes al cerrar OE 018
+
+- **CRÍTICO:** Limpiar localStorage en el navegador y retrazar los 90 polígonos sobre la nueva imagen portrait con `/admin/trace` (`y∈[0,155.20]`).
+- Persistir cambios de estado en backend real.
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Cargar precios reales.

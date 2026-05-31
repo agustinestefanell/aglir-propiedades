@@ -346,7 +346,7 @@ AdminVisitList:
 - Todos los lotes cerrados guardados se muestran como poligonos verdes de fondo al cargar la pagina.
 - Persistencia en `localStorage["aglir_trace_polygons"]` — estructura `Record<lotId, {points, closed}>`.
 - "Copiar" → clipboard: `[{"x":45.23,"y":32.11},...]`.
-- Sistema de coordenadas: igual que `LotPolygon` → `x∈[0,100]`, `y∈[0,70.72]`.
+- Sistema de coordenadas: `x∈[0,100]`, `y∈[0,155.20]` — actualizado en OE 018 para imagen portrait 2897×4496.
 - El array se pega en el campo `polygon` del lote correspondiente en `src/data/lots.ts`.
 
 ---
@@ -377,7 +377,7 @@ AdminVisitList:
 
 ## 15. Pendientes tecnicos
 
-- ~~Trazar los 90 polígonos con `/admin/trace` y cargar en `lots.ts`.~~ — Completado OE 008. **INVALIDADO OE 016** — imagen base reemplazada, requiere re-trazado completo.
+- **CRÍTICO:** Retrazar los 90 polígonos con `/admin/trace` sobre imagen portrait `y∈[0,155.20]` y pegar en `lots.ts`. OE 018 limpió polygonMap y corrigió SVG_H del trace tool.
 - Auditar manzanas 1, 4, 5 y 7.
 - Cargar precios reales.
 - Eliminar archivos huerfanos: `LotBottomSheet.tsx`, `VisitRequestForm.tsx`.
