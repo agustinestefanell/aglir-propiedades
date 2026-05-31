@@ -27,8 +27,8 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-paper pb-8">
-      <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/95 px-4 py-3 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center gap-3">
+      <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-[430px] items-center gap-3 px-4 py-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo.jpg"
@@ -40,7 +40,7 @@ export default function Home() {
       </header>
 
       <div className="mx-auto w-full max-w-[430px] px-4 pt-4 pb-3">
-        <h1 className="text-center text-2xl font-black leading-tight text-ink md:text-3xl">
+        <h1 className="text-center text-xl font-black leading-tight text-ink">
           Terrenos en Barros Blancos
         </h1>
         <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-xs text-stone-600">

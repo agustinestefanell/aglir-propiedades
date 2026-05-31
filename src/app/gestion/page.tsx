@@ -50,9 +50,9 @@ export default function GestionPage() {
 
   return (
     <main className="min-h-screen bg-paper">
-      <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/95 px-4 pt-3 pb-2 backdrop-blur">
+      <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/95 backdrop-blur">
         {/* Row 1: logo + ADMIN badge + user + logout */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="mx-auto flex max-w-[430px] items-center justify-between gap-3 px-4 pt-3 pb-2">
           <div className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -82,7 +82,7 @@ export default function GestionPage() {
         </div>
 
         {/* Row 2: legend */}
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-stone-600">
+        <div className="mx-auto max-w-[430px] px-4 pb-2 mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-stone-600">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-sm border border-stone-500 bg-transparent" />
             <span className="font-semibold">Disponible</span>

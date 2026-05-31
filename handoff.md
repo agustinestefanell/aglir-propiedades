@@ -878,3 +878,42 @@ El plano es portrait (vertical/angosto) pero el contenedor ocupaba 100% del anch
 - Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
 - Persistir cambios de estado en backend real.
 - Cargar precios reales.
+
+---
+
+## OE 021 — Fix header + título + diagnóstico /gestion
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** UI fix + diagnóstico
+
+### Cambios ejecutados
+
+**C1 — Título en una sola línea (`page.tsx`):**
+- `text-2xl md:text-3xl` → `text-xl`. "Terrenos en Barros Blancos" entraba en dos líneas porque `md:text-3xl` (30px) superaba el ancho disponible en el contenedor de 430px con padding interno.
+
+**C2 — Header contenido en 430px (`page.tsx` + `gestion/page.tsx`):**
+- Header: eliminado `px-4 py-3` del elemento `<header>`, movido al `<div>` interno.
+- Inner div público: `max-w-6xl` → `max-w-[430px]`.
+- Inner div gestion: wrapeado en `max-w-[430px] px-4 pt-3 pb-2`. Segunda fila (leyenda) también wrapeada en `max-w-[430px] px-4 pb-2`.
+- En ambas páginas: `border-b` sigue en el `<header>` (full-width), el contenido queda dentro de 430px.
+
+**C3 — Diagnóstico /gestion:**
+- `tsc --noEmit`: limpio, sin errores.
+- `npm run build`: errores de prerender en TODAS las páginas incluyendo `/` (que funciona en dev). Causa: bug de Next.js 14 en el paso de export estático, no en código de la app.
+- `LoginScreen`, `useLotStates`, `gestion/page.tsx` y todos sus imports: correctos.
+- `useLotStates` tiene guard `typeof window === "undefined"` — SSR-safe.
+- Causa más probable del "blanco" en dev: `if (!authChecked) return null` produce blanco durante el primer render (~1 tick antes de que `useEffect` dispare). Debe resolverse solo y mostrar `LoginScreen`.
+- **Si persiste en blanco:** abrir DevTools → Console → buscar error rojo. El error en console va a indicar la causa real.
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio.
+
+### Pendientes al cerrar OE 021
+
+- Verificar que /gestion carga el LoginScreen en el navegador.
+- Verificar alineación visual de polígonos en smartphone real.
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Persistir cambios de estado en backend real.
+- Cargar precios reales.
