@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-05-31 — OE 016
+Ultima actualizacion: 2026-05-31 — OE 017
 
 ---
 
@@ -55,6 +55,7 @@ Ultima actualizacion: 2026-05-31 — OE 016
 
 | Feature | Estado | Evidencia | Pendiente |
 |---|---|---|---|
+| Ruta `/admin` legacy | Closed | Vaciada en OE 017 — devuelve página en blanco; funcionalidad admin real en `/gestion` | — |
 | Gestion de estados comerciales (local) | Partial | `AdminLotStatusManager` + `AdminLotStatusCard` — cambios locales por sesion | Persistencia real en backend |
 | Busqueda de lotes por manzana/solar | Closed | Filtro de texto en `AdminLotStatusManager` | — |
 | Vista de solicitudes mock | Partial | `AdminVisitList` con datos de `visitRequests.ts` | Conectar con solicitudes reales |

@@ -728,3 +728,38 @@ Los 90 polígonos en `lots.ts/polygonMap` fueron trazados sobre la imagen anteri
 - Push a GitHub.
 - Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
 - Cargar precios reales.
+
+---
+
+## OE 017 — Vaciar `/admin` legacy + confirmar panel condicional
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Limpieza quirúrgica
+
+### Cambios ejecutados
+
+**C1 — `src/app/admin/page.tsx` vaciado:**
+- Todo el contenido anterior (imports de `AdminLotStatusManager`, `AdminCalendarView`, `AdminVisitList`, `lots`, `visitRequests` + JSX completo) reemplazado por:
+  ```tsx
+  export default function AdminPage() {
+    return null;
+  }
+  ```
+- La ruta `/admin` ahora devuelve página en blanco. El panel operativo real vive en `/gestion`.
+
+**C2 — `InteractivePlan.tsx` verificado, sin cambios:**
+- `LotDetailPanel` ya estaba condicional: `const panelVisible = showLotDetails && selectedLot` (línea 180) + `{panelVisible && <LotDetailPanel ... />}` (línea 257).
+- El panel solo aparece al tocar un lote. Sin modificación necesaria.
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio, sin errores.
+
+### Pendientes al cerrar OE 017
+
+- **CRÍTICO:** Re-trazar los 90 polígonos sobre la nueva imagen portrait con `/admin/trace`.
+- Persistir cambios de estado en backend real.
+- Push a GitHub.
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Cargar precios reales.
