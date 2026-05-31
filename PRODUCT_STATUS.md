@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-05-31 — OE 024
+Ultima actualizacion: 2026-05-31 — OE 025
 
 ---
 
@@ -58,11 +58,10 @@ Ultima actualizacion: 2026-05-31 — OE 024
 | Ruta `/admin` legacy | Closed | Vaciada en OE 017 — devuelve página en blanco; funcionalidad admin real en `/gestion` | — |
 | Gestion de estados comerciales (local) | Partial | `AdminLotStatusManager` + `AdminLotStatusCard` — cambios locales por sesion | Persistencia real en backend |
 | Busqueda de lotes por manzana/solar | Closed | Filtro de texto en `AdminLotStatusManager` | — |
-| Vista de solicitudes mock | Partial | `AdminVisitList` con datos de `visitRequests.ts` | Conectar con solicitudes reales |
-| Vista por dia (calendario simple) | Partial | `AdminCalendarView` con datos mock agrupados por fecha | Conectar con solicitudes reales |
+| Panel de visitas admin | Closed | Sección "Visitas recibidas" en `/gestion` — lee Supabase `visit_requests`, botones WhatsApp y Google Calendar (OE 025) | — |
 | WhatsApp human-in-the-loop | Partial | `buildWhatsAppUrl` + apertura de `wa.me/...` | Probar con numero real |
 | Formato de contacto AP-{tel}{Nombre} | Closed | `formatContactName` en `whatsapp.ts`, visible en `WhatsAppAcceptButton` | Probar flujo real |
-| Login admin (`/gestion`) | Closed | `LoginScreen` con credenciales hardcodeadas, sessionStorage | Migrar a Supabase Auth |
+| Login admin (`/gestion`) | Closed | `LoginScreen` con credenciales hardcodeadas, **localStorage** (persiste entre sesiones) (OE 025) | Migrar a Supabase Auth |
 | Cambio de estado desde plano (admin) | Closed | Single-tap → `LotStatusMenu`; upsert en Supabase `lot_states`; optimistic update inmediato (OE 023) | — |
 | Sincronización Admin ↔ Público | Closed | `useLotStates` con Supabase realtime (`postgres_changes`) — cambios en admin se propagan en tiempo real a la página pública (OE 023) | — |
 | URL admin no predecible | Closed | `/gestion` en lugar de `/admin`; botón Admin eliminado del header público | — |
@@ -94,7 +93,7 @@ Ultima actualizacion: 2026-05-31 — OE 024
 | Backend / Supabase | Closed | `@supabase/supabase-js@2.106.2` instalado; `src/lib/supabase.ts` con env vars; tablas `lot_states` + `visit_requests` integradas (OE 023) |
 | Login admin | Deferred | Requiere OE especifica |
 | PWA instalable | Closed | `manifest.json`, `sw.js`, `ServiceWorkerRegister` — instalable en Android/iOS desde Chrome (OE 024) |
-| Notificaciones push | Closed | Web Push API + VAPID + Supabase `push_subscriptions` — notifica al admin al agendar visita (OE 024) |
+| Notificaciones push | Closed | Web Push API + VAPID + Supabase `push_subscriptions` — botón "🔔 Notif" en header admin para activar manualmente (OE 024/025) |
 | Google Calendar | Deferred | Requiere OE especifica |
 | Georreferenciacion real | Deferred | No es objetivo del MVP |
 

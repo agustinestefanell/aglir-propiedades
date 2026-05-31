@@ -1059,3 +1059,44 @@ VAPID_SUBJECT=mailto:arenaglirsas@gmail.com
 - Verificar flujo completo: visita agendada → notificación push en dispositivo admin.
 - Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
 - Cargar precios reales.
+
+---
+
+## OE 025 — Fix login persistente + panel de visitas admin
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Bug fix + Feature
+
+### Cambios ejecutados
+
+**C1 — Login persistente (`gestion/page.tsx`):**
+- `sessionStorage` → `localStorage` en las tres ocurrencias: `getItem`, `setItem`, `removeItem`.
+- La sesión ahora sobrevive al cierre del tab y al reinicio del browser.
+
+**C2 — Panel de visitas admin (`gestion/page.tsx`):**
+- Nuevo tipo local `VisitRow` con los campos de la tabla Supabase `visit_requests`.
+- `useEffect([user])` fetch a Supabase `visit_requests` al loguearse; resultado en estado `visits`.
+- Sección "Visitas recibidas" debajo del plano: cards por solicitud con nombre, WA, lote, dia_hora, estado.
+- Helper `buildWAUrl()`: construye `wa.me/598{tel}?text=mensaje_confirmacion`.
+- Helper `buildCalendarUrl()`: construye URL Google Calendar con `action=TEMPLATE`, text, details, dates (1h desde dia_hora).
+- Botones: "WhatsApp" (verde `#25D366`) y "📅 Calendar" (outlined), ambos `target="_blank"`.
+
+**C3 — Botón "Activar notificaciones" (`gestion/page.tsx`):**
+- Estado `notifPermission` inicializado desde `Notification.permission` en el `useEffect` de auth check.
+- `subscribePush` extraído a `useCallback` (estable para el dep array de useEffect).
+- Botón "🔔 Notif" visible en el header solo cuando `notifPermission !== "granted"`.
+- Al tocarlo llama `subscribePush()` que pide permiso, suscribe y POST a `/api/push/subscribe`.
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio.
+
+### Pendientes al cerrar OE 025
+
+- Ejecutar SQL de `push_subscriptions` en Supabase (acción manual).
+- Agregar variables VAPID + Supabase en Vercel Dashboard (acción manual).
+- Verificar panel de visitas con datos reales de `visit_requests`.
+- Verificar que login persiste al cerrar y reabrir browser.
+- Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
+- Cargar precios reales.
