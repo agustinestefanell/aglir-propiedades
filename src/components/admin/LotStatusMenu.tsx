@@ -38,23 +38,22 @@ type Props = {
 export function LotStatusMenu({ lot, position, onChangeStatus, onClose }: Props) {
   const safeX =
     typeof window !== "undefined"
-      ? Math.min(position.x, window.innerWidth - 200)
+      ? Math.min(position.x, window.innerWidth - 180)
       : position.x;
   const safeY =
     typeof window !== "undefined"
-      ? Math.min(position.y, window.innerHeight - 180)
+      ? Math.min(position.y, window.innerHeight - 160)
       : position.y;
 
   return (
     <>
-      {/* Backdrop — click outside closes */}
       <div className="fixed inset-0 z-40" onClick={onClose} />
 
       <div
-        className="fixed z-50 min-w-[176px] rounded-xl border border-stone-200 bg-white p-1.5 shadow-xl"
+        className="fixed z-50 min-w-[160px] rounded-lg bg-white py-1 shadow-2xl"
         style={{ top: safeY, left: safeX }}
       >
-        <p className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-stone-400">
+        <p className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">
           M{lot.manzana} · S{lot.solar}
         </p>
 
@@ -65,17 +64,15 @@ export function LotStatusMenu({ lot, position, onChangeStatus, onClose }: Props)
               key={opt.value}
               type="button"
               onClick={() => onChangeStatus(opt.value)}
-              className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
+              className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition ${
                 isActive
                   ? `${opt.activeCls} font-bold`
                   : "text-stone-700 hover:bg-stone-50"
               }`}
             >
-              <span
-                className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${opt.dot}`}
-              />
+              <span className={`h-2 w-2 flex-shrink-0 rounded-full ${opt.dot}`} />
               {opt.label}
-              {isActive && <span className="ml-auto text-xs">✓</span>}
+              {isActive && <span className="ml-auto text-[10px] text-stone-400">✓</span>}
             </button>
           );
         })}

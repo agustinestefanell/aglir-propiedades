@@ -533,3 +533,38 @@ Dos pasos a ejecutar en terminal local:
 - Reemplazar credenciales hardcodeadas por Supabase Auth (OE siguiente).
 - Persistir cambios de estado de lotes en base de datos.
 - Decidir qué hacer con la ruta `/admin` legacy.
+
+---
+
+## OE 013 — Limpiar admin: eliminar cards y dejar solo el plano
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** UI — limpieza
+
+### Cambios ejecutados
+
+**`src/app/gestion/page.tsx`:**
+- Eliminados: imports de `visitRequests`, `AdminCalendarView`, `AdminVisitList`.
+- Eliminado: bloque `<div>` con `AdminCalendarView` y `AdminVisitList`.
+- Eliminado: sección h1 "Panel de gestión" + párrafo de instrucción.
+- Header simplificado: "Aglir — Admin" (texto, no link) + nombre de usuario + botón Salir.
+- Resultado: header + plano + menú flotante — nada más.
+
+**`src/components/admin/LotStatusMenu.tsx`:**
+- Más minimalista: sin borde (`border`), `shadow-2xl` para profundidad.
+- `rounded-lg` (menos redondeado que `rounded-xl`).
+- Padding reducido: `py-1` en container, `py-2` en botones.
+- Dots más pequeños: `h-2 w-2`.
+- Label lote más compacto: `text-[10px] tracking-widest`.
+
+### Archivos tocados
+
+- `src/app/gestion/page.tsx`
+- `src/components/admin/LotStatusMenu.tsx`
+- `handoff.md`, `PRODUCT_STATUS.md`, `AglirPlans.md` (actualizados)
+
+### Pendientes al cerrar OE 013
+
+- Reemplazar credenciales hardcodeadas por Supabase Auth.
+- Persistir cambios de estado en DB.

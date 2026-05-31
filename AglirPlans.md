@@ -96,10 +96,10 @@ public/
 
 - URL no predecible para acceso admin.
 - Login guard con `sessionStorage["aglir_gestion_user"]`. Credenciales hardcodeadas: Agustin/Estefanell33, Rodrigo/Surferogalactico33.
-- Flujo: `LoginScreen` → autenticación → panel con plano + menú de estado + visitas.
-- Interacción: double-click/double-tap en lote → `LotStatusMenu` flotante con 3 opciones.
-- Estado local: cambios de estado viven en `useState` de la página (no persisten).
-- `AdminCalendarView` + `AdminVisitList` como secciones secundarias.
+- Flujo: `LoginScreen` → autenticación → header mínimo "Aglir — Admin" + plano + menú de estado flotante.
+- Interacción: double-click/double-tap en lote → `LotStatusMenu` flotante con 3 opciones (En venta / Reservado / Vendido).
+- Estado local: cambios de estado viven en `useState` de la página (no persisten entre sesiones).
+- Sin cards, sin listas, sin tablas — solo el plano.
 
 ### `/admin/trace` — Herramienta de trazado (solo dev)
 
