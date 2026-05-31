@@ -12,6 +12,7 @@ type Props = {
   onSchedule: () => void;
   showLotDetails?: boolean;
   isAdmin?: boolean;
+  onLotDoubleClick?: (lot: Lot, clientX: number, clientY: number) => void;
 };
 
 type Tf = { scale: number; x: number; y: number };
@@ -23,6 +24,7 @@ export function InteractivePlan({
   onSchedule,
   showLotDetails = true,
   isAdmin = false,
+  onLotDoubleClick,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [tf, setTf] = useState<Tf>({ scale: 1, x: 0, y: 0 });
@@ -61,6 +63,11 @@ export function InteractivePlan({
       return;
     }
     onSelectLot(lot);
+  }
+
+  function handleLotDoubleClick(lot: Lot, clientX: number, clientY: number) {
+    if (dragMoved.current) return;
+    onLotDoubleClick?.(lot, clientX, clientY);
   }
 
   useEffect(() => {
@@ -234,6 +241,7 @@ export function InteractivePlan({
                 selected={selectedLot?.id === lot.id}
                 onSelect={handleLotSelect}
                 forceClickable={isAdmin}
+                onDoubleSelect={onLotDoubleClick ? handleLotDoubleClick : undefined}
               />
             ))}
           </svg>

@@ -476,3 +476,60 @@ Dos pasos a ejecutar en terminal local:
 - Editar PNG para ocultar la carátula del lado derecho del A3.
 - Auditar áreas reales de M2(s.1-5), M3(s.1-5), M4, M7.
 - Cargar precios reales.
+
+---
+
+## OE 012 — Rediseño del flujo admin
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Feature — nueva ruta + login + interacción admin
+
+### Cambios ejecutados
+
+**Nueva ruta `/gestion` (`src/app/gestion/page.tsx`):**
+- Reemplaza `/admin` como punto de entrada del admin (URL no predecible).
+- Login guard: lee `sessionStorage["aglir_gestion_user"]` en `useEffect`. Si no hay sesión → muestra `LoginScreen`.
+- Al loguearse: escribe en sessionStorage, muestra el panel. Al salir: borra sessionStorage.
+- Contenido: plan interactivo + `LotStatusMenu` flotante + `AdminCalendarView` + `AdminVisitList`.
+
+**`LoginScreen` (`src/components/admin/LoginScreen.tsx`):**
+- Credenciales hardcodeadas: Agustin/Estefanell33, Rodrigo/Surferogalactico33.
+- Error "Credenciales incorrectas." si no coinciden.
+- `sessionStorage` para persistencia de sesión (expira al cerrar el tab).
+
+**`LotStatusMenu` (`src/components/admin/LotStatusMenu.tsx`):**
+- Menú flotante `position: fixed` en las coordenadas del click.
+- 3 opciones: En venta (= disponible) / Reservado / Vendido, con dots de color.
+- Opción actual marcada con ✓.
+- Backdrop `fixed inset-0 z-40` cierra el menú al hacer click fuera.
+- Posición ajustada para no desbordarse del viewport.
+
+**`LotPolygon` actualizado:**
+- Nuevo prop `onDoubleSelect?: (lot, clientX, clientY) => void`.
+- `lastTapRef` detecta double-click/double-tap en ≤350ms sin añadir latencia al single-click.
+- Si `onDoubleSelect` está definido: primer click → `onSelect` normal; segundo click rápido → `onDoubleSelect`.
+
+**`InteractivePlan` actualizado:**
+- Nuevo prop `onLotDoubleClick?: (lot, clientX, clientY) => void`.
+- `handleLotDoubleClick` con guard `dragMoved` para no disparar en drag.
+- Pasa `onDoubleSelect` a `LotPolygon` solo cuando `onLotDoubleClick` está definido.
+
+**Página pública (`src/app/page.tsx`):**
+- Botón "Admin" → `/admin` eliminado del header. La URL `/gestion` no está linkada públicamente.
+
+### Archivos tocados
+
+- `src/app/gestion/page.tsx` (nuevo)
+- `src/components/admin/LoginScreen.tsx` (nuevo)
+- `src/components/admin/LotStatusMenu.tsx` (nuevo)
+- `src/components/plan/LotPolygon.tsx`
+- `src/components/plan/InteractivePlan.tsx`
+- `src/app/page.tsx`
+- `handoff.md`, `PRODUCT_STATUS.md`, `AglirPlans.md` (actualizados)
+
+### Pendientes al cerrar OE 012
+
+- Reemplazar credenciales hardcodeadas por Supabase Auth (OE siguiente).
+- Persistir cambios de estado de lotes en base de datos.
+- Decidir qué hacer con la ruta `/admin` legacy.

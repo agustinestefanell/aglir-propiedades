@@ -87,13 +87,19 @@ public/
 - Flujo: tap en solar disponible → LotDetailPanel → clic "Agendar visita" → VisitBookingModal.
 - Sin persistencia: las solicitudes creadas viven solo en estado React de la sesion.
 
-### `/admin` — Panel operativo
+### `/admin` — Panel legacy (no linkado)
 
-- Funcion: gestionar estados comerciales de terrenos y revisar solicitudes.
-- Servidor: `page.tsx` es Server Component, importa `AdminLotStatusManager` y `AdminVisitList`.
-- Componentes: `AdminLotStatusManager`, `AdminCalendarView`, `AdminVisitList`.
-- Estado local: los cambios de estado del admin son locales a la sesion (modo demo).
-- Sin autenticacion real.
+- Sigue en el repo pero no está linkado desde ninguna página.
+- Reemplazado funcionalmente por `/gestion`.
+
+### `/gestion` — Panel operativo (nuevo)
+
+- URL no predecible para acceso admin.
+- Login guard con `sessionStorage["aglir_gestion_user"]`. Credenciales hardcodeadas: Agustin/Estefanell33, Rodrigo/Surferogalactico33.
+- Flujo: `LoginScreen` → autenticación → panel con plano + menú de estado + visitas.
+- Interacción: double-click/double-tap en lote → `LotStatusMenu` flotante con 3 opciones.
+- Estado local: cambios de estado viven en `useState` de la página (no persisten).
+- `AdminCalendarView` + `AdminVisitList` como secciones secundarias.
 
 ### `/admin/trace` — Herramienta de trazado (solo dev)
 

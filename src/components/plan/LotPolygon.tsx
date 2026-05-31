@@ -1,6 +1,7 @@
 "use client";
 
-import type { KeyboardEvent } from "react";
+import { useRef } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
 import type { Lot, LotStatus } from "@/types";
 
 type LotPolygonProps = {
@@ -8,6 +9,7 @@ type LotPolygonProps = {
   selected: boolean;
   onSelect: (lot: Lot) => void;
   forceClickable?: boolean;
+  onDoubleSelect?: (lot: Lot, clientX: number, clientY: number) => void;
 };
 
 const fillClass: Record<LotStatus, string> = {
@@ -22,9 +24,32 @@ const strokeClass: Record<LotStatus, string> = {
   vendido: "stroke-yellow-600",
 };
 
-export function LotPolygon({ lot, selected, onSelect, forceClickable }: LotPolygonProps) {
+export function LotPolygon({
+  lot,
+  selected,
+  onSelect,
+  forceClickable,
+  onDoubleSelect,
+}: LotPolygonProps) {
   const isClickable = forceClickable || lot.estado === "disponible";
   const points = lot.polygon.map((p) => `${p.x},${p.y}`).join(" ");
+  const lastTapRef = useRef<number>(0);
+
+  function handleClick(e: MouseEvent<SVGGElement>) {
+    if (!isClickable) return;
+
+    if (onDoubleSelect) {
+      const now = Date.now();
+      if (now - lastTapRef.current < 350) {
+        lastTapRef.current = 0;
+        onDoubleSelect(lot, e.clientX, e.clientY);
+        return;
+      }
+      lastTapRef.current = now;
+    }
+
+    onSelect(lot);
+  }
 
   function handleKeyDown(e: KeyboardEvent<SVGGElement>) {
     if (!isClickable) return;
@@ -39,7 +64,7 @@ export function LotPolygon({ lot, selected, onSelect, forceClickable }: LotPolyg
       role={isClickable ? "button" : undefined}
       tabIndex={isClickable ? 0 : undefined}
       aria-label={`Manzana ${lot.manzana}, Solar ${lot.solar}, ${lot.estado}`}
-      onClick={isClickable ? () => onSelect(lot) : undefined}
+      onClick={isClickable ? handleClick : undefined}
       onKeyDown={handleKeyDown}
       className={isClickable ? "group outline-none" : undefined}
     >
@@ -49,7 +74,8 @@ export function LotPolygon({ lot, selected, onSelect, forceClickable }: LotPolyg
           fillClass[lot.estado],
           strokeClass[lot.estado],
           "transition duration-100",
-          isClickable && "cursor-pointer group-hover:fill-emerald-100/40 group-focus-visible:outline group-focus-visible:outline-2",
+          isClickable &&
+            "cursor-pointer group-hover:fill-emerald-100/40 group-focus-visible:outline group-focus-visible:outline-2",
           selected && lot.estado === "disponible" && "fill-emerald-100/50",
         ]
           .filter(Boolean)

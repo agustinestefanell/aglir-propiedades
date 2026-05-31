@@ -31,12 +31,6 @@ export default function Home() {
           <a href="/" className="text-base font-black text-ink">
             Aglir Propiedades
           </a>
-          <a
-            href="/admin"
-            className="rounded-md border border-stone-300 px-3 py-2 text-sm font-bold text-stone-700 transition hover:bg-stone-50"
-          >
-            Admin
-          </a>
         </div>
       </header>
 

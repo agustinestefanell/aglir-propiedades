@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-05-31 — OE 011
+Ultima actualizacion: 2026-05-31 — OE 012
 
 ---
 
@@ -60,7 +60,9 @@ Ultima actualizacion: 2026-05-31 — OE 011
 | Vista por dia (calendario simple) | Partial | `AdminCalendarView` con datos mock agrupados por fecha | Conectar con solicitudes reales |
 | WhatsApp human-in-the-loop | Partial | `buildWhatsAppUrl` + apertura de `wa.me/...` | Probar con numero real |
 | Formato de contacto AP-{tel}{Nombre} | Closed | `formatContactName` en `whatsapp.ts`, visible en `WhatsAppAcceptButton` | Probar flujo real |
-| Autenticacion admin | Deferred | No implementado | OE especifica futura |
+| Login admin (`/gestion`) | Closed | `LoginScreen` con credenciales hardcodeadas, sessionStorage — validado Playwright | Migrar a Supabase Auth |
+| Cambio de estado desde plano (admin) | Closed | Double-click/double-tap → `LotStatusMenu` flotante; color cambia inmediatamente | Persistir en DB |
+| URL admin no predecible | Closed | `/gestion` en lugar de `/admin`; botón Admin eliminado del header público | — |
 
 ---
 
