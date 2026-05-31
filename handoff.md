@@ -348,3 +348,43 @@ Corregir el campo `observaciones` del map en `lots.ts` (ya no era correcto tras 
 - Cargar precios reales.
 - Limpiar archivos huérfanos.
 - Conectar persistencia real.
+
+---
+
+## OE 009 — Fix push a GitHub
+
+**Fecha:** 2026-05-30
+**Ejecutor:** Claude (Sonnet 4.6) + usuario
+**Tipo:** Infra / DevOps
+
+### Diagnóstico
+
+- Remote `origin` apunta a `https://github.com/agustinestefanell/aglir-propiedades.git`.
+- `git ls-remote` retorna "Repository not found" desde GitHub — el repo no existe o es privado sin credenciales.
+- `gh` CLI no disponible en el entorno.
+- `curl` a github.com falla por restricción de red en el entorno de Claude.
+- Identidad git: `Aglir Propiedades <arenaglirsas@gmail.com>`.
+- 9 commits locales pendientes de push.
+
+### Resolución requerida (manual — usuario)
+
+Dos pasos a ejecutar en terminal local:
+
+**1 — Crear el repo en GitHub (si no existe):**
+- github.com/new → nombre `aglir-propiedades`, cuenta `agustinestefanell`
+- Sin README/gitignore/license (el historial local ya existe)
+
+**2 — Autenticar y pushear:**
+- Opción HTTPS con PAT: `git remote set-url origin https://agustinestefanell:<TOKEN>@github.com/agustinestefanell/aglir-propiedades.git`
+- Opción SSH: `git remote set-url origin git@github.com:agustinestefanell/aglir-propiedades.git`
+- Luego: `git push origin main`
+
+### Estado al cerrar
+
+- Commit local: `4d12ef7` y 8 anteriores — todos pendientes de push.
+- Push bloqueado por credenciales/repo inexistente: acción requerida del usuario.
+
+### Pendientes al cerrar OE 009
+
+- Crear repo en GitHub y pushear los 9 commits.
+- Verificar que Vercel se reconecta automáticamente tras el push.

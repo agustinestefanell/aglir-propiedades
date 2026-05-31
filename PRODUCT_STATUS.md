@@ -12,7 +12,7 @@ Ultima actualizacion: 2026-05-30 — OE 008
 |---|---|---|---|
 | Next.js 14 + TypeScript + Tailwind + App Router | Closed | `next build` OK, `tsc --noEmit` limpio | Verificar build en Linux antes de cada push |
 | Deploy Vercel | Closed | https://aglir-propiedades.vercel.app | Re-deploy con cambios de OE 000 fase 4-5 (sin push aun) |
-| GitHub remoto | Closed | origin → `agustinestefanell/aglir-propiedades.git` | — |
+| GitHub remoto | Broken | Remote configurado pero repo no encontrado en GitHub — 9 commits locales sin push | Crear repo en GitHub y pushear |
 | Logo en public/ | Closed | `public/logo.jpg` presente | Integrar en layout.tsx |
 
 ---
