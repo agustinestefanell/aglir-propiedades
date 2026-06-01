@@ -1353,3 +1353,24 @@ El error en Vercel se debía a que el deploy usaba el commit `2029e7e` (OE 025),
 - Cargar precios reales.
 - Verificar Vercel build sin errores.
 - Agregar variables VAPID + Supabase en Vercel Dashboard.
+
+---
+
+## OE 034 — Actualizar imagen del plano
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** Asset — reemplazo de imagen
+
+### Cambio
+
+- `public/plan/plano-11223.png` reemplazada por el usuario.
+- Tamaño anterior: 2,176,687 bytes → nuevo: 2,327,445 bytes.
+- Dimensiones verificadas: **2897×4496 px** (portrait, ratio 155.20) — idénticas a la versión anterior.
+- El código no requirió ningún cambio (viewBox, polygonMap y clamp siguen siendo válidos).
+
+### Pendientes al cerrar OE 034
+
+- Cargar precios reales.
+- Verificar Vercel build sin errores.
+- Agregar variables VAPID + Supabase en Vercel Dashboard.
