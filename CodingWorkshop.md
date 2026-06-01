@@ -114,6 +114,64 @@ En Windows: cuando `npx create-next-app <nombre>` crea el directorio, NTFS almac
 
 ---
 
+## 2026-05-31 - supabaseUrl is required en API routes de Next.js
+
+### Problema
+
+Build de Vercel falla con:
+```
+Error: supabaseUrl is required
+    at new SupabaseClient (...)
+```
+La ruta `/api/push/subscribe` (y `/api/push/notify`) fallaban en el deploy de producción, aunque funcionaban en desarrollo.
+
+### Causa raiz
+
+El cliente Supabase se importaba como singleton a nivel de módulo:
+
+```typescript
+// ❌ INCORRECTO — a nivel de módulo
+import { supabase } from "@/lib/supabase";
+```
+
+`src/lib/supabase.ts` instancia `createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, ...)` también a nivel de módulo. Durante el build de Next.js (fase de exportación estática), los módulos se evalúan con `process.env.*` vacíos — las variables de entorno no están disponibles hasta el runtime. Resultado: `supabaseUrl` es `undefined` y el cliente lanza.
+
+En desarrollo (`npm run dev`) no ocurre porque el servidor se inicia con las env vars ya cargadas y no hay fase de exportación estática.
+
+### Solucion final
+
+Instanciar `createClient` directamente dentro del handler, no a nivel de módulo:
+
+```typescript
+// ✅ CORRECTO — dentro del handler
+import { createClient } from "@supabase/supabase-js";
+
+export async function POST(req: NextRequest) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+  );
+  // ... resto del handler
+}
+```
+
+Lo mismo aplica para `webpush.setVapidDetails(...)` en `/api/push/notify/route.ts` — moverlo dentro del handler.
+
+### Archivos afectados
+
+- `src/app/api/push/subscribe/route.ts`
+- `src/app/api/push/notify/route.ts`
+
+### Commit
+
+`[ver OE 029]`
+
+### Leccion
+
+En Next.js App Router, cualquier código a nivel de módulo en una API route se evalúa en build time sin acceso a variables de entorno. Todo acceso a `process.env.*` que no sea `NEXT_PUBLIC_*` durante SSR, y toda instanciación de clientes externos (Supabase, Redis, etc.), debe hacerse dentro del handler function. El singleton compartido (`src/lib/supabase.ts`) es seguro para componentes cliente pero no para API routes que se evalúan en build time.
+
+---
+
 ## 2026-05-30 - useEffect genérico sobreescribe polígonos cerrados al resetear (trace tool)
 
 ### Problema
