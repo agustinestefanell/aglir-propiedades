@@ -61,6 +61,26 @@ export default function Home() {
         </div>
       </div>
 
+      <div className="mx-auto w-full max-w-[430px] px-4 pb-2 text-center text-xs">
+        <a
+          href="https://maps.app.goo.gl/RjxqqCqcYUQu6x2w8"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 underline"
+        >
+          Ubicación Manzana 8
+        </a>
+        {" · "}
+        <a
+          href="https://maps.app.goo.gl/C854Udbazm8RubTH6"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 underline"
+        >
+          Ubicación Manzana 2
+        </a>
+      </div>
+
       <InteractivePlan
         lots={lots}
         selectedLot={selectedLot}

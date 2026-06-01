@@ -1326,3 +1326,30 @@ El error en Vercel se debía a que el deploy usaba el commit `2029e7e` (OE 025),
 - Cargar precios reales.
 - Agregar variables VAPID + Supabase en Vercel Dashboard (acción manual).
 - Verificar `created_at` en tabla `visit_requests` de Supabase.
+
+---
+
+## OE 033 — Links de ubicación en página pública
+
+**Fecha:** 2026-05-31
+**Ejecutor:** Claude (Sonnet 4.6)
+**Tipo:** UI — feature mínima
+
+### Cambio ejecutado
+
+**`src/app/page.tsx`:**
+- Agregado bloque entre la leyenda y el `<InteractivePlan>`:
+  - "Ubicación Manzana 8" → `https://maps.app.goo.gl/RjxqqCqcYUQu6x2w8`
+  - "Ubicación Manzana 2" → `https://maps.app.goo.gl/C854Udbazm8RubTH6`
+- Estilo: `text-xs text-blue-600 underline`, centrado, separados por ` · `.
+- Ambos con `target="_blank" rel="noopener noreferrer"`.
+
+### Resultado de build
+
+- `tsc --noEmit`: limpio.
+
+### Pendientes al cerrar OE 033
+
+- Cargar precios reales.
+- Verificar Vercel build sin errores.
+- Agregar variables VAPID + Supabase en Vercel Dashboard.
