@@ -1374,3 +1374,66 @@ El error en Vercel se debía a que el deploy usaba el commit `2029e7e` (OE 025),
 - Cargar precios reales.
 - Verificar Vercel build sin errores.
 - Agregar variables VAPID + Supabase en Vercel Dashboard.
+
+---
+
+## OE 036 — Fix: estados no se cargan al abrir la página
+
+**Fecha:** 2026-09-17
+**Ejecutor:** Claude (Sonnet 5)
+**Tipo:** Bug fix — diagnóstico
+
+### Problema
+
+Los cambios de estado se guardan correctamente en Supabase (confirmado en SQL Editor) pero al abrir la página pública o recargar, todos los lotes aparecen como disponibles — no se leen los estados guardados.
+
+### Diagnóstico de `src/lib/lotStates.ts`
+
+- **¿`fetchOverrides` se llama al montar el hook?** Sí — `useEffect([])` en `useLotStates` lo invoca inmediatamente al montar (línea 30 antes del fix), además de suscribir el canal realtime.
+- **¿Hay `console.error` que capture errores del fetch?** Sí, ya estaba desde OE 028 (`if (error) console.error(...)`). Pero si Supabase RLS filtra las filas sin devolver un error (comportamiento típico de Postgres RLS: la policy de SELECT resuelve a `false` y el SELECT retorna 0 filas, no un error), este `console.error` nunca se dispara — el fetch "tiene éxito" con `data: []`.
+- **¿El realtime subscription está activo?** Sí — canal `lot_states_changes` suscripto a `postgres_changes` sobre la tabla, con refetch completo en cualquier evento.
+
+Los tres puntos que pedía la OE (fetch inicial al montar, log de errores, overlay sobre lotes base) ya estaban implementados desde OE 023/027/028. El código de `lotStates.ts` no tiene el bug.
+
+### Causa raíz más probable
+
+RLS en la tabla `lot_states` de Supabase: es probable que exista una policy que permite `INSERT`/`UPDATE` para el rol `anon` (por eso el guardado funciona y es visible en SQL Editor, que corre con permisos de superusuario y no pasa por RLS) pero **no** una policy de `SELECT` para `anon`/`public`, o una policy de `SELECT` restringida a `authenticated` (el proyecto no usa Supabase Auth — `AglirPlans.md` §2 — así que ninguna request, ni pública ni de `/gestion`, llega nunca autenticada). Esto es coherente con el pendiente sin confirmar desde OE 026/027/028: "Verificar en Supabase que RLS permite select y upsert desde anon key en `lot_states`".
+
+Esta hipótesis no se pudo confirmar por SQL directo en esta sesión — sin acceso de red al proyecto Supabase desde este entorno ni credencial de service role en `.env.local`. Requiere verificación manual del usuario en el dashboard de Supabase (ver acción pendiente abajo).
+
+### Cambio de código aplicado
+
+**`src/lib/lotStates.ts` — `fetchOverrides()`:**
+- Si `data.length === 0` sin error, se agrega `console.warn` explícito indicando que puede tratarse de una policy de RLS de SELECT bloqueando la lectura para el rol anon — para que la próxima vez este síntoma sea diagnosticable desde la consola del navegador en vez de indistinguible de "no hay estados guardados".
+
+### Acción manual pendiente (usuario, en Supabase SQL Editor)
+
+Ejecutar y confirmar que existe una policy de SELECT para `anon` en `lot_states`:
+
+```sql
+alter table lot_states enable row level security;
+
+drop policy if exists "public read lot_states" on lot_states;
+create policy "public read lot_states" on lot_states
+  for select using (true);
+
+drop policy if exists "public write lot_states" on lot_states;
+create policy "public write lot_states" on lot_states
+  for insert with check (true);
+
+drop policy if exists "public update lot_states" on lot_states;
+create policy "public update lot_states" on lot_states
+  for update using (true) with check (true);
+```
+
+Tras ejecutarlo, recargar `/` con la consola del navegador abierta: si aparece el `console.warn` nuevo, la policy sigue sin aplicar; si los estados se ven correctamente, el fix quedó confirmado.
+
+### Resultado de build
+
+- `npx tsc --noEmit`: limpio.
+
+### Pendientes al cerrar OE 036
+
+- **Acción manual usuario:** ejecutar el SQL de policies de `lot_states` en Supabase y confirmar en el navegador que los estados cargan al abrir `/`.
+- Cargar precios reales.
+- Agregar variables VAPID + Supabase en Vercel Dashboard (si no están ya).

@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-05-31 — OE 033
+Ultima actualizacion: 2026-09-17 — OE 036
 
 ---
 
@@ -63,7 +63,7 @@ Ultima actualizacion: 2026-05-31 — OE 033
 | Formato de contacto AP-{tel}{Nombre} | Closed | `formatContactName` en `whatsapp.ts`, visible en `WhatsAppAcceptButton` | Probar flujo real |
 | Login admin (`/gestion`) | Closed | `LoginScreen` con credenciales hardcodeadas, **localStorage** (persiste entre sesiones) (OE 025) | Migrar a Supabase Auth |
 | Cambio de estado desde plano (admin) | Closed | Single-tap → `LotStatusMenu`; upsert en Supabase `lot_states`; optimistic update inmediato (OE 023) | — |
-| Sincronización Admin ↔ Público | Closed | `useLotStates` con Supabase realtime (`postgres_changes`) — cambios en admin se propagan en tiempo real a la página pública (OE 023) | — |
+| Sincronización Admin ↔ Público | Broken | `useLotStates` con Supabase realtime (`postgres_changes`) implementado correctamente (OE 023) pero al abrir/recargar la página no se leen los estados guardados — sospecha de RLS de SELECT bloqueando lectura anon en `lot_states` (OE 036) | Ejecutar SQL de policies en Supabase (OE 036) y confirmar en navegador |
 | URL admin no predecible | Closed | `/gestion` en lugar de `/admin`; botón Admin eliminado del header público | — |
 | Logo Aglir en header | Closed | `public/logo.jpg` integrado en ambas páginas (`img` h-8 w-8) | — |
 

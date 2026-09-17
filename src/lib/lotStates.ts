@@ -7,8 +7,17 @@ const TABLE = "lot_states";
 
 async function fetchOverrides(): Promise<Record<string, LotStatus>> {
   const { data, error } = await supabase.from(TABLE).select("*");
-  if (error) console.error("Error cargando estados:", error);
-  if (error || !data) return {};
+  if (error) {
+    console.error("Error cargando estados de lot_states:", error);
+    return {};
+  }
+  if (!data) return {};
+  if (data.length === 0) {
+    console.warn(
+      "lot_states: 0 filas leidas (sin error). Si hay estados guardados en Supabase, " +
+        "revisar la policy de RLS de SELECT para el rol anon/publishable en la tabla lot_states."
+    );
+  }
   const result: Record<string, LotStatus> = {};
   for (const row of data) {
     result[row.lot_id as string] = row.estado as LotStatus;

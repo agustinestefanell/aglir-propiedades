@@ -215,3 +215,34 @@ Separación de ciclos de vida en dos stores independientes:
 ### Leccion
 
 Nunca usar un `useEffect` genérico de "persistir todo lo que cambia" cuando hay múltiples operaciones (guardar vs resetear) que deben comportarse diferente. El reset intencional siempre debe ser explícito, no como efecto secundario de un cambio de estado. Separar el ciclo de vida de datos permanentes del de datos efímeros desde el diseño.
+
+---
+
+## 2026-09-17 - Estados de lot_states se guardan pero no se leen (RLS silenciosa)
+
+### Problema
+
+Admin cambia el estado de un lote → se confirma guardado en Supabase vía SQL Editor. Pero al abrir/recargar la página pública, todos los lotes vuelven a mostrarse como "disponible" — el fetch inicial de `useLotStates` no trae los estados guardados.
+
+### Causa raiz
+
+`src/lib/lotStates.ts` ya tenía, desde OE 023/027/028, todo lo que se esperaría de una implementación correcta: fetch al montar, `console.error` en el catch de error, y merge de overrides sobre `baseLots`. El código en sí no tenía el bug.
+
+La causa real más probable está fuera del código: Postgres RLS no siempre falla con un error. Si una tabla tiene RLS habilitado y la policy de `SELECT` para el rol que hace la query (`anon`, ya que este proyecto no usa Supabase Auth) resuelve a `false`, el `SELECT` no lanza una excepción — simplemente devuelve `data: []` con `error: null`. Es indistinguible, desde el código cliente, de "la tabla está vacía". Mientras tanto, si existe una policy de `INSERT`/`UPDATE` separada y permisiva, el guardado funciona sin problema — de ahí la asimetría "se guarda pero no se lee".
+
+### Consecuencia
+
+4 OEs distintas (026, 027, 028, más ésta) reabrieron el mismo síntoma sin resolverlo, porque cada una revisaba el código (que ya era correcto) en vez de la configuración de RLS en Supabase, que nunca llegó a confirmarse.
+
+### Solucion final
+
+- Código: agregado un `console.warn` explícito cuando el fetch retorna 0 filas sin error, para que el síntoma "0 filas silenciosas" quede diferenciado de un error real y sea diagnosticable desde la consola del navegador.
+- Infra (acción manual pendiente del usuario): confirmar/crear policies de RLS de `SELECT`, `INSERT` y `UPDATE` para `lot_states` que permitan al rol `anon` — ver SQL en `handoff.md` OE 036.
+
+### Commit
+
+`[ver OE 036]`
+
+### Leccion
+
+Cuando un fetch a una tabla con RLS "funciona" (sin error) pero devuelve datos vacíos o incompletos, sospechar primero de las policies de SELECT antes de re-revisar el código del cliente — RLS deniega leyendo como "tabla vacía", no como excepción. Si ya se revisó el mismo archivo en más de una OE anterior sin encontrar nada, es señal de que el bug probablemente no está en ese archivo.
