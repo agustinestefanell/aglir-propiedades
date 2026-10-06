@@ -41,7 +41,7 @@ function PriceRow({ lot, onSavePrices }: { lot: Lot; onSavePrices: SavePrices })
           inputMode="numeric"
           value={ur}
           onChange={(e) => { setUr(e.target.value); setSaveState("idle"); }}
-          placeholder="Ej: 500.000"
+          placeholder="Ej: 10"
           aria-label={`Precio UR manzana ${lot.manzana} solar ${lot.solar}`}
           className="w-full rounded border border-stone-300 px-1.5 py-1 text-xs"
         />

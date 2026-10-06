@@ -1516,3 +1516,21 @@ Sin este SQL, Guardar en el tab Terrenos falla con error de columna inexistente 
 ### Pendientes al cerrar OE 037b
 
 - Mismos que OE 037: SQL de columnas `precio_ur` / `precio_contado` + policies de OE 036 en Supabase.
+
+---
+
+## OE 038 — Fix placeholder precio UR
+
+**Fecha:** 2026-10-06
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** UI — texto
+
+### Cambio ejecutado
+
+- Placeholder del campo Precio UR: `"Ej: 500.000"` → `"Ej: 10"`.
+- Archivos: `src/components/admin/LotStatusMenu.tsx` (popup del plano) y `src/components/admin/AdminPriceTable.tsx` (tabla del tab Terrenos — la tabla vive en este componente, no en `gestion/page.tsx`).
+- Placeholder de Contado U$S sin cambios ("Ej: 25.000").
+
+### Pendientes al cerrar OE 038
+
+- Mismos que OE 037: SQL de columnas `precio_ur` / `precio_contado` + policies de OE 036 en Supabase.

@@ -118,7 +118,7 @@ export function LotStatusMenu({ lot, onChangeStatus, onSavePrices, onClose }: Pr
                 inputMode="numeric"
                 value={ur}
                 onChange={(e) => { setUr(e.target.value); setSaveState("idle"); }}
-                placeholder="Ej: 500.000"
+                placeholder="Ej: 10"
                 className="mt-1 w-full rounded-md border border-stone-300 px-2.5 py-2 text-sm font-normal text-ink"
               />
             </label>
