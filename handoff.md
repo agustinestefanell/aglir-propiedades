@@ -1853,3 +1853,42 @@ Más el SQL de OE 040 (RLS + realtime) si no se ejecutó.
 - Ejecutar SQL de arriba (+ OE 040 si falta).
 - Probar: registro Dueño con logo → Aprobar en /gestion → login Dueño → crear vendedor → login vendedor → propuesta con logo del Dueño → Desactivar Dueño → vendedor deslogueado / no puede entrar.
 - OE de hardening: login y operaciones de equipo server-side.
+
+---
+
+## OE 043 — Fix: mail opcional al crear vendedor desde panel del Dueño
+
+**Fecha:** 2026-10-06
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** Bug fix
+
+### Problema
+
+Crear un vendedor desde "Mi equipo" (panel del Dueño) fallaba. `crearVendedorEquipo` no enviaba `mail` en el insert y la columna `vendedores.mail` en Supabase es `NOT NULL`. La UI mostraba solo "No se pudo crear el vendedor." — el error real quedaba en la consola.
+
+### Cambios ejecutados
+
+**C1 — `DuenoPanel.tsx`:** campo "Mail" (opcional, placeholder "Mail (opcional)", `type="email"`) en el formulario "Nuevo vendedor"; se limpia tras crear.
+
+**C2 — `vendedores.ts` → `crearVendedorEquipo`:** recibe `mail`; inserta `mail: mail.trim() || null`. Columnas explícitas en el insert (antes `...data`).
+
+**C3 — Supabase (acción manual del usuario):**
+
+```sql
+alter table vendedores alter column mail drop not null;
+```
+
+Sin este SQL, crear un vendedor **sin** mail sigue fallando (ahora con el mensaje de Postgres visible en pantalla); con mail cargado funciona igual.
+
+**C4 — Error real en pantalla:** `crearVendedorEquipo` devuelve `{ status, message? }` (`CrearVendedorResult`); en error, `message = error.message` de Supabase. `DuenoPanel` muestra "No se pudo crear el vendedor: {message}".
+
+### Verificación
+
+- `npx tsc --noEmit`: limpio.
+- No verificado contra Supabase real.
+
+### Pendientes al cerrar OE 043
+
+- **Acción manual usuario:** ejecutar el `alter table … drop not null` de arriba.
+- Probar crear vendedor con y sin mail desde "Mi equipo".
+- Pendientes previos: SQL OE 036/037/040/042.

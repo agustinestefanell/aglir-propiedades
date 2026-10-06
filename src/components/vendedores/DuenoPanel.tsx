@@ -28,6 +28,7 @@ function formatFechaCorta(iso: string): string {
 function NuevoVendedorForm({ duenoId, onCreated }: { duenoId: string; onCreated: () => void }) {
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
+  const [mail, setMail] = useState("");
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -44,13 +45,21 @@ function NuevoVendedorForm({ duenoId, onCreated }: { duenoId: string; onCreated:
     }
     setSaving(true);
     setError(null);
-    const result = await crearVendedorEquipo(duenoId, { nombre: nombre.trim(), telefono: telefono.trim(), pin });
+    const result = await crearVendedorEquipo(duenoId, {
+      nombre: nombre.trim(),
+      telefono: telefono.trim(),
+      mail,
+      pin,
+    });
     setSaving(false);
-    if (result === "pin_en_uso") setError("Ese PIN ya está en uso. Elegí otro.");
-    else if (result === "error") setError("No se pudo crear el vendedor.");
+    if (result.status === "pin_en_uso") setError("Ese PIN ya está en uso. Elegí otro.");
+    // Error real de Supabase en pantalla → diagnosticable sin DevTools
+    else if (result.status === "error")
+      setError(`No se pudo crear el vendedor: ${result.message ?? "error desconocido"}`);
     else {
       setNombre("");
       setTelefono("");
+      setMail("");
       setPin("");
       onCreated();
     }
@@ -77,6 +86,16 @@ function NuevoVendedorForm({ duenoId, onCreated }: { duenoId: string; onCreated:
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
             className={`${inputCls} tracking-[0.4em]`}
+          />
+        </label>
+        <label className="col-span-2 text-xs font-semibold text-stone-600">
+          Mail
+          <input
+            type="email"
+            value={mail}
+            onChange={(e) => setMail(e.target.value)}
+            placeholder="Mail (opcional)"
+            className={inputCls}
           />
         </label>
       </div>

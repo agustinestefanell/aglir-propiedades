@@ -226,23 +226,29 @@ export async function fetchEquipo(duenoId: string): Promise<VendedorRow[]> {
   return (data as VendedorRow[]) ?? [];
 }
 
+// message: texto de Supabase cuando status = "error", para mostrarlo en pantalla
+export type CrearVendedorResult = { status: RegistroResult; message?: string };
+
 export async function crearVendedorEquipo(
   duenoId: string,
-  data: { nombre: string; telefono: string; pin: string }
-): Promise<RegistroResult> {
-  if (await pinEnUso(data.pin)) return "pin_en_uso";
+  data: { nombre: string; telefono: string; mail: string; pin: string }
+): Promise<CrearVendedorResult> {
+  if (await pinEnUso(data.pin)) return { status: "pin_en_uso" };
   // Lo crea el Dueño → queda activo sin pasar por aprobación de admin
   const { error } = await supabase.from(VENDEDORES_TABLE).insert({
-    ...data,
+    nombre: data.nombre,
+    telefono: data.telefono,
+    mail: data.mail.trim() || null,
+    pin: data.pin,
     rol: "vendedor",
     dueno_id: duenoId,
     estado: "activo",
   });
   if (error) {
     console.error("Error creando vendedor del equipo:", error);
-    return "error";
+    return { status: "error", message: error.message };
   }
-  return "ok";
+  return { status: "ok" };
 }
 
 export async function fetchPropuestas(vendedorIds: string[]): Promise<PropuestaRow[]> {

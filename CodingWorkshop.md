@@ -246,3 +246,33 @@ La causa real más probable está fuera del código: Postgres RLS no siempre fal
 ### Leccion
 
 Cuando un fetch a una tabla con RLS "funciona" (sin error) pero devuelve datos vacíos o incompletos, sospechar primero de las policies de SELECT antes de re-revisar el código del cliente — RLS deniega leyendo como "tabla vacía", no como excepción. Si ya se revisó el mismo archivo en más de una OE anterior sin encontrar nada, es señal de que el bug probablemente no está en ese archivo.
+
+---
+
+## 2026-10-06 - Crear vendedor desde el panel del Dueño falla (mail NOT NULL)
+
+### Problema
+
+En `/vendedores` → "Mi equipo", "Crear vendedor" fallaba siempre con el mensaje genérico "No se pudo crear el vendedor.".
+
+### Causa raiz
+
+`crearVendedorEquipo` (`src/lib/vendedores.ts`) insertaba `nombre`, `telefono`, `pin`, `rol`, `dueno_id`, `estado` — **sin `mail`**, porque el formulario del Dueño no lo pedía. En Supabase la columna `vendedores.mail` es `NOT NULL` sin default → Postgres rechaza el insert (`null value in column "mail" ... violates not-null constraint`).
+
+El esquema de `vendedores` nunca se pudo leer desde el entorno de desarrollo (sin acceso de red a Supabase, OE 040/042): el código se escribió con un esquema asumido, y la restricción NOT NULL no estaba documentada.
+
+Agravante: la función devolvía solo `"error"` y la UI mostraba un texto genérico — el mensaje real de Postgres solo estaba en `console.error`, inaccesible en un celular sin depuración remota. Hizo falta una OE de diagnóstico solo para encontrar la causa.
+
+### Solucion final
+
+- Formulario con campo Mail opcional; insert con `mail: mail.trim() || null`.
+- Supabase: `alter table vendedores alter column mail drop not null;` (acción manual).
+- `crearVendedorEquipo` devuelve `{ status, message }` y la UI muestra `error.message` de Supabase.
+
+### Commit
+
+`[ver OE 043]`
+
+### Leccion
+
+Cuando el esquema de una tabla es asumido (no verificado contra la base real), todo insert debe propagar `error.message` de Supabase hasta la UI desde el primer día: los errores de constraints (NOT NULL, CHECK, FK) son autoexplicativos si se muestran, e invisibles si se reemplazan por un texto genérico. En apps mobile-first, `console.error` no es un canal de diagnóstico.
