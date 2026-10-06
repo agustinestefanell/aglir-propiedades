@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-09-17 — OE 036
+Ultima actualizacion: 2026-10-06 — OE 037b
 
 ---
 
@@ -22,7 +22,7 @@ Ultima actualizacion: 2026-09-17 — OE 036
 | Feature | Estado | Evidencia | Pendiente |
 |---|---|---|---|
 | Dataset lotes — metadata m2/solar/area | Closed | 90 lotes auditados completos (OE 030): M2, M3, M4, M7 completadas; M8 s10/s11 y M9 corregidas | Verificar M6 s.14 vs plano |
-| Precios reales | Broken | `precio_contado: 0` en todos los lotes | Cargar precios reales cuando se definan |
+| Precios reales | Partial | Editables desde tab "Terrenos" en `/gestion` → `lot_states.precio_ur` / `precio_contado` (OE 037) | Ejecutar SQL de columnas (OE 037) + policies (OE 036); cargar precios reales |
 | Polígonos SVG trazados | Closed | 90 polígonos cargados en OE 020 — coordenadas portrait `y∈[0,155.20]`, trazados por el usuario en `/admin/trace` | Verificar alineación visual en smartphone real |
 | Observaciones de lotes | Closed | `area_m2 === 0` → "Pendiente de auditoría de área.", resto → "" | — |
 | Solicitudes de visita mock | Partial | 4 registros en `visitRequests.ts` con IDs de lotes validos | Solo para probar admin; no persisten |
@@ -47,6 +47,7 @@ Ultima actualizacion: 2026-09-17 — OE 036
 | Botón "Agendar visita" siempre visible | Closed | Bottom sheet fijo — botón en viewport sin scroll | — |
 | Flujo de agenda (registro + booking) | Closed | `VisitBookingModal` 2 pasos; guarda en Supabase `visit_requests`; error visible si falla | — |
 | Persistencia de solicitudes de visita | Closed | Supabase `visit_requests` — persiste entre sesiones (OE 023) | — |
+| Precio en panel de detalle | Partial | `LotDetailPanel` muestra "Precio: UR …" / "Contado: U$S …" si hay precios cargados; nada si no (OE 037) | Depende de SQL de columnas y de RLS SELECT |
 | Lotes no disponibles bloqueados | Closed | `LotDetailPanel` muestra "Este terreno no está disponible." + botón deshabilitado para reservado/vendido | — |
 
 ---
@@ -65,6 +66,8 @@ Ultima actualizacion: 2026-09-17 — OE 036
 | Cambio de estado desde plano (admin) | Closed | Single-tap → `LotStatusMenu`; upsert en Supabase `lot_states`; optimistic update inmediato (OE 023) | — |
 | Sincronización Admin ↔ Público | Broken | `useLotStates` con Supabase realtime (`postgres_changes`) implementado correctamente (OE 023) pero al abrir/recargar la página no se leen los estados guardados — sospecha de RLS de SELECT bloqueando lectura anon en `lot_states` (OE 036) | Ejecutar SQL de policies en Supabase (OE 036) y confirmar en navegador |
 | URL admin no predecible | Closed | `/gestion` en lugar de `/admin`; botón Admin eliminado del header público | — |
+| Tabla de precios (tab Terrenos) | Partial | `AdminPriceTable` — 90 lotes, inputs UR / Contado U$S, Guardar por fila con upsert en `lot_states` (OE 037) | Ejecutar SQL `add column precio_ur/precio_contado` en Supabase |
+| Edición de precio desde popup del plano | Partial | `LotStatusMenu` con inputs Precio UR / U$S contado + "Guardar precio", pre-llenados, comparte `useLotStates` con tab Terrenos (OE 037b) | Ejecutar SQL de columnas (OE 037) |
 | Logo Aglir en header | Closed | `public/logo.jpg` integrado en ambas páginas (`img` h-8 w-8) | — |
 
 ---

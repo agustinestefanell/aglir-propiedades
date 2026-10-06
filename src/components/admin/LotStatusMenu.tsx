@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { Lot, LotStatus } from "@/types";
+import type { SavePrices } from "@/lib/lotStates";
 
 const OPTIONS: {
   value: LotStatus;
@@ -31,10 +33,28 @@ const OPTIONS: {
 type Props = {
   lot: Lot;
   onChangeStatus: (status: LotStatus) => void;
+  onSavePrices: SavePrices;
   onClose: () => void;
 };
 
-export function LotStatusMenu({ lot, onChangeStatus, onClose }: Props) {
+type SaveState = "idle" | "saving" | "saved" | "error";
+
+export function LotStatusMenu({ lot, onChangeStatus, onSavePrices, onClose }: Props) {
+  const [ur, setUr] = useState(lot.precio_ur ?? "");
+  const [contado, setContado] = useState(lot.precio_contado_usd ?? "");
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+
+  // Pre-llena con los precios actuales y re-sincroniza si cambian (realtime / tab Terrenos)
+  useEffect(() => { setUr(lot.precio_ur ?? ""); }, [lot.id, lot.precio_ur]);
+  useEffect(() => { setContado(lot.precio_contado_usd ?? ""); }, [lot.id, lot.precio_contado_usd]);
+
+  async function handleSavePrices() {
+    setSaveState("saving");
+    const ok = await onSavePrices(lot.id, ur, contado);
+    setSaveState(ok ? "saved" : "error");
+    if (ok) setTimeout(() => setSaveState("idle"), 2000);
+  }
+
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} />
@@ -84,6 +104,52 @@ export function LotStatusMenu({ lot, onChangeStatus, onClose }: Props) {
               </button>
             );
           })}
+        </div>
+
+        <div className="mt-4 border-t border-stone-100 pt-4">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-stone-400">
+            Precio
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="text-xs font-semibold text-stone-600">
+              Precio UR
+              <input
+                type="text"
+                inputMode="numeric"
+                value={ur}
+                onChange={(e) => { setUr(e.target.value); setSaveState("idle"); }}
+                placeholder="Ej: 500.000"
+                className="mt-1 w-full rounded-md border border-stone-300 px-2.5 py-2 text-sm font-normal text-ink"
+              />
+            </label>
+            <label className="text-xs font-semibold text-stone-600">
+              Precio U$S contado
+              <input
+                type="text"
+                inputMode="numeric"
+                value={contado}
+                onChange={(e) => { setContado(e.target.value); setSaveState("idle"); }}
+                placeholder="Ej: 25.000"
+                className="mt-1 w-full rounded-md border border-stone-300 px-2.5 py-2 text-sm font-normal text-ink"
+              />
+            </label>
+          </div>
+          <div className="mt-3 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleSavePrices}
+              disabled={saveState === "saving"}
+              className="flex-1 rounded-md bg-leaf py-2.5 text-sm font-bold text-white disabled:opacity-60"
+            >
+              {saveState === "saving" ? "Guardando…" : "Guardar precio"}
+            </button>
+            {saveState === "saved" && (
+              <span className="text-sm font-bold text-emerald-700">✓</span>
+            )}
+            {saveState === "error" && (
+              <span className="text-sm font-bold text-red-600">Error</span>
+            )}
+          </div>
         </div>
       </aside>
     </>

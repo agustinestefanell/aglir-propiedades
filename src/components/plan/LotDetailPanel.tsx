@@ -66,6 +66,22 @@ export function LotDetailPanel({ lot, onClose, onSchedule }: Props) {
           {lot.area_m2 > 0 ? lot.area_m2 : "—"}{" "}
           <span className="text-xl font-bold text-stone-500">m²</span>
         </dd>
+        {(lot.precio_ur || lot.precio_contado_usd) && (
+          <div className="mt-2 space-y-0.5 text-sm text-ink">
+            {lot.precio_ur && (
+              <p>
+                <span className="font-semibold text-stone-500">Precio:</span>{" "}
+                <span className="font-bold">UR {lot.precio_ur}</span>
+              </p>
+            )}
+            {lot.precio_contado_usd && (
+              <p>
+                <span className="font-semibold text-stone-500">Contado:</span>{" "}
+                <span className="font-bold">U$S {lot.precio_contado_usd}</span>
+              </p>
+            )}
+          </div>
+        )}
       </dl>
 
       {lot.estado === "disponible" ? (

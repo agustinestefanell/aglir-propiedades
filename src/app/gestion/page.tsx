@@ -5,12 +5,13 @@ import type { Lot, LotStatus } from "@/types";
 import { InteractivePlan } from "@/components/plan/InteractivePlan";
 import { LoginScreen } from "@/components/admin/LoginScreen";
 import { LotStatusMenu } from "@/components/admin/LotStatusMenu";
+import { AdminPriceTable } from "@/components/admin/AdminPriceTable";
 import { useLotStates } from "@/lib/lotStates";
 import { supabase } from "@/lib/supabase";
 
 const SESSION_KEY = "aglir_gestion_user";
 
-type Tab = "plano" | "visitas";
+type Tab = "plano" | "visitas" | "terrenos";
 
 type VisitRow = {
   id: string;
@@ -44,7 +45,7 @@ async function fetchVisits(): Promise<VisitRow[]> {
 export default function GestionPage() {
   const [user, setUser] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
-  const [lots, changeStatus] = useLotStates();
+  const [lots, changeStatus, savePrices] = useLotStates();
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("plano");
   const [visits, setVisits] = useState<VisitRow[]>([]);
@@ -213,6 +214,17 @@ export default function GestionPage() {
               </span>
             )}
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("terrenos")}
+            className={`flex-1 border-b-2 pb-2 text-sm font-bold transition ${
+              activeTab === "terrenos"
+                ? "border-leaf text-leaf"
+                : "border-transparent text-stone-400 hover:text-stone-600"
+            }`}
+          >
+            Terrenos
+          </button>
         </div>
       </header>
 
@@ -248,8 +260,9 @@ export default function GestionPage() {
 
           {selectedLot && (
             <LotStatusMenu
-              lot={selectedLot}
+              lot={lots.find((l) => l.id === selectedLot.id) ?? selectedLot}
               onChangeStatus={(status) => handleChangeStatus(selectedLot.id, status)}
+              onSavePrices={savePrices}
               onClose={() => setSelectedLot(null)}
             />
           )}
@@ -322,6 +335,11 @@ export default function GestionPage() {
             </div>
           )}
         </section>
+      )}
+
+      {/* ── Tab: Terrenos (precios) ──────────────────────────────────── */}
+      {activeTab === "terrenos" && (
+        <AdminPriceTable lots={lots} onSavePrices={savePrices} />
       )}
     </main>
   );

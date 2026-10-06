@@ -14,6 +14,9 @@ export type Lot = {
   area_m2: number;
   precio_contado: number;
   precio_financiado: number;
+  // Precios cargados desde admin (lot_states.precio_ur / lot_states.precio_contado), texto libre tal como se tipea
+  precio_ur?: string;
+  precio_contado_usd?: string;
   estado: LotStatus;
   observaciones: string;
   polygon: PolygonPoint[];

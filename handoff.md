@@ -1437,3 +1437,82 @@ Tras ejecutarlo, recargar `/` con la consola del navegador abierta: si aparece e
 - **Acción manual usuario:** ejecutar el SQL de policies de `lot_states` en Supabase y confirmar en el navegador que los estados cargan al abrir `/`.
 - Cargar precios reales.
 - Agregar variables VAPID + Supabase en Vercel Dashboard (si no están ya).
+
+---
+
+## OE 037 — Tabla de precios editable en admin + precio en panel público
+
+**Fecha:** 2026-10-06
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** Feature — admin + página pública
+
+### Cambios ejecutados
+
+**C1 — Tab "Terrenos" en `/gestion` (`src/app/gestion/page.tsx` + `src/components/admin/AdminPriceTable.tsx` nuevo):**
+- Tercer tab junto a Plano y Visitas (`Tab = "plano" | "visitas" | "terrenos"`).
+- Tabla de los 90 lotes con columnas: Mz, Lote, m², UR (input texto, placeholder "Ej: 500.000"), Contado U$S (input texto, placeholder "Ej: 25.000"), botón Guardar por fila.
+- Guardar hace upsert en `lot_states` (`lot_id`, `precio_ur`, `precio_contado`) con `onConflict: "lot_id"`. Feedback en el botón: "…" → "✓" (2s) o "Error" (rojo, detalle en consola).
+- Campo vacío se guarda como `null` (borra el precio).
+- El upsert de precios **no envía `estado`**: así no pisa un estado reservado/vendido ya guardado (relevante mientras siga abierto el problema de lectura RLS de OE 036). Para filas nuevas, `estado` toma el default de la columna (ver SQL abajo).
+
+**C2 — `useLotStates` lee precios (`src/lib/lotStates.ts`):**
+- `fetchOverrides` devuelve `Record<lotId, { estado?, precio_ur?, precio_contado? }>`.
+- Los precios se aplican al lote como `precio_ur` y `precio_contado_usd` (nombre distinto en el tipo `Lot` porque `precio_contado: number` ya existía como placeholder en `lots.ts`).
+- El hook ahora retorna `[lots, changeStatus, savePrices]` (`SavePrices` exportado). `page.tsx` público sigue usando solo `[lots]`.
+
+**C3 — Precios en `LotDetailPanel.tsx`:**
+- Debajo del m², si hay precio: "Precio: UR {precio_ur}" y/o "Contado: U$S {precio_contado_usd}". Si no hay ninguno, no se muestra nada.
+
+**Tipos (`src/types/index.ts`):** `Lot` suma `precio_ur?: string` y `precio_contado_usd?: string` (texto libre tal como se tipea en admin).
+
+### Acción manual pendiente (usuario, en Supabase SQL Editor)
+
+Las columnas nuevas no existen todavía en `lot_states`:
+
+```sql
+alter table lot_states add column if not exists precio_ur text;
+alter table lot_states add column if not exists precio_contado text;
+alter table lot_states alter column estado set default 'disponible';
+```
+
+Sin este SQL, Guardar en el tab Terrenos falla con error de columna inexistente (visible en consola y botón "Error"). Además, para que los precios se vean en la página pública sigue haciendo falta el SQL de policies de OE 036 (SELECT para anon).
+
+### Resultado de build
+
+- `npx tsc --noEmit`: limpio.
+
+### Pendientes al cerrar OE 037
+
+- **Acción manual usuario:** ejecutar el SQL de columnas de precio (arriba) y el de policies de OE 036.
+- Cargar los precios reales desde el tab Terrenos.
+- Verificar en smartphone que la tabla de 6 columnas es usable en 430px.
+- Agregar variables VAPID + Supabase en Vercel Dashboard (si no están ya).
+
+---
+
+## OE 037b — Edición de precios desde el popup del plano (admin)
+
+**Fecha:** 2026-10-06
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** Feature — admin
+**Commit:** incluido en el mismo commit que OE 037 (amend antes del push)
+
+### Cambios ejecutados
+
+**`src/components/admin/LotStatusMenu.tsx`:**
+- Nuevo prop `onSavePrices: SavePrices`.
+- Debajo de las opciones de estado: sección "Precio" con inputs "Precio UR" (placeholder "Ej: 500.000") y "Precio U$S contado" (placeholder "Ej: 25.000"), botón "Guardar precio".
+- Inputs pre-llenados con `lot.precio_ur` / `lot.precio_contado_usd`; re-sincronizan si el precio cambia (realtime o tab Terrenos).
+- Feedback: "Guardando…" en el botón, luego ✓ verde (2s) o "Error" en rojo.
+
+**`src/app/gestion/page.tsx`:**
+- `LotStatusMenu` recibe `onSavePrices={savePrices}` (mismo `useLotStates` que el tab Terrenos → ambos se reflejan mutuamente).
+- El popup recibe el lote fresco desde `lots` (`lots.find(id) ?? selectedLot`) en vez del snapshot `selectedLot`, para que los precios mostrados estén siempre actualizados.
+
+### Resultado de build
+
+- `npx tsc --noEmit`: limpio.
+
+### Pendientes al cerrar OE 037b
+
+- Mismos que OE 037: SQL de columnas `precio_ur` / `precio_contado` + policies de OE 036 en Supabase.

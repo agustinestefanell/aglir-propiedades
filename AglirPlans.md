@@ -67,7 +67,7 @@ src/
 
   lib/
     whatsapp.ts       — buildWhatsAppUrl + formatContactName
-    lotStates.ts      — useLotStates() hook: lee/escribe en Supabase lot_states + suscripción realtime
+    lotStates.ts      — useLotStates() hook → [lots, changeStatus, savePrices]: lee/escribe estado y precios en Supabase lot_states + realtime
     supabase.ts       — cliente Supabase (env vars NEXT_PUBLIC_SUPABASE_URL / PUBLISHABLE_KEY)
 
   app/api/push/
@@ -106,6 +106,7 @@ public/
 - Login guard con `localStorage["aglir_gestion_user"]` (persiste entre sesiones). Credenciales hardcodeadas: Agustin/Estefanell33, Rodrigo/Surferogalactico33.
 - Flujo: `LoginScreen` → autenticación → header con tabs → **Plano** (plano interactivo + LotStatusMenu) / **Visitas** (panel de solicitudes).
 - Tab "Plano": plano interactivo, toque simple en lote → LotStatusMenu para cambiar estado (upsert Supabase).
+- Tab "Terrenos" (OE 037): `AdminPriceTable` — tabla de los 90 lotes con inputs Precio UR / Contado U$S y botón Guardar por fila (upsert `lot_states.precio_ur` / `precio_contado`, sin tocar `estado`).
 - Tab "Visitas": lista `visit_requests` de Supabase ordenada por `created_at` desc. Realtime (`postgres_changes`). Badge con count pendientes. Botones WhatsApp y Confirmar (update estado en Supabase).
 - Botón `🔔 Notif` en header: activa Web Push manualmente si no hay permiso.
 - Interacción: double-click/double-tap en lote → `LotStatusMenu` flotante con 3 opciones (En venta / Reservado / Vendido).
@@ -179,7 +180,7 @@ Props: `initialLots`
 
 ### `LotStatusMenu`
 
-Props: `lot`, `onChangeStatus`, `onClose`
+Props: `lot`, `onChangeStatus`, `onSavePrices`, `onClose`
 
 - Bottom sheet fijo mobile-first: `fixed bottom-0 left-0 right-0 z-50`, rounded-t-2xl.
 - Backdrop `fixed inset-0 z-40` cierra al hacer click fuera.
@@ -187,6 +188,7 @@ Props: `lot`, `onChangeStatus`, `onClose`
 - Opción activa marcada con ✓ y fondo destacado.
 - Muestra Manzana, Solar, m² del lote seleccionado.
 - Reemplazó el popup flotante de coordenadas (position x,y) de OE 012.
+- Sección "Precio" (OE 037b): inputs Precio UR / U$S contado pre-llenados + botón "Guardar precio" → `savePrices` de `useLotStates`. Prop `onSavePrices`.
 
 ### `AdminLotStatusCard`
 
@@ -228,6 +230,8 @@ type Lot = {
   area_m2: number
   precio_contado: number     // 0 = pendiente de carga real
   precio_financiado: number  // 0 = pendiente de carga real
+  precio_ur?: string          // desde lot_states.precio_ur (OE 037), texto libre
+  precio_contado_usd?: string // desde lot_states.precio_contado (OE 037), texto libre
   estado: LotStatus
   observaciones: string
   polygon: PolygonPoint[]    // [] = pendiente de trazado
