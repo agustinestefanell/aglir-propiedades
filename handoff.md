@@ -1706,3 +1706,76 @@ Si `vendedores.id` no es `uuid`, ajustar el tipo de `propuestas.vendedor_id`. Si
 - Probar flujo completo: registro → push al admin → Aprobar → login PIN → Generar propuesta → count +1 en admin.
 - OE de hardening del login de vendedores (ver riesgos).
 - Pendientes previos: SQL OE 036/037, prueba de "Descargar JPG" en smartphone.
+
+---
+
+## OE 041 — Fix: solicitar logo en perfil de vendedor
+
+**Fecha:** 2026-10-06
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** Bug fix + UI
+
+### Diagnóstico
+
+El modal (`VendedorProfileModal`) ya tenía un campo "Logo" desde OE 039, pero **no se mostraba** en este caso: `LotStatusMenu` solo abría el modal si no existía `aglir_vendedor`. Desde OE 040, iniciar sesión en `/vendedores` siembra `aglir_vendedor` con nombre y teléfono **sin logo** → en ese dispositivo "Enviar propuesta" saltaba directo a la propuesta y el logo nunca se pedía. Además el campo era poco visible (label "Logo" + botón chico).
+
+### Cambios ejecutados
+
+**`src/components/admin/LotStatusMenu.tsx`:**
+- El modal se abre si no hay perfil **o si el perfil no tiene logo**. Se pasa `initial={loadVendedor()}` para pre-llenar nombre/teléfono.
+- Guardar sin logo sigue permitido (abre la propuesta); el modal vuelve a ofrecer el logo en el próximo "Enviar propuesta".
+
+**`src/components/admin/VendedorProfileModal.tsx`:**
+- Campo renombrado a "Logo de tu inmobiliaria": zona de upload con borde punteado, vista previa y texto "Subir imagen (JPG o PNG)" / "Cambiar imagen" + "Quitar logo".
+- `accept="image/jpeg,image/png"` (antes `image/*`).
+- Modal con `max-h-[90vh] overflow-y-auto` para que el campo y el botón Guardar no queden fuera de pantalla en celulares chicos.
+- El logo sigue guardándose en `aglir_vendedor.logo` (data URL JPEG redimensionada a 400px).
+
+**`src/app/propuesta/[id]/page.tsx`:**
+- Header: slot fijo `h-16 w-24` a la derecha. Con logo (solo `?modo=vendedor`) se muestra alineado a la derecha; sin logo queda vacío sin mover el header.
+- El logo usa `max-h-16 max-w-24` sin `object-contain` → la caja toma la proporción real de la imagen (html2canvas 1.4 no soporta `object-fit` y estiraría logos no cuadrados en el JPG).
+
+### Verificación
+
+- `npx tsc --noEmit`: limpio.
+- No verificado en navegador (flujo de upload + JPG con logo): probar en smartphone.
+
+### Pendientes al cerrar OE 041
+
+- Probar: `/gestion` → lote disponible → "Enviar propuesta" → subir logo → propuesta con logo arriba a la derecha → "Descargar JPG".
+- Pendientes previos: SQL OE 036/037/040.
+
+---
+
+## OE 041b — Logo se pide al ingresar a /gestion, editable después
+
+**Fecha:** 2026-10-06
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** UX admin
+**Commit:** incluido en el mismo commit que OE 041 (amend antes del push)
+
+### Cambios ejecutados
+
+**C1 — Pedido de logo al ingresar (`src/app/gestion/page.tsx`):**
+- Después del login (Agustin / Rodrigo), si `aglir_vendedor` no tiene logo → `VendedorProfileModal` con nombre/teléfono pre-llenados si existen.
+- También se pide al abrir `/gestion` con sesión ya guardada (la sesión persiste en localStorage, así que sin esto los usuarios ya logueados nunca lo verían).
+- "Omitir por ahora" (o ✕) guarda `sessionStorage["aglir_logo_omitido"]` → no se vuelve a pedir hasta cerrar el navegador.
+- `VendedorProfileModal` suma prop opcional `onSkip` que muestra "Omitir por ahora".
+
+**C2 — "Editar mi perfil" en el header de `/gestion`:**
+- Botón junto a ADMIN / 🔔 Notif / Salir. Abre el mismo modal con los datos actuales (nombre, teléfono, logo), sin "Omitir".
+- Para que entre en 430px, el texto "Aglir Propiedades" del header se oculta debajo de `sm` (640px); el logo queda siempre visible.
+
+**Ajuste sobre OE 041 (`LotStatusMenu.tsx`):**
+- "Enviar propuesta" vuelve a pedir el perfil **solo si no existe** (antes de esta OE: también si faltaba el logo). El logo ahora se pide al ingresar y se edita desde el header — evita pedirlo dos veces si se omitió.
+
+### Verificación
+
+- `npx tsc --noEmit`: limpio.
+- `next dev`: `/gestion` 200, sin errores en log.
+- No verificado en navegador el flujo login → modal → omitir/guardar.
+
+### Pendientes al cerrar OE 041b
+
+- Probar en smartphone: login → modal de logo → subir/omitir → "Editar mi perfil" → propuesta con logo → JPG.
+- Pendientes previos: SQL OE 036/037/040.

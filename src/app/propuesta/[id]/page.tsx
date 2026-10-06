@@ -114,10 +114,13 @@ export default function PropuestaPage({
           <div className="flex items-center justify-between gap-4 border-b border-stone-200 pb-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.jpg" alt="Aglir Propiedades" className="h-16 w-16 object-contain" />
-            {esVendedor && vendedor?.logo && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={vendedor.logo} alt={vendedor.nombre} className="h-16 w-16 object-contain" />
-            )}
+            {/* Slot fijo a la derecha: sin logo queda vacío y el header no se mueve */}
+            <div className="flex h-16 w-24 items-center justify-end">
+              {esVendedor && vendedor?.logo && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={vendedor.logo} alt={vendedor.nombre} className="max-h-16 max-w-24 object-contain" />
+              )}
+            </div>
           </div>
 
           {/* Identificación del terreno */}

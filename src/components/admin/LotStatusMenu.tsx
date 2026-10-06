@@ -54,7 +54,8 @@ export function LotStatusMenu({ lot, onChangeStatus, onSavePrices, onClose }: Pr
   }
 
   function handleEnviarPropuesta() {
-    // Sin perfil de vendedor guardado → pedirlo antes de abrir la propuesta
+    // Sin perfil guardado → pedirlo antes de abrir la propuesta.
+    // El logo se pide al ingresar a /gestion (OE 041b) y se edita con "Editar mi perfil".
     if (loadVendedor()) openPropuesta();
     else setShowProfile(true);
   }
@@ -180,6 +181,7 @@ export function LotStatusMenu({ lot, onChangeStatus, onSavePrices, onClose }: Pr
 
       {showProfile && (
         <VendedorProfileModal
+          initial={loadVendedor()}
           onSaved={() => { setShowProfile(false); openPropuesta(); }}
           onClose={() => setShowProfile(false)}
         />

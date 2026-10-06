@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-10-06 — OE 040
+Ultima actualizacion: 2026-10-06 — OE 041b
 
 ---
 
@@ -70,7 +70,7 @@ Ultima actualizacion: 2026-10-06 — OE 040
 | Tabla de precios (tab Terrenos) | Partial | `AdminPriceTable` — 90 lotes, inputs UR / Contado U$S, Guardar por fila con upsert en `lot_states` (OE 037) | Ejecutar SQL `add column precio_ur/precio_contado` en Supabase |
 | Edición de precio desde popup del plano | Partial | `LotStatusMenu` con inputs Precio UR / U$S contado + "Guardar precio", pre-llenados, comparte `useLotStates` con tab Terrenos (OE 037b) | Ejecutar SQL de columnas (OE 037) |
 | Botón "Enviar propuesta" en popup del plano | Closed | `LotStatusMenu`, solo lotes disponibles → `/propuesta/[id]?modo=vendedor`; pide perfil si no existe (OE 039/039b) | — |
-| Perfil del vendedor | Closed | `VendedorProfileModal` — nombre, teléfono, logo (redimensionado 400px) en `localStorage["aglir_vendedor"]` (OE 039) | Solo vive en el dispositivo del vendedor |
+| Perfil del vendedor | Closed | `VendedorProfileModal` — nombre, teléfono, "Logo de tu inmobiliaria" (JPG/PNG, redimensionado 400px) en `localStorage["aglir_vendedor"]` (OE 039); logo se pide al ingresar a `/gestion` si falta ("Omitir por ahora" disponible) y se edita con "Editar mi perfil" en el header (OE 041/041b) | Solo vive en el dispositivo del vendedor; probar upload en smartphone |
 | Tab Vendedores (gestión) | Partial | `AdminVendedores` — tabla con estado, count de propuestas, Aprobar/Desactivar, realtime (OE 040) | Ejecutar SQL OE 040 (RLS + realtime publication) |
 | Logo Aglir en header | Closed | `public/logo.jpg` integrado en ambas páginas (`img` h-8 w-8) | — |
 

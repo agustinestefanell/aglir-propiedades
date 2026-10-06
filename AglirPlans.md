@@ -113,6 +113,7 @@ public/
 - Tab "Vendedores" (OE 040): `AdminVendedores` — vendedores con estado, count de propuestas, Aprobar / Desactivar, realtime sobre `vendedores` y `propuestas`.
 - Tab "Visitas": lista `visit_requests` de Supabase ordenada por `created_at` desc. Realtime (`postgres_changes`). Badge con count pendientes. Botones WhatsApp y Confirmar (update estado en Supabase).
 - Botón `🔔 Notif` en header: activa Web Push manualmente si no hay permiso.
+- Botón "Editar mi perfil" en header (OE 041b): abre `VendedorProfileModal` (nombre, teléfono, logo). Al ingresar, si `aglir_vendedor` no tiene logo, se pide con opción "Omitir por ahora" (silenciado por `sessionStorage["aglir_logo_omitido"]`).
 - Interacción: double-click/double-tap en lote → `LotStatusMenu` flotante con 3 opciones (En venta / Reservado / Vendido).
 - Estado local: cambios de estado viven en `useState` de la página (no persisten entre sesiones).
 - Sin cards, sin listas, sin tablas — solo el plano.
@@ -209,7 +210,7 @@ Props: `lot`, `onChangeStatus`, `onSavePrices`, `onClose`
 - Opción activa marcada con ✓ y fondo destacado.
 - Muestra Manzana, Solar, m² del lote seleccionado.
 - Reemplazó el popup flotante de coordenadas (position x,y) de OE 012.
-- Botón "Enviar propuesta" (OE 039, solo disponibles): sin perfil de vendedor → `VendedorProfileModal`; luego `router.push("/propuesta/{id}?modo=vendedor")`.
+- Botón "Enviar propuesta" (OE 039, solo disponibles): sin perfil de vendedor → `VendedorProfileModal` (el logo se pide al ingresar, OE 041b); luego `router.push("/propuesta/{id}?modo=vendedor")`.
 - Sección "Precio" (OE 037b): inputs Precio UR / U$S contado pre-llenados + botón "Guardar precio" → `savePrices` de `useLotStates`. Prop `onSavePrices`.
 
 ### `AdminLotStatusCard`

@@ -7,10 +7,19 @@ import { LoginScreen } from "@/components/admin/LoginScreen";
 import { LotStatusMenu } from "@/components/admin/LotStatusMenu";
 import { AdminPriceTable } from "@/components/admin/AdminPriceTable";
 import { AdminVendedores } from "@/components/admin/AdminVendedores";
+import { VendedorProfileModal } from "@/components/admin/VendedorProfileModal";
+import { loadVendedor } from "@/lib/vendedor";
 import { useLotStates } from "@/lib/lotStates";
 import { supabase } from "@/lib/supabase";
 
 const SESSION_KEY = "aglir_gestion_user";
+// sessionStorage: "Omitir por ahora" silencia el pedido de logo hasta cerrar el navegador
+const LOGO_SKIP_KEY = "aglir_logo_omitido";
+
+function needsLogoPrompt(): boolean {
+  if (sessionStorage.getItem(LOGO_SKIP_KEY)) return false;
+  return !loadVendedor()?.logo;
+}
 
 type Tab = "plano" | "visitas" | "terrenos" | "vendedores";
 
@@ -51,6 +60,7 @@ export default function GestionPage() {
   const [activeTab, setActiveTab] = useState<Tab>("plano");
   const [visits, setVisits] = useState<VisitRow[]>([]);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
+  const [profileModal, setProfileModal] = useState<"login" | "edit" | null>(null);
 
   const pendingCount = visits.filter(
     (v) => !v.estado || v.estado === "pendiente"
@@ -60,6 +70,8 @@ export default function GestionPage() {
     const saved = localStorage.getItem(SESSION_KEY);
     setUser(saved);
     setAuthChecked(true);
+    // La sesión persiste en localStorage: también pedir el logo al volver a abrir /gestion ya logueado
+    if (saved && needsLogoPrompt()) setProfileModal("login");
     if (typeof Notification !== "undefined") {
       setNotifPermission(Notification.permission);
     }
@@ -110,6 +122,13 @@ export default function GestionPage() {
   function handleLogin(username: string) {
     localStorage.setItem(SESSION_KEY, username);
     setUser(username);
+    if (needsLogoPrompt()) setProfileModal("login");
+  }
+
+  // "Omitir por ahora" (o ✕) en el pedido de logo del login
+  function skipLogoPrompt() {
+    sessionStorage.setItem(LOGO_SKIP_KEY, "1");
+    setProfileModal(null);
   }
 
   function handleLogout() {
@@ -159,7 +178,7 @@ export default function GestionPage() {
               alt="Aglir Propiedades"
               className="h-8 w-8 rounded-sm object-cover"
             />
-            <span className="text-sm font-black tracking-tight text-ink">
+            <span className="hidden text-sm font-black tracking-tight text-ink sm:inline">
               Aglir Propiedades
             </span>
           </div>
@@ -177,6 +196,13 @@ export default function GestionPage() {
                 🔔 Notif
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => setProfileModal("edit")}
+              className="rounded-md border border-stone-300 px-2 py-1.5 text-[11px] font-bold text-stone-600 transition hover:bg-stone-50"
+            >
+              Editar mi perfil
+            </button>
             <button
               type="button"
               onClick={handleLogout}
@@ -356,6 +382,15 @@ export default function GestionPage() {
 
       {/* ── Tab: Vendedores ──────────────────────────────────────────── */}
       {activeTab === "vendedores" && <AdminVendedores />}
+
+      {profileModal && (
+        <VendedorProfileModal
+          initial={loadVendedor()}
+          onSaved={() => setProfileModal(null)}
+          onClose={profileModal === "login" ? skipLogoPrompt : () => setProfileModal(null)}
+          onSkip={profileModal === "login" ? skipLogoPrompt : undefined}
+        />
+      )}
     </main>
   );
 }

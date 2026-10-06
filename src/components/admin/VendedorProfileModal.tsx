@@ -8,9 +8,11 @@ type Props = {
   initial?: Vendedor | null;
   onSaved: (v: Vendedor) => void;
   onClose: () => void;
+  // Si se pasa, muestra "Omitir por ahora" bajo Guardar
+  onSkip?: () => void;
 };
 
-export function VendedorProfileModal({ initial, onSaved, onClose }: Props) {
+export function VendedorProfileModal({ initial, onSaved, onClose, onSkip }: Props) {
   const [nombre, setNombre] = useState(initial?.nombre ?? "");
   const [telefono, setTelefono] = useState(initial?.telefono ?? "");
   const [logo, setLogo] = useState<string | undefined>(initial?.logo);
@@ -49,7 +51,7 @@ export function VendedorProfileModal({ initial, onSaved, onClose }: Props) {
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 sm:items-center">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-[430px] rounded-t-2xl bg-white px-5 pt-5 pb-8 shadow-2xl sm:rounded-2xl"
+        className="max-h-[90vh] w-full max-w-[430px] overflow-y-auto rounded-t-2xl bg-white px-5 pt-5 pb-8 shadow-2xl sm:rounded-2xl"
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
@@ -88,26 +90,35 @@ export function VendedorProfileModal({ initial, onSaved, onClose }: Props) {
             />
           </label>
           <div className="text-xs font-semibold text-stone-600">
-            Logo
-            <div className="mt-1 flex items-center gap-3">
+            Logo de tu inmobiliaria
+            <label className="mt-1 flex cursor-pointer items-center gap-3 rounded-md border-2 border-dashed border-stone-300 p-3 hover:bg-stone-50">
               {logo ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={logo} alt="Logo del vendedor" className="h-14 w-14 rounded border border-stone-200 object-contain" />
+                <img src={logo} alt="Logo de la inmobiliaria" className="h-14 w-14 rounded border border-stone-200 bg-white object-contain" />
               ) : (
-                <div className="flex h-14 w-14 items-center justify-center rounded border border-dashed border-stone-300 text-[10px] text-stone-400">
-                  Sin logo
-                </div>
+                <span className="flex h-14 w-14 items-center justify-center rounded bg-stone-100 text-2xl text-stone-400">
+                  +
+                </span>
               )}
-              <label className="cursor-pointer rounded-md border border-stone-300 px-3 py-2 text-xs font-bold text-stone-700 hover:bg-stone-50">
-                {loadingLogo ? "Cargando…" : logo ? "Cambiar" : "Elegir imagen"}
-                <input type="file" accept="image/*" onChange={handleLogo} className="hidden" />
-              </label>
-              {logo && (
-                <button type="button" onClick={() => setLogo(undefined)} className="text-xs text-stone-500 underline">
-                  Quitar
-                </button>
-              )}
-            </div>
+              <span className="text-sm font-bold text-stone-700">
+                {loadingLogo ? "Cargando…" : logo ? "Cambiar imagen" : "Subir imagen (JPG o PNG)"}
+              </span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png"
+                onChange={handleLogo}
+                className="hidden"
+              />
+            </label>
+            {logo && (
+              <button
+                type="button"
+                onClick={() => setLogo(undefined)}
+                className="mt-1 text-xs font-normal text-stone-500 underline"
+              >
+                Quitar logo
+              </button>
+            )}
           </div>
         </div>
 
@@ -120,6 +131,15 @@ export function VendedorProfileModal({ initial, onSaved, onClose }: Props) {
         >
           Guardar
         </button>
+        {onSkip && (
+          <button
+            type="button"
+            onClick={onSkip}
+            className="mt-3 w-full text-center text-xs font-semibold text-stone-500 underline"
+          >
+            Omitir por ahora
+          </button>
+        )}
       </form>
     </div>
   );
