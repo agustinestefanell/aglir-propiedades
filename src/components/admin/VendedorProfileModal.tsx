@@ -10,9 +10,12 @@ type Props = {
   onClose: () => void;
   // Si se pasa, muestra "Omitir por ahora" bajo Guardar
   onSkip?: () => void;
+  // false → oculta el campo de logo (vendedor simple: el logo viene siempre del Dueño).
+  // El logo actual se conserva al guardar.
+  allowLogo?: boolean;
 };
 
-export function VendedorProfileModal({ initial, onSaved, onClose, onSkip }: Props) {
+export function VendedorProfileModal({ initial, onSaved, onClose, onSkip, allowLogo = true }: Props) {
   const [nombre, setNombre] = useState(initial?.nombre ?? "");
   const [telefono, setTelefono] = useState(initial?.telefono ?? "");
   const [logo, setLogo] = useState<string | undefined>(initial?.logo);
@@ -89,37 +92,39 @@ export function VendedorProfileModal({ initial, onSaved, onClose, onSkip }: Prop
               className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm font-normal text-ink"
             />
           </label>
-          <div className="text-xs font-semibold text-stone-600">
-            Logo de tu inmobiliaria
-            <label className="mt-1 flex cursor-pointer items-center gap-3 rounded-md border-2 border-dashed border-stone-300 p-3 hover:bg-stone-50">
-              {logo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={logo} alt="Logo de la inmobiliaria" className="h-14 w-14 rounded border border-stone-200 bg-white object-contain" />
-              ) : (
-                <span className="flex h-14 w-14 items-center justify-center rounded bg-stone-100 text-2xl text-stone-400">
-                  +
+          {allowLogo && (
+            <div className="text-xs font-semibold text-stone-600">
+              Logo de tu inmobiliaria
+              <label className="mt-1 flex cursor-pointer items-center gap-3 rounded-md border-2 border-dashed border-stone-300 p-3 hover:bg-stone-50">
+                {logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logo} alt="Logo de la inmobiliaria" className="h-14 w-14 rounded border border-stone-200 bg-white object-contain" />
+                ) : (
+                  <span className="flex h-14 w-14 items-center justify-center rounded bg-stone-100 text-2xl text-stone-400">
+                    +
+                  </span>
+                )}
+                <span className="text-sm font-bold text-stone-700">
+                  {loadingLogo ? "Cargando…" : logo ? "Cambiar imagen" : "Subir imagen (JPG o PNG)"}
                 </span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  onChange={handleLogo}
+                  className="hidden"
+                />
+              </label>
+              {logo && (
+                <button
+                  type="button"
+                  onClick={() => setLogo(undefined)}
+                  className="mt-1 text-xs font-normal text-stone-500 underline"
+                >
+                  Quitar logo
+                </button>
               )}
-              <span className="text-sm font-bold text-stone-700">
-                {loadingLogo ? "Cargando…" : logo ? "Cambiar imagen" : "Subir imagen (JPG o PNG)"}
-              </span>
-              <input
-                type="file"
-                accept="image/jpeg,image/png"
-                onChange={handleLogo}
-                className="hidden"
-              />
-            </label>
-            {logo && (
-              <button
-                type="button"
-                onClick={() => setLogo(undefined)}
-                className="mt-1 text-xs font-normal text-stone-500 underline"
-              >
-                Quitar logo
-              </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {error && <p className="mt-3 text-sm font-semibold text-red-600">{error}</p>}

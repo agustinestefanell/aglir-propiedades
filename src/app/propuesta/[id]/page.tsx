@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLotStates } from "@/lib/lotStates";
 import { loadVendedor, type Vendedor } from "@/lib/vendedor";
+import { loadSession } from "@/lib/vendedores";
 import { VendedorProfileModal } from "@/components/admin/VendedorProfileModal";
 
 const SVG_W = 100;
@@ -33,12 +34,17 @@ export default function PropuestaPage({
   const [vendedor, setVendedor] = useState<Vendedor | null>(null);
   const [fecha, setFecha] = useState("");
   const [showProfile, setShowProfile] = useState(false);
+  // Vendedor simple logueado en /vendedores: el logo viene del Dueño, no lo puede cambiar (OE 044)
+  const [esVendedorSimple, setEsVendedorSimple] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const docRef = useRef<HTMLDivElement>(null);
 
   // localStorage y fecha solo en cliente (evita mismatch de hidratación)
   useEffect(() => {
-    if (esVendedor) setVendedor(loadVendedor());
+    if (esVendedor) {
+      setVendedor(loadVendedor());
+      setEsVendedorSimple(loadSession()?.rol === "vendedor");
+    }
     setFecha(formatFecha(new Date()));
   }, [esVendedor]);
 
@@ -207,6 +213,7 @@ export default function PropuestaPage({
           initial={vendedor}
           onSaved={(v) => { setVendedor(v); setShowProfile(false); }}
           onClose={() => setShowProfile(false)}
+          allowLogo={!esVendedorSimple}
         />
       )}
     </main>

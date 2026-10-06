@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-10-06 — OE 043
+Ultima actualizacion: 2026-10-06 — OE 044
 
 ---
 
@@ -95,7 +95,7 @@ Ultima actualizacion: 2026-10-06 — OE 043
 | Dashboard vendedor (plano + Generar propuesta) | Partial | Plano solo lectura, bottom sheet, insert en `propuestas` → `/propuesta/[id]?modo=vendedor` (OE 040) | Probar contra Supabase real |
 | Registro de Dueño de inmobiliaria | Partial | Checkbox "Soy dueño de inmobiliaria" → rol dueno + logo_inmobiliaria, estado pendiente (OE 042) | Verificar columna `logo_inmobiliaria` (SQL OE 042) |
 | Dashboard Dueño (Mi equipo / Propuestas) | Partial | `DuenoPanel` — crear vendedores con PIN y mail opcional (activos), activar/desactivar, propuestas del equipo; errores de Supabase visibles en pantalla (OE 042/043) | Ejecutar `alter table vendedores alter column mail drop not null`; aislamiento entre equipos solo de UI |
-| Logo del Dueño en propuestas | Partial | Login de vendedor con dueno_id carga `logo_inmobiliaria` del Dueño en `aglir_vendedor`; Dueño inactivo bloquea login y desloguea (OE 042) | Probar contra Supabase real |
+| Logo del Dueño en propuestas | Partial | Login de vendedor con dueno_id carga `logo_inmobiliaria` del Dueño en `aglir_vendedor`; Dueño inactivo bloquea login y desloguea (OE 042). Vendedor simple no ve el campo de logo en "Editar mi perfil" (OE 044) | Probar contra Supabase real; vendedores sin Dueño quedan sin logo |
 | Push al admin por registro | Partial | `/api/push/notify` "Nuevo vendedor registrado" (OE 040) | Probar en dispositivo admin |
 
 ---

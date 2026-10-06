@@ -1892,3 +1892,41 @@ Sin este SQL, crear un vendedor **sin** mail sigue fallando (ahora con el mensaj
 - **Acción manual usuario:** ejecutar el `alter table … drop not null` de arriba.
 - Probar crear vendedor con y sin mail desde "Mi equipo".
 - Pendientes previos: SQL OE 036/037/040/042.
+
+---
+
+## OE 044 — Quitar opción de subir logo al vendedor simple
+
+**Fecha:** 2026-10-06
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** Fix de permisos (UI)
+
+### Problema
+
+Un vendedor simple (`rol = "vendedor"`) logueado en `/vendedores` llegaba a la propuesta (`?modo=vendedor`) y desde "Editar mi perfil" podía subir/cambiar/quitar el logo, pisando el logo de su Dueño en `aglir_vendedor.logo`.
+
+### Cambios ejecutados
+
+**`VendedorProfileModal.tsx`:** nueva prop `allowLogo` (default `true`). Con `false` se oculta completamente el campo "Logo de tu inmobiliaria" (upload, vista previa y "Quitar logo"). El logo actual se conserva al guardar (no se borra el del Dueño).
+
+**`src/app/propuesta/[id]/page.tsx`:** en modo vendedor lee `aglir_vendedor_session`; si `rol === "vendedor"` → `allowLogo={false}`. Nombre y teléfono siguen editables.
+
+**Sin cambios donde el logo sigue visible:**
+- Dueño logueado en `/vendedores` (`rol = "dueno"`) → campo visible y editable.
+- Admin en `/gestion` (Agustin/Rodrigo, sin sesión de vendedor): pedido de logo al ingresar, "Editar mi perfil" y "Enviar propuesta" → campo visible (OE 041b).
+
+### Notas
+
+- Aplica también a vendedores **sin Dueño** (`rol = "vendedor"`, `dueno_id` nulo): ya no pueden cargar logo, así que sus propuestas salen sin logo de inmobiliaria (o con el que hubiera quedado guardado antes en el dispositivo). Si se quiere que los independientes sí puedan subir logo, cambiar la condición a `rol === "vendedor" && dueno_id`.
+- El logo que edita el Dueño desde este modal se guarda solo en su dispositivo (`aglir_vendedor`), **no** actualiza `vendedores.logo_inmobiliaria` en Supabase — sus vendedores siguen viendo el logo cargado al registrarse. Pendiente si se quiere que el Dueño pueda cambiar el logo del equipo.
+- Es una restricción de UI: el vendedor podría seguir alterando su localStorage manualmente (sin impacto fuera de su propio dispositivo).
+
+### Verificación
+
+- `npx tsc --noEmit`: limpio.
+- No verificado en navegador.
+
+### Pendientes al cerrar OE 044
+
+- Probar: login vendedor simple → Generar propuesta → Editar mi perfil sin campo de logo, logo del Dueño intacto. Login Dueño → campo visible.
+- Decidir: logo para vendedores sin Dueño / edición del logo del equipo por el Dueño en Supabase.
