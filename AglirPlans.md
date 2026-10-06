@@ -26,6 +26,7 @@ Reemplaza a `AISyncPlans.md`. Documento tecnico de referencia del proyecto. Se a
 | Tailwind CSS | 3.4.17 |
 | @supabase/supabase-js | 2.106.2 |
 | web-push | latest |
+| html2canvas | 1.4.1 |
 | App Router | src/app |
 
 Sin Google Calendar. Sin login real (Supabase Auth pendiente).
@@ -113,6 +114,16 @@ public/
 - Estado local: cambios de estado viven en `useState` de la página (no persisten entre sesiones).
 - Sin cards, sin listas, sin tablas — solo el plano.
 
+### `/propuesta/[id]` — Propuesta comercial (OE 039)
+
+- Pública, `"use client"`. Documento blanco de máx. 600px pensado para exportarse como JPG.
+- `?modo=vendedor` (desde `/gestion`) muestra logo, nombre y teléfono del vendedor + "Editar mi perfil". `?modo=publico` (desde `/`, botón "Descargar propuesta" en `LotDetailPanel`) y sin parámetro → sin datos de vendedor (OE 039b).
+- Contenido: logo Aglir + logo vendedor, Mz/Solar, m², precio UR, plano con el lote resaltado en amarillo, condiciones de pago, footer con vendedor, fecha y validez (15 días).
+- Plano = `<img>` + `<svg>` superpuesto solo con el polígono (inline fill/stroke) — compatible con html2canvas.
+- "Descargar JPG": html2canvas (import dinámico) → `propuesta-m{manzana}-s{solar}.jpg`.
+- Datos del vendedor desde `localStorage["aglir_vendedor"]` (`src/lib/vendedor.ts`); "Editar mi perfil" abre `VendedorProfileModal`.
+- Entradas: "Enviar propuesta" en `LotStatusMenu` → modo vendedor; "Descargar propuesta" en `LotDetailPanel` → modo público (solo lotes disponibles).
+
 ### `/admin/trace` — Herramienta de trazado (solo dev)
 
 - Funcion: trazar poligonos SVG sobre el plano para poblar `lots.ts`.
@@ -154,7 +165,7 @@ Props: `lot`, `selected`, `onSelect`, `forceClickable?`
 
 Props: `lot`, `onClose`, `onSchedule`
 
-- Badge de estado, Manzana, Solar, m² (muestra "—" si area=0), botón "Agendar visita".
+- Badge de estado, Manzana, Solar, m² (muestra "—" si area=0), precios si están cargados, botón "Descargar propuesta" (OE 039b, `/propuesta/{id}?modo=publico`). Botón "Agendar visita" eliminado en OE 039 (`onSchedule` opcional, sin uso).
 - Bottom sheet centrado en 430px en todos los tamaños: `fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-30` (OE 019 — eliminado el modo sticky de columna derecha).
 - Botón "Agendar visita" siempre visible sin scroll (deshabilitado si no disponible).
 - Nota "Horario a confirmar · Te contactamos por WhatsApp" fija bajo el botón.
@@ -188,6 +199,7 @@ Props: `lot`, `onChangeStatus`, `onSavePrices`, `onClose`
 - Opción activa marcada con ✓ y fondo destacado.
 - Muestra Manzana, Solar, m² del lote seleccionado.
 - Reemplazó el popup flotante de coordenadas (position x,y) de OE 012.
+- Botón "Enviar propuesta" (OE 039, solo disponibles): sin perfil de vendedor → `VendedorProfileModal`; luego `router.push("/propuesta/{id}?modo=vendedor")`.
 - Sección "Precio" (OE 037b): inputs Precio UR / U$S contado pre-llenados + botón "Guardar precio" → `savePrices` de `useLotStates`. Prop `onSavePrices`.
 
 ### `AdminLotStatusCard`

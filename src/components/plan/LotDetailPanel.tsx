@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import type { Lot } from "@/types";
 
 type Props = {
   lot: Lot;
   onClose: () => void;
-  onSchedule: () => void;
+  // Sin uso desde OE 039 (se eliminó "Agendar visita"); se mantiene para no romper InteractivePlan
+  onSchedule?: () => void;
 };
 
 const statusConfig = {
@@ -23,7 +25,7 @@ const statusConfig = {
   },
 } as const;
 
-export function LotDetailPanel({ lot, onClose, onSchedule }: Props) {
+export function LotDetailPanel({ lot, onClose }: Props) {
   const cfg = statusConfig[lot.estado];
 
   return (
@@ -84,20 +86,16 @@ export function LotDetailPanel({ lot, onClose, onSchedule }: Props) {
         )}
       </dl>
 
-      {lot.estado === "disponible" ? (
-        <>
-          <button
-            type="button"
-            onClick={onSchedule}
-            className="min-h-12 w-full rounded-md bg-leaf px-5 py-3 text-base font-bold text-white shadow-sm transition hover:bg-emerald-800"
-          >
-            Agendar visita
-          </button>
-          <p className="text-center text-xs leading-5 text-stone-500">
-            Horario a confirmar · Te contactamos por WhatsApp
-          </p>
-        </>
-      ) : (
+      {lot.estado === "disponible" && (
+        <Link
+          href={`/propuesta/${lot.id}?modo=publico`}
+          className="flex min-h-12 w-full items-center justify-center rounded-md bg-leaf px-5 py-3 text-base font-bold text-white shadow-sm transition hover:bg-emerald-800"
+        >
+          Descargar propuesta
+        </Link>
+      )}
+
+      {lot.estado !== "disponible" && (
         <>
           <p className="rounded-md bg-stone-50 px-4 py-3 text-center text-sm font-semibold text-stone-600">
             Este terreno no está disponible.

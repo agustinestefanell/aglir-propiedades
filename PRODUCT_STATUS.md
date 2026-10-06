@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-10-06 — OE 037b
+Ultima actualizacion: 2026-10-06 — OE 039b
 
 ---
 
@@ -44,8 +44,9 @@ Ultima actualizacion: 2026-10-06 — OE 037b
 | Carátula derecha del A3 | Closed | Nueva imagen portrait sin carátula lateral separada — todo el contenido está integrado en la imagen | — |
 | Panel lateral — desktop sticky | Closed | `position:sticky top:56px width:300px` — validado Playwright | — |
 | Panel — mobile bottom sheet | Closed | `position:fixed bottom:0` — superpuesto sobre plano, validado Playwright | — |
-| Botón "Agendar visita" siempre visible | Closed | Bottom sheet fijo — botón en viewport sin scroll | — |
-| Flujo de agenda (registro + booking) | Closed | `VisitBookingModal` 2 pasos; guarda en Supabase `visit_requests`; error visible si falla | — |
+| Botón "Descargar propuesta" | Closed | `LotDetailPanel`, solo lotes disponibles → `/propuesta/[id]?modo=publico` (OE 039b) | — |
+| Botón "Agendar visita" | Deferred | Eliminado de `LotDetailPanel` en OE 039 | `VisitBookingModal` sigue en el repo, inalcanzable |
+| Flujo de agenda (registro + booking) | Deferred | Sin punto de entrada desde OE 039. Antes: | `VisitBookingModal` 2 pasos; guarda en Supabase `visit_requests`; error visible si falla | — |
 | Persistencia de solicitudes de visita | Closed | Supabase `visit_requests` — persiste entre sesiones (OE 023) | — |
 | Precio en panel de detalle | Partial | `LotDetailPanel` muestra "Precio: UR …" / "Contado: U$S …" si hay precios cargados; nada si no (OE 037) | Depende de SQL de columnas y de RLS SELECT |
 | Lotes no disponibles bloqueados | Closed | `LotDetailPanel` muestra "Este terreno no está disponible." + botón deshabilitado para reservado/vendido | — |
@@ -68,7 +69,19 @@ Ultima actualizacion: 2026-10-06 — OE 037b
 | URL admin no predecible | Closed | `/gestion` en lugar de `/admin`; botón Admin eliminado del header público | — |
 | Tabla de precios (tab Terrenos) | Partial | `AdminPriceTable` — 90 lotes, inputs UR / Contado U$S, Guardar por fila con upsert en `lot_states` (OE 037) | Ejecutar SQL `add column precio_ur/precio_contado` en Supabase |
 | Edición de precio desde popup del plano | Partial | `LotStatusMenu` con inputs Precio UR / U$S contado + "Guardar precio", pre-llenados, comparte `useLotStates` con tab Terrenos (OE 037b) | Ejecutar SQL de columnas (OE 037) |
+| Botón "Enviar propuesta" en popup del plano | Closed | `LotStatusMenu`, solo lotes disponibles → `/propuesta/[id]?modo=vendedor`; pide perfil si no existe (OE 039/039b) | — |
+| Perfil del vendedor | Closed | `VendedorProfileModal` — nombre, teléfono, logo (redimensionado 400px) en `localStorage["aglir_vendedor"]` (OE 039) | Solo vive en el dispositivo del vendedor |
 | Logo Aglir en header | Closed | `public/logo.jpg` integrado en ambas páginas (`img` h-8 w-8) | — |
+
+---
+
+## Propuesta comercial `/propuesta/[id]`
+
+| Feature | Estado | Evidencia | Pendiente |
+|---|---|---|---|
+| Página de propuesta | Partial | Logos, Mz/Solar, m², precio UR, plano con lote en amarillo, condiciones, footer vendedor + fecha + validez 15 días; renderiza en `next dev` (OE 039) | Precio depende de SQL OE 037 + RLS OE 036 |
+| Versión pública vs vendedor | Closed | `?modo=publico` (default) sin datos de vendedor; `?modo=vendedor` con logo, nombre, teléfono y "Editar mi perfil" (OE 039b) | — |
+| Descargar JPG (html2canvas) | Partial | `propuesta-m{mz}-s{solar}.jpg`, scale 2, JPEG 0.92 (OE 039) | Probar descarga en smartphone real (iOS Safari) |
 
 ---
 

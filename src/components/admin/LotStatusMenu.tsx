@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { Lot, LotStatus } from "@/types";
 import type { SavePrices } from "@/lib/lotStates";
+import { loadVendedor } from "@/lib/vendedor";
+import { VendedorProfileModal } from "./VendedorProfileModal";
 
 const OPTIONS: {
   value: LotStatus;
@@ -43,6 +46,18 @@ export function LotStatusMenu({ lot, onChangeStatus, onSavePrices, onClose }: Pr
   const [ur, setUr] = useState(lot.precio_ur ?? "");
   const [contado, setContado] = useState(lot.precio_contado_usd ?? "");
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [showProfile, setShowProfile] = useState(false);
+  const router = useRouter();
+
+  function openPropuesta() {
+    router.push(`/propuesta/${lot.id}?modo=vendedor`);
+  }
+
+  function handleEnviarPropuesta() {
+    // Sin perfil de vendedor guardado → pedirlo antes de abrir la propuesta
+    if (loadVendedor()) openPropuesta();
+    else setShowProfile(true);
+  }
 
   // Pre-llena con los precios actuales y re-sincroniza si cambian (realtime / tab Terrenos)
   useEffect(() => { setUr(lot.precio_ur ?? ""); }, [lot.id, lot.precio_ur]);
@@ -151,7 +166,24 @@ export function LotStatusMenu({ lot, onChangeStatus, onSavePrices, onClose }: Pr
             )}
           </div>
         </div>
+
+        {lot.estado === "disponible" && (
+          <button
+            type="button"
+            onClick={handleEnviarPropuesta}
+            className="mt-4 w-full rounded-md border-2 border-leaf py-2.5 text-sm font-bold text-leaf transition hover:bg-emerald-50"
+          >
+            Enviar propuesta
+          </button>
+        )}
       </aside>
+
+      {showProfile && (
+        <VendedorProfileModal
+          onSaved={() => { setShowProfile(false); openPropuesta(); }}
+          onClose={() => setShowProfile(false)}
+        />
+      )}
     </>
   );
 }

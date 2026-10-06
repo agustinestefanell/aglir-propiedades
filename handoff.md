@@ -1534,3 +1534,92 @@ Sin este SQL, Guardar en el tab Terrenos falla con error de columna inexistente 
 ### Pendientes al cerrar OE 038
 
 - Mismos que OE 037: SQL de columnas `precio_ur` / `precio_contado` + policies de OE 036 en Supabase.
+
+---
+
+## OE 039 — Propuesta comercial descargable como JPG
+
+**Fecha:** 2026-10-06
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** Feature — admin + nueva ruta pública
+
+### Cambios ejecutados
+
+**C1 — `LotDetailPanel.tsx`: eliminado "Agendar visita":**
+- Se quitó el botón y la nota "Horario a confirmar · Te contactamos por WhatsApp". Lotes disponibles ahora muestran solo estado, Manzana/Solar, m² y precios.
+- Rama no disponible ("Este terreno no está disponible." + botón deshabilitado) sin cambios.
+- Prop `onSchedule` queda opcional y sin uso para no tocar `InteractivePlan`. `VisitBookingModal` y `handleSchedule` en `page.tsx` quedan en el repo pero inalcanzables (no se eliminan sin OE específica).
+
+**C2 — Botón "Enviar propuesta" en `LotStatusMenu.tsx`:**
+- Visible solo si `lot.estado === "disponible"`, debajo de la sección Precio.
+- Si no hay perfil de vendedor en `localStorage["aglir_vendedor"]` → abre `VendedorProfileModal`; al guardar, navega. Si ya existe → `router.push("/propuesta/{lotId}")` directo (misma pestaña; la propuesta tiene "← Volver").
+
+**C3 — Nueva ruta `/propuesta/[id]` (`src/app/propuesta/[id]/page.tsx`):**
+- Pública, `"use client"`, documento blanco de máx. 600px.
+- Header: logo Aglir (izq.) + logo del vendedor (der., si está cargado).
+- Manzana X · Solar Y / m² / "Precio: {precio_ur} UR" ("a consultar" si no hay precio).
+- Plano completo con el lote destacado en amarillo transparente (mismo look que "vendido": `rgba(250,204,21,0.65)` + stroke `#ca8a04`).
+- Descripción textual de la OE (entrega inicial, seña, cuotas, "Cuotas a 12 años desde {precio_ur} UR", valor UR).
+- Footer: Nombre · Teléfono del vendedor, fecha en formato "06 de octubre de 2026" (`toLocaleDateString("es-UY")`), "Propuesta válida por 15 días".
+- Barra superior (fuera del área capturada): "← Volver", "Editar mi perfil", "Descargar JPG".
+- Precios vienen de `useLotStates` → dependen del SQL de OE 037 + policies de OE 036.
+
+**C4 — Perfil del vendedor (`src/lib/vendedor.ts` + `src/components/admin/VendedorProfileModal.tsx`, nuevos):**
+- Campos: Nombre, Teléfono, Logo (input file `accept="image/*"` → galería en mobile).
+- El logo se redimensiona a lado máx. 400px y se guarda como data URL JPEG (fondo blanco para PNG transparentes) para no exceder la cuota de localStorage.
+- Se guarda en `localStorage["aglir_vendedor"]` (`{nombre, telefono, logo?}`). Solo existe en el dispositivo del vendedor: si se abre `/propuesta/[id]` en otro dispositivo, sale sin datos de vendedor.
+
+**C5 — "Descargar JPG":**
+- `npm install html2canvas` (v1.4.1), import dinámico en el handler (sin impacto SSR/bundle inicial).
+- `html2canvas(doc, { scale: 2, backgroundColor: "#ffffff", useCORS: true })` → `toDataURL("image/jpeg", 0.92)` → descarga `propuesta-m{manzana}-s{solar}.jpg`.
+
+### Decisiones técnicas (html2canvas + SVG)
+
+- El plano en la propuesta es `<img>` + `<svg>` superpuesto con solo el polígono — **no** el `<svg><image/></svg>` de `InteractivePlan`. html2canvas renderiza los SVG serializándolos a imagen, y en ese modo no se cargan recursos externos (el `<image href>` saldría vacío).
+- Por la misma razón el polígono usa atributos inline (`fill`, `stroke`) y no clases Tailwind.
+
+### Verificación
+
+- `npx tsc --noEmit`: limpio.
+- `next dev`: `/propuesta/m2-s6` responde 200 y renderiza contenido; `/` y `/gestion` 200; sin errores en el log.
+- **No verificado:** la descarga real del JPG en navegador (sin Playwright en el entorno). Probar en smartphone: generar, abrir el JPG y confirmar plano + polígono amarillo + logos.
+
+### Pendientes al cerrar OE 039
+
+- Probar "Descargar JPG" en Android/iOS real (en iOS Safari la descarga puede abrir la imagen en una pestaña en vez de guardarla).
+- SQL de columnas de precio (OE 037) + policies (OE 036) para que el precio aparezca en la propuesta.
+- Decidir si se elimina `VisitBookingModal` / flujo de agenda (hoy inalcanzable desde la página pública).
+
+---
+
+## OE 039b — Dos versiones de propuesta: pública y de vendedor
+
+**Fecha:** 2026-10-06
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** Feature
+**Commit:** incluido en el mismo commit que OE 039 (amend antes del push)
+
+### Cambios ejecutados
+
+**`/propuesta/[id]` lee `searchParams.modo`:**
+- `?modo=vendedor` → versión completa: logo vendedor, nombre · teléfono en footer, botón "Editar mi perfil".
+- `?modo=publico` → logo Aglir, Mz/Solar, m², precio UR, plano con lote destacado, descripción, fecha y validez. Sin logo, nombre ni teléfono del vendedor; sin "Editar mi perfil". Ni siquiera se lee `aglir_vendedor`.
+- Sin parámetro o valor desconocido → **pública** (por defecto nunca se exponen datos del vendedor).
+- "Descargar JPG" visible en ambas.
+
+**`LotDetailPanel.tsx` (página pública `/`):**
+- Lotes disponibles: botón "Descargar propuesta" (`<Link>` a `/propuesta/{id}?modo=publico`), en el lugar donde estaba "Agendar visita".
+
+**`LotStatusMenu.tsx` (`/gestion`):**
+- "Enviar propuesta" ahora navega a `/propuesta/{id}?modo=vendedor` (sigue pidiendo perfil si no existe).
+
+### Verificación
+
+- `npx tsc --noEmit`: limpio.
+- `next dev`: `?modo=publico` y sin parámetro → sin "Editar mi perfil"; `?modo=vendedor` → con "Editar mi perfil". Todas 200, sin errores en log.
+- No verificado: descarga real del JPG en navegador (igual que OE 039).
+
+### Pendientes al cerrar OE 039b
+
+- Probar ambas versiones + "Descargar JPG" en smartphone real.
+- SQL de columnas de precio (OE 037) + policies (OE 036).
