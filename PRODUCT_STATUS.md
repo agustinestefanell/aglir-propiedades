@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-10-06 — OE 039b
+Ultima actualizacion: 2026-10-06 — OE 040
 
 ---
 
@@ -71,6 +71,7 @@ Ultima actualizacion: 2026-10-06 — OE 039b
 | Edición de precio desde popup del plano | Partial | `LotStatusMenu` con inputs Precio UR / U$S contado + "Guardar precio", pre-llenados, comparte `useLotStates` con tab Terrenos (OE 037b) | Ejecutar SQL de columnas (OE 037) |
 | Botón "Enviar propuesta" en popup del plano | Closed | `LotStatusMenu`, solo lotes disponibles → `/propuesta/[id]?modo=vendedor`; pide perfil si no existe (OE 039/039b) | — |
 | Perfil del vendedor | Closed | `VendedorProfileModal` — nombre, teléfono, logo (redimensionado 400px) en `localStorage["aglir_vendedor"]` (OE 039) | Solo vive en el dispositivo del vendedor |
+| Tab Vendedores (gestión) | Partial | `AdminVendedores` — tabla con estado, count de propuestas, Aprobar/Desactivar, realtime (OE 040) | Ejecutar SQL OE 040 (RLS + realtime publication) |
 | Logo Aglir en header | Closed | `public/logo.jpg` integrado en ambas páginas (`img` h-8 w-8) | — |
 
 ---
@@ -82,6 +83,17 @@ Ultima actualizacion: 2026-10-06 — OE 039b
 | Página de propuesta | Partial | Logos, Mz/Solar, m², precio UR, plano con lote en amarillo, condiciones, footer vendedor + fecha + validez 15 días; renderiza en `next dev` (OE 039) | Precio depende de SQL OE 037 + RLS OE 036 |
 | Versión pública vs vendedor | Closed | `?modo=publico` (default) sin datos de vendedor; `?modo=vendedor` con logo, nombre, teléfono y "Editar mi perfil" (OE 039b) | — |
 | Descargar JPG (html2canvas) | Partial | `propuesta-m{mz}-s{solar}.jpg`, scale 2, JPEG 0.92 (OE 039) | Probar descarga en smartphone real (iOS Safari) |
+
+---
+
+## Portal de vendedores `/vendedores`
+
+| Feature | Estado | Evidencia | Pendiente |
+|---|---|---|---|
+| Registro de vendedor | Partial | Nombre/Teléfono/Mail/PIN → insert `vendedores` estado pendiente; PIN único (OE 040) | Esquema asumido sin verificar — ejecutar SQL OE 040 |
+| Login por PIN | Partial | PIN + estado activo → sesión `aglir_vendedor_session` (OE 040) | Riesgo: PIN 4 dígitos sin rate limit, tabla legible con anon key |
+| Dashboard vendedor (plano + Generar propuesta) | Partial | Plano solo lectura, bottom sheet, insert en `propuestas` → `/propuesta/[id]?modo=vendedor` (OE 040) | Probar contra Supabase real |
+| Push al admin por registro | Partial | `/api/push/notify` "Nuevo vendedor registrado" (OE 040) | Probar en dispositivo admin |
 
 ---
 

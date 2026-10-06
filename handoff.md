@@ -1623,3 +1623,86 @@ Sin este SQL, Guardar en el tab Terrenos falla con error de columna inexistente 
 
 - Probar ambas versiones + "Descargar JPG" en smartphone real.
 - SQL de columnas de precio (OE 037) + policies (OE 036).
+
+---
+
+## OE 040 — Portal de vendedores `/vendedores` + gestión en admin
+
+**Fecha:** 2026-10-06
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** Feature — nueva ruta + admin + push
+
+### Cambios ejecutados
+
+**C1 — `/vendedores` (`src/app/vendedores/page.tsx`, nuevo):**
+- **Registro** (vista por defecto en un dispositivo que nunca registró): Nombre, Teléfono, Mail, PIN (4 dígitos, solo números). Insert en `vendedores` con `estado: "pendiente"`. Mensaje: "Tu solicitud fue enviada. Te avisamos cuando esté aprobada."
+- Antes del insert se verifica que el PIN no esté en uso ("Ese PIN ya está en uso. Elegí otro.") — el login es solo por PIN, dos vendedores no pueden compartirlo.
+- **Login**: PIN de 4 dígitos → `select … where pin = X and estado = 'activo'`. Si no hay fila: "PIN incorrecto o cuenta pendiente de aprobación". Sesión `{id, nombre, telefono, mail}` en `localStorage["aglir_vendedor_session"]` (sin PIN).
+- `localStorage["aglir_vendedor_registrado"]` recuerda que el dispositivo ya se registró → abre en Login. Links para alternar Registro ↔ Login.
+- **Dashboard**: header con logo + nombre del vendedor + "Salir". `InteractivePlan` en solo lectura (solo lotes disponibles clickeables, sin `LotDetailPanel`). Al tocar un lote disponible → bottom sheet con Mz/Solar/m²/precio + "Generar propuesta" → insert en `propuestas` (`vendedor_id`, `lot_id`, `manzana`, `solar`) → `/propuesta/{id}?modo=vendedor`. Si el insert falla se loguea en consola y se abre la propuesta igual.
+- Al loguearse se siembra `aglir_vendedor` (perfil de la propuesta) con nombre/teléfono, conservando el logo si ya existía → la propuesta sale con sus datos; el logo se agrega con "Editar mi perfil".
+- Al abrir el dashboard se re-chequea el estado del vendedor: si el admin lo desactivó, se cierra la sesión.
+
+**C2 — Tab "Vendedores" en `/gestion` (`src/components/admin/AdminVendedores.tsx`, nuevo):**
+- Cuarto tab. Tabla: Vendedor (nombre / teléfono / mail apilados), Estado (badge pendiente=amarillo, activo=verde, otro=gris), Prop. (count de `propuestas` por `vendedor_id`), acción "Aprobar" (pendiente → activo) o "Desactivar" (activo → `inactivo`).
+- Realtime: un canal con `postgres_changes` sobre `vendedores` (refetch lista) y `propuestas` (refetch counts).
+
+**C3 — Push al admin al registrarse un vendedor:**
+- Tras el insert exitoso, fire-and-forget a `/api/push/notify` con "Nuevo vendedor registrado" / "{nombre} · {telefono}" / url `/gestion` (mismo mecanismo que visitas).
+
+**`src/lib/vendedores.ts` (nuevo):** nombres de tablas, tipos, sesión, registro, login, propuestas y funciones admin — **todo el esquema asumido está concentrado acá**.
+
+### Esquema asumido (no verificado)
+
+Sin acceso de red a Supabase desde el entorno (igual que OE 036), no se pudo leer el esquema real de las tablas. El código asume:
+
+- `vendedores`: `id`, `nombre`, `telefono`, `mail`, `pin`, `estado` (`pendiente` | `activo` | `inactivo`), `created_at`
+- `propuestas`: `id`, `vendedor_id`, `lot_id`, `manzana`, `solar`, `created_at`
+
+SQL de alineación/permisos (idempotente salvo la última línea, que falla si las tablas ya están en la publicación — en ese caso ignorar ese error):
+
+```sql
+alter table vendedores add column if not exists nombre text;
+alter table vendedores add column if not exists telefono text;
+alter table vendedores add column if not exists mail text;
+alter table vendedores add column if not exists pin text;
+alter table vendedores add column if not exists estado text default 'pendiente';
+alter table vendedores add column if not exists created_at timestamptz default now();
+
+alter table propuestas add column if not exists vendedor_id uuid references vendedores(id);
+alter table propuestas add column if not exists lot_id text;
+alter table propuestas add column if not exists manzana text;
+alter table propuestas add column if not exists solar text;
+alter table propuestas add column if not exists created_at timestamptz default now();
+
+alter table vendedores enable row level security;
+drop policy if exists "anon all vendedores" on vendedores;
+create policy "anon all vendedores" on vendedores for all using (true) with check (true);
+
+alter table propuestas enable row level security;
+drop policy if exists "anon all propuestas" on propuestas;
+create policy "anon all propuestas" on propuestas for all using (true) with check (true);
+
+alter publication supabase_realtime add table vendedores, propuestas;
+```
+
+Si `vendedores.id` no es `uuid`, ajustar el tipo de `propuestas.vendedor_id`. Si `estado` tiene un check constraint que no incluye `inactivo`, el botón Desactivar va a fallar (error en consola).
+
+### Riesgos de seguridad (por diseño de la OE)
+
+- **PIN de 4 dígitos como único factor**: 10.000 combinaciones, sin límite de intentos → adivinable por fuerza bruta.
+- **La tabla `vendedores` (con PINs) es legible con la anon key** (necesario para el login desde el cliente): cualquiera con la key pública puede listar PINs, mails y teléfonos. Mitigación futura: mover login/registro a API routes con service role key, o RPC `security definer` que valide el PIN sin exponer la tabla; o login por teléfono + PIN.
+- Mismo nivel que el login de `/gestion` (credenciales hardcodeadas) — coherente con el resto del proyecto, pero conviene una OE de hardening antes de abrir el portal a muchos vendedores.
+
+### Verificación
+
+- `npx tsc --noEmit`: limpio.
+- `next dev`: `/vendedores`, `/gestion`, `/`, `/propuesta/m2-s6?modo=vendedor` → 200, sin errores en log.
+- **No verificado** contra Supabase real (registro, login, conteos, realtime, push).
+
+### Pendientes al cerrar OE 040
+
+- **Acción manual usuario:** revisar columnas reales de `vendedores` / `propuestas` contra el esquema asumido y ejecutar el SQL de arriba.
+- Probar flujo completo: registro → push al admin → Aprobar → login PIN → Generar propuesta → count +1 en admin.
+- OE de hardening del login de vendedores (ver riesgos).
+- Pendientes previos: SQL OE 036/037, prueba de "Descargar JPG" en smartphone.

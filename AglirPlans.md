@@ -67,6 +67,8 @@ src/
     visitRequests.ts  — 4 solicitudes mock para probar admin
 
   lib/
+    vendedor.ts       — perfil del vendedor para la propuesta (localStorage aglir_vendedor) + resize de logo
+    vendedores.ts     — portal de vendedores: sesión, registro, login PIN, propuestas, funciones admin
     whatsapp.ts       — buildWhatsAppUrl + formatContactName
     lotStates.ts      — useLotStates() hook → [lots, changeStatus, savePrices]: lee/escribe estado y precios en Supabase lot_states + realtime
     supabase.ts       — cliente Supabase (env vars NEXT_PUBLIC_SUPABASE_URL / PUBLISHABLE_KEY)
@@ -108,11 +110,19 @@ public/
 - Flujo: `LoginScreen` → autenticación → header con tabs → **Plano** (plano interactivo + LotStatusMenu) / **Visitas** (panel de solicitudes).
 - Tab "Plano": plano interactivo, toque simple en lote → LotStatusMenu para cambiar estado (upsert Supabase).
 - Tab "Terrenos" (OE 037): `AdminPriceTable` — tabla de los 90 lotes con inputs Precio UR / Contado U$S y botón Guardar por fila (upsert `lot_states.precio_ur` / `precio_contado`, sin tocar `estado`).
+- Tab "Vendedores" (OE 040): `AdminVendedores` — vendedores con estado, count de propuestas, Aprobar / Desactivar, realtime sobre `vendedores` y `propuestas`.
 - Tab "Visitas": lista `visit_requests` de Supabase ordenada por `created_at` desc. Realtime (`postgres_changes`). Badge con count pendientes. Botones WhatsApp y Confirmar (update estado en Supabase).
 - Botón `🔔 Notif` en header: activa Web Push manualmente si no hay permiso.
 - Interacción: double-click/double-tap en lote → `LotStatusMenu` flotante con 3 opciones (En venta / Reservado / Vendido).
 - Estado local: cambios de estado viven en `useState` de la página (no persisten entre sesiones).
 - Sin cards, sin listas, sin tablas — solo el plano.
+
+### `/vendedores` — Portal de vendedores (OE 040)
+
+- `"use client"`. Vistas: Registro (Nombre, Teléfono, Mail, PIN 4 dígitos → `vendedores` estado pendiente + push al admin) / Login (PIN + estado activo) / Dashboard.
+- Sesión en `localStorage["aglir_vendedor_session"]`; `aglir_vendedor_registrado` decide si abre en Login.
+- Dashboard: `InteractivePlan` solo lectura + bottom sheet "Generar propuesta" → insert `propuestas` → `/propuesta/[id]?modo=vendedor`.
+- Lógica de datos en `src/lib/vendedores.ts` (esquema asumido documentado en handoff OE 040).
 
 ### `/propuesta/[id]` — Propuesta comercial (OE 039)
 

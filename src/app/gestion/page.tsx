@@ -6,12 +6,13 @@ import { InteractivePlan } from "@/components/plan/InteractivePlan";
 import { LoginScreen } from "@/components/admin/LoginScreen";
 import { LotStatusMenu } from "@/components/admin/LotStatusMenu";
 import { AdminPriceTable } from "@/components/admin/AdminPriceTable";
+import { AdminVendedores } from "@/components/admin/AdminVendedores";
 import { useLotStates } from "@/lib/lotStates";
 import { supabase } from "@/lib/supabase";
 
 const SESSION_KEY = "aglir_gestion_user";
 
-type Tab = "plano" | "visitas" | "terrenos";
+type Tab = "plano" | "visitas" | "terrenos" | "vendedores";
 
 type VisitRow = {
   id: string;
@@ -225,6 +226,17 @@ export default function GestionPage() {
           >
             Terrenos
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("vendedores")}
+            className={`flex-1 border-b-2 pb-2 text-sm font-bold transition ${
+              activeTab === "vendedores"
+                ? "border-leaf text-leaf"
+                : "border-transparent text-stone-400 hover:text-stone-600"
+            }`}
+          >
+            Vendedores
+          </button>
         </div>
       </header>
 
@@ -341,6 +353,9 @@ export default function GestionPage() {
       {activeTab === "terrenos" && (
         <AdminPriceTable lots={lots} onSavePrices={savePrices} />
       )}
+
+      {/* ── Tab: Vendedores ──────────────────────────────────────────── */}
+      {activeTab === "vendedores" && <AdminVendedores />}
     </main>
   );
 }
