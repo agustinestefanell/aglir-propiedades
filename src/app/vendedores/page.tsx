@@ -1,20 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { FormEvent } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { Lot } from "@/types";
 import { InteractivePlan } from "@/components/plan/InteractivePlan";
+import { DuenoPanel } from "@/components/vendedores/DuenoPanel";
 import { useLotStates } from "@/lib/lotStates";
+import { fileToResizedDataUrl } from "@/lib/vendedor";
 import {
   REGISTRADO_KEY,
   clearSession,
-  fetchEstadoVendedor,
+  fetchContextoSesion,
   loadSession,
   loginPorPin,
   registrarPropuesta,
   registrarVendedor,
   saveSession,
+  syncPerfilPropuesta,
   type VendedorSession,
 } from "@/lib/vendedores";
 
@@ -37,8 +40,24 @@ function RegistroForm({ onDone, onGoLogin }: { onDone: () => void; onGoLogin: ()
   const [telefono, setTelefono] = useState("");
   const [mail, setMail] = useState("");
   const [pin, setPin] = useState("");
+  const [esDueno, setEsDueno] = useState(false);
+  const [logo, setLogo] = useState<string | undefined>();
+  const [loadingLogo, setLoadingLogo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+
+  async function handleLogo(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLoadingLogo(true);
+    try {
+      setLogo(await fileToResizedDataUrl(file));
+    } catch {
+      setError("No se pudo cargar la imagen.");
+    } finally {
+      setLoadingLogo(false);
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -57,6 +76,8 @@ function RegistroForm({ onDone, onGoLogin }: { onDone: () => void; onGoLogin: ()
       telefono: telefono.trim(),
       mail: mail.trim(),
       pin,
+      rol: esDueno ? "dueno" : "vendedor",
+      logo_inmobiliaria: esDueno ? logo : undefined,
     });
     setSending(false);
     if (result === "pin_en_uso") setError("Ese PIN ya está en uso. Elegí otro.");
@@ -90,10 +111,39 @@ function RegistroForm({ onDone, onGoLogin }: { onDone: () => void; onGoLogin: ()
           className={`${inputCls} tracking-[0.5em]`}
         />
       </label>
+      <label className="flex items-center gap-2 rounded-md border border-stone-200 px-3 py-2.5 text-sm font-semibold text-ink">
+        <input
+          type="checkbox"
+          checked={esDueno}
+          onChange={(e) => setEsDueno(e.target.checked)}
+          className="h-4 w-4 accent-leaf"
+        />
+        Soy dueño de inmobiliaria
+      </label>
+      {esDueno && (
+        <div className="text-xs font-semibold text-stone-600">
+          Logo de tu inmobiliaria
+          <label className="mt-1 flex cursor-pointer items-center gap-3 rounded-md border-2 border-dashed border-stone-300 p-3 hover:bg-stone-50">
+            {logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logo} alt="Logo de la inmobiliaria" className="h-14 w-14 rounded border border-stone-200 bg-white object-contain" />
+            ) : (
+              <span className="flex h-14 w-14 items-center justify-center rounded bg-stone-100 text-2xl text-stone-400">+</span>
+            )}
+            <span className="text-sm font-bold text-stone-700">
+              {loadingLogo ? "Cargando…" : logo ? "Cambiar imagen" : "Subir imagen (JPG o PNG)"}
+            </span>
+            <input type="file" accept="image/jpeg,image/png" onChange={handleLogo} className="hidden" />
+          </label>
+          <p className="mt-1 font-normal text-stone-400">
+            Va a aparecer en las propuestas de tus vendedores.
+          </p>
+        </div>
+      )}
       {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
       <button
         type="submit"
-        disabled={sending}
+        disabled={sending || loadingLogo}
         className="mt-1 w-full rounded-md bg-leaf py-3 text-sm font-bold text-white disabled:opacity-60"
       >
         {sending ? "Enviando…" : "Registrarme"}
@@ -111,7 +161,7 @@ function LoginForm({
   onLogin,
   onGoRegistro,
 }: {
-  onLogin: (s: VendedorSession) => void;
+  onLogin: (s: VendedorSession, logo: string | null) => void;
   onGoRegistro: () => void;
 }) {
   const [pin, setPin] = useState("");
@@ -126,13 +176,13 @@ function LoginForm({
     }
     setLoading(true);
     setError(null);
-    const session = await loginPorPin(pin);
+    const result = await loginPorPin(pin);
     setLoading(false);
-    if (!session) {
+    if (!result) {
       setError("PIN incorrecto o cuenta pendiente de aprobación");
       return;
     }
-    onLogin(session);
+    onLogin(result.session, result.logo);
   }
 
   return (
@@ -172,13 +222,17 @@ function Dashboard({ session, onLogout }: { session: VendedorSession; onLogout: 
   const [lots] = useLotStates();
   const [selectedLot, setSelectedLot] = useState<Lot | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [tab, setTab] = useState<"plano" | "equipo" | "propuestas">("plano");
+  const esDueno = session.rol === "dueno";
 
-  // Si el admin desactivó la cuenta, cerrar sesión (null = no se pudo verificar → se mantiene)
+  // Cuenta (o su Dueño) desactivada → cerrar sesión. activo=null: no se pudo verificar → se mantiene.
+  // También refresca el logo de la inmobiliaria por si el Dueño lo cambió.
   useEffect(() => {
-    fetchEstadoVendedor(session.id).then((estado) => {
-      if (estado && estado !== "activo") onLogout();
+    fetchContextoSesion(session).then(({ activo, logo }) => {
+      if (activo === false) onLogout();
+      else if (logo) syncPerfilPropuesta(session, logo);
     });
-  }, [session.id, onLogout]);
+  }, [session, onLogout]);
 
   const lot = selectedLot ? lots.find((l) => l.id === selectedLot.id) ?? selectedLot : null;
 
@@ -205,21 +259,43 @@ function Dashboard({ session, onLogout }: { session: VendedorSession; onLogout: 
             Salir
           </button>
         </div>
+        {esDueno && (
+          <div className="mx-auto flex max-w-[430px] px-4">
+            {(["plano", "equipo", "propuestas"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTab(t)}
+                className={`flex-1 border-b-2 pb-2 text-sm font-bold transition ${
+                  tab === t ? "border-leaf text-leaf" : "border-transparent text-stone-400 hover:text-stone-600"
+                }`}
+              >
+                {t === "plano" ? "Plano" : t === "equipo" ? "Mi equipo" : "Propuestas"}
+              </button>
+            ))}
+          </div>
+        )}
       </header>
 
-      <p className="mx-auto max-w-[430px] px-4 pt-2 pb-1 text-center text-xs text-stone-500">
-        Tocá un solar disponible para generar una propuesta
-      </p>
+      {esDueno && tab !== "plano" && <DuenoPanel session={session} vista={tab} />}
 
-      <InteractivePlan
-        lots={lots}
-        selectedLot={lot}
-        onSelectLot={setSelectedLot}
-        onSchedule={() => undefined}
-        showLotDetails={false}
-      />
+      {tab === "plano" && (
+        <>
+          <p className="mx-auto max-w-[430px] px-4 pt-2 pb-1 text-center text-xs text-stone-500">
+            Tocá un solar disponible para generar una propuesta
+          </p>
 
-      {lot && lot.estado === "disponible" && (
+          <InteractivePlan
+            lots={lots}
+            selectedLot={lot}
+            onSelectLot={setSelectedLot}
+            onSchedule={() => undefined}
+            showLotDetails={false}
+          />
+        </>
+      )}
+
+      {tab === "plano" && lot && lot.estado === "disponible" && (
         <>
           <div className="fixed inset-0 z-40 bg-black/30" onClick={() => setSelectedLot(null)} />
           <aside className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 rounded-t-2xl bg-white px-5 pt-4 pb-8 shadow-2xl">
@@ -270,8 +346,8 @@ export default function VendedoresPage() {
     setReady(true);
   }, []);
 
-  function handleLogin(s: VendedorSession) {
-    saveSession(s);
+  function handleLogin(s: VendedorSession, logo: string | null) {
+    saveSession(s, logo);
     localStorage.setItem(REGISTRADO_KEY, "1");
     setSession(s);
   }

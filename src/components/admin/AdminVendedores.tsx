@@ -17,6 +17,52 @@ const badgeCls: Record<string, string> = {
   activo: "bg-emerald-100 text-emerald-800",
 };
 
+function EstadoBadge({ estado }: { estado: string }) {
+  return (
+    <span
+      className={`inline-block rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+        badgeCls[estado] ?? "bg-stone-100 text-stone-600"
+      }`}
+    >
+      {estado}
+    </span>
+  );
+}
+
+function AccionEstado({
+  v,
+  busy,
+  onChange,
+}: {
+  v: VendedorRow;
+  busy: boolean;
+  onChange: (id: string, estado: EstadoVendedor) => void;
+}) {
+  if (v.estado === "activo") {
+    return (
+      <button
+        type="button"
+        onClick={() => onChange(v.id, "inactivo")}
+        disabled={busy}
+        className="rounded border border-stone-300 px-2 py-1 text-[11px] font-bold text-stone-600 disabled:opacity-60"
+      >
+        Desactivar
+      </button>
+    );
+  }
+  // pendiente → Aprobar; inactivo → Activar
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(v.id, "activo")}
+      disabled={busy}
+      className="rounded bg-leaf px-2 py-1 text-[11px] font-bold text-white disabled:opacity-60"
+    >
+      {v.estado === "pendiente" ? "Aprobar" : "Activar"}
+    </button>
+  );
+}
+
 export function AdminVendedores() {
   const [vendedores, setVendedores] = useState<VendedorRow[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -54,69 +100,98 @@ export function AdminVendedores() {
     );
   }
 
-  return (
-    <section className="mx-auto w-full max-w-[430px] px-2 pt-3 pb-6">
-      <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-        <table className="w-full table-fixed text-xs">
-          <colgroup>
-            <col className="w-[46%]" />
-            <col className="w-[20%]" />
-            <col className="w-[10%]" />
-            <col className="w-[24%]" />
-          </colgroup>
-          <thead className="bg-stone-50 text-[10px] uppercase tracking-wide text-stone-500">
-            <tr>
-              <th className="px-2 py-2 text-left font-bold">Vendedor</th>
-              <th className="py-2 font-bold">Estado</th>
-              <th className="py-2 font-bold" title="Propuestas enviadas">Prop.</th>
-              <th className="py-2" />
-            </tr>
-          </thead>
-          <tbody>
-            {vendedores.map((v) => (
-              <tr key={v.id} className="border-b border-stone-100 align-top last:border-b-0">
-                <td className="px-2 py-2">
-                  <p className="truncate font-bold text-ink">{v.nombre}</p>
-                  <p className="truncate text-stone-500">{v.telefono}</p>
-                  <p className="truncate text-stone-500">{v.mail}</p>
-                </td>
-                <td className="py-2 text-center">
-                  <span
-                    className={`inline-block rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase ${
-                      badgeCls[v.estado] ?? "bg-stone-100 text-stone-600"
-                    }`}
-                  >
-                    {v.estado}
-                  </span>
-                </td>
-                <td className="py-2 text-center font-bold text-ink">{counts[v.id] ?? 0}</td>
-                <td className="py-2 pr-2">
-                  {v.estado === "pendiente" && (
-                    <button
-                      type="button"
-                      onClick={() => changeEstado(v.id, "activo")}
-                      disabled={busyId === v.id}
-                      className="w-full rounded bg-leaf px-1.5 py-1 text-[11px] font-bold text-white disabled:opacity-60"
-                    >
-                      Aprobar
-                    </button>
-                  )}
-                  {v.estado === "activo" && (
-                    <button
-                      type="button"
-                      onClick={() => changeEstado(v.id, "inactivo")}
-                      disabled={busyId === v.id}
-                      className="w-full rounded border border-stone-300 px-1.5 py-1 text-[11px] font-bold text-stone-600 disabled:opacity-60"
-                    >
-                      Desactivar
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  const duenos = vendedores.filter((v) => v.rol === "dueno");
+  const duenoIds = new Set(duenos.map((d) => d.id));
+  const equipoDe = (id: string) => vendedores.filter((v) => v.rol !== "dueno" && v.dueno_id === id);
+  // Sin Dueño (o con dueno_id que no corresponde a un Dueño existente)
+  const independientes = vendedores.filter(
+    (v) => v.rol !== "dueno" && (!v.dueno_id || !duenoIds.has(v.dueno_id))
+  );
+
+  function VendedorLine({ v, duenoInactivo }: { v: VendedorRow; duenoInactivo?: boolean }) {
+    return (
+      <div className="flex items-center justify-between gap-2 border-t border-stone-100 px-3 py-2 text-xs">
+        <div className="min-w-0">
+          <p className="truncate font-bold text-ink">{v.nombre}</p>
+          <p className="truncate text-stone-500">
+            {v.telefono}
+            {v.mail ? ` · ${v.mail}` : ""}
+          </p>
+          {duenoInactivo && v.estado === "activo" && (
+            <p className="text-[10px] font-semibold text-red-600">Sin acceso: dueño inactivo</p>
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <EstadoBadge estado={v.estado} />
+          <span className="w-6 text-center font-bold text-ink" title="Propuestas enviadas">
+            {counts[v.id] ?? 0}
+          </span>
+          <AccionEstado v={v} busy={busyId === v.id} onChange={changeEstado} />
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <section className="mx-auto grid w-full max-w-[430px] gap-3 px-2 pt-3 pb-6">
+      <p className="px-1 text-[10px] uppercase tracking-wide text-stone-400">
+        Número junto al estado = propuestas enviadas
+      </p>
+
+      {duenos.map((d) => {
+        const equipo = equipoDe(d.id);
+        const totalEquipo =
+          (counts[d.id] ?? 0) + equipo.reduce((acc, v) => acc + (counts[v.id] ?? 0), 0);
+        const duenoInactivo = d.estado !== "activo";
+        return (
+          <div key={d.id} className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+            <div className="flex items-start justify-between gap-2 bg-stone-50 px-3 py-3">
+              <div className="flex min-w-0 items-start gap-2.5">
+                {d.logo_inmobiliaria ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={d.logo_inmobiliaria}
+                    alt=""
+                    className="h-10 w-10 shrink-0 rounded border border-stone-200 bg-white object-contain"
+                  />
+                ) : (
+                  <div className="h-10 w-10 shrink-0 rounded border border-dashed border-stone-300" />
+                )}
+                <div className="min-w-0 text-xs">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Dueño</p>
+                  <p className="truncate text-sm font-black text-ink">{d.nombre}</p>
+                  <p className="truncate text-stone-500">{d.telefono}</p>
+                  {d.mail && <p className="truncate text-stone-500">{d.mail}</p>}
+                  <p className="mt-1 font-semibold text-stone-700">
+                    {totalEquipo} propuesta{totalEquipo === 1 ? "" : "s"} del equipo · {equipo.length} vendedor
+                    {equipo.length === 1 ? "" : "es"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-2">
+                <EstadoBadge estado={d.estado} />
+                <AccionEstado v={d} busy={busyId === d.id} onChange={changeEstado} />
+              </div>
+            </div>
+            {equipo.length === 0 ? (
+              <p className="border-t border-stone-100 px-3 py-2 text-xs text-stone-400">Sin vendedores aún.</p>
+            ) : (
+              equipo.map((v) => <VendedorLine key={v.id} v={v} duenoInactivo={duenoInactivo} />)
+            )}
+          </div>
+        );
+      })}
+
+      {independientes.length > 0 && (
+        <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+          <p className="bg-stone-50 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-stone-400">
+            Vendedores sin dueño
+          </p>
+          {independientes.map((v) => (
+            <VendedorLine key={v.id} v={v} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

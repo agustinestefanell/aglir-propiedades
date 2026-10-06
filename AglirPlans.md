@@ -110,7 +110,7 @@ public/
 - Flujo: `LoginScreen` → autenticación → header con tabs → **Plano** (plano interactivo + LotStatusMenu) / **Visitas** (panel de solicitudes).
 - Tab "Plano": plano interactivo, toque simple en lote → LotStatusMenu para cambiar estado (upsert Supabase).
 - Tab "Terrenos" (OE 037): `AdminPriceTable` — tabla de los 90 lotes con inputs Precio UR / Contado U$S y botón Guardar por fila (upsert `lot_states.precio_ur` / `precio_contado`, sin tocar `estado`).
-- Tab "Vendedores" (OE 040): `AdminVendedores` — vendedores con estado, count de propuestas, Aprobar / Desactivar, realtime sobre `vendedores` y `propuestas`.
+- Tab "Vendedores" (OE 040/042): `AdminVendedores` — agrupado por Dueño (equipo + total de propuestas) + grupo "sin dueño"; Aprobar / Desactivar / Activar; realtime sobre `vendedores` y `propuestas`.
 - Tab "Visitas": lista `visit_requests` de Supabase ordenada por `created_at` desc. Realtime (`postgres_changes`). Badge con count pendientes. Botones WhatsApp y Confirmar (update estado en Supabase).
 - Botón `🔔 Notif` en header: activa Web Push manualmente si no hay permiso.
 - Botón "Editar mi perfil" en header (OE 041b): abre `VendedorProfileModal` (nombre, teléfono, logo). Al ingresar, si `aglir_vendedor` no tiene logo, se pide con opción "Omitir por ahora" (silenciado por `sessionStorage["aglir_logo_omitido"]`).
@@ -124,6 +124,9 @@ public/
 - Sesión en `localStorage["aglir_vendedor_session"]`; `aglir_vendedor_registrado` decide si abre en Login.
 - Dashboard: `InteractivePlan` solo lectura + bottom sheet "Generar propuesta" → insert `propuestas` → `/propuesta/[id]?modo=vendedor`.
 - Lógica de datos en `src/lib/vendedores.ts` (esquema asumido documentado en handoff OE 040).
+- Roles (OE 042): `vendedores.rol` = `dueno` | `vendedor`, `dueno_id` → Dueño. Registro con "Soy dueño de inmobiliaria" + `logo_inmobiliaria`.
+- Dueño logueado: tabs Plano / Mi equipo / Propuestas (`src/components/vendedores/DuenoPanel.tsx`) — crea vendedores con PIN (activos), activa/desactiva, ve propuestas del equipo.
+- Login de vendedor con Dueño: requiere Dueño activo; el `logo_inmobiliaria` del Dueño se copia a `aglir_vendedor.logo` para las propuestas.
 
 ### `/propuesta/[id]` — Propuesta comercial (OE 039)
 

@@ -1779,3 +1779,77 @@ El modal (`VendedorProfileModal`) ya tenía un campo "Logo" desde OE 039, pero *
 
 - Probar en smartphone: login → modal de logo → subir/omitir → "Editar mi perfil" → propuesta con logo → JPG.
 - Pendientes previos: SQL OE 036/037/040.
+
+---
+
+## OE 042 — Jerarquía de vendedores: Dueño + Vendedores
+
+**Fecha:** 2026-10-06
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** Feature — roles, portal y admin
+
+### Contexto
+
+`vendedores` tiene ahora `rol` (`dueno` | `vendedor`) y `dueno_id` (FK al Dueño). El logo del Dueño se guarda en `vendedores.logo_inmobiliaria` (data URL JPEG redimensionada a 400px, ~20–40 KB — misma función `fileToResizedDataUrl` que el perfil local).
+
+### Cambios ejecutados
+
+**C1 — Tab Vendedores en `/gestion` (`AdminVendedores.tsx`, reescrito):**
+- Una tarjeta por Dueño: logo, nombre, teléfono, mail, estado, **propuestas totales del equipo** (Dueño + sus vendedores) y cantidad de vendedores; debajo, cada vendedor del equipo con teléfono, estado, propuestas y acción.
+- Grupo "Vendedores sin dueño" para `dueno_id` nulo o que no apunta a un Dueño existente.
+- Admin puede cambiar el estado de cualquiera: pendiente → **Aprobar**, activo → **Desactivar**, inactivo → **Activar** (nuevo: antes un desactivado no se podía reactivar).
+- Vendedores activos de un Dueño inactivo muestran "Sin acceso: dueño inactivo".
+- Realtime igual que OE 040.
+
+**C2 — Registro de Dueño (`/vendedores`):**
+- Checkbox "Soy dueño de inmobiliaria" → `rol: "dueno"` + campo "Logo de tu inmobiliaria" (JPG/PNG, opcional). Estado inicial `pendiente`.
+- Sin marcar → `rol: "vendedor"`, `dueno_id` nulo (vendedor independiente).
+- Push al admin diferenciado: "Nuevo dueño de inmobiliaria registrado" / "Nuevo vendedor registrado".
+
+**C3 — Dashboard del Dueño (`/vendedores`, `src/components/vendedores/DuenoPanel.tsx` nuevo):**
+- Tabs en el header (solo rol dueño): **Plano** (igual que vendedor, puede generar propuestas) / **Mi equipo** / **Propuestas**.
+- Mi equipo: formulario "Nuevo vendedor" (Nombre, Teléfono, PIN de 4 dígitos asignado por el Dueño; PIN único) → insert con `rol: "vendedor"`, `dueno_id`, `estado: "activo"` (sin aprobación del admin). Tabla: nombre/teléfono, PIN, estado, propuestas, Activar/Desactivar.
+- Propuestas: vendedor, terreno (M·S), fecha — del Dueño y de su equipo.
+- Solo consulta `vendedores where dueno_id = <su id>` y `propuestas where vendedor_id in (equipo + él)` → no ve otros equipos. **Filtro de aplicación, no de base de datos** (ver riesgos).
+- Realtime sobre `vendedores` y `propuestas`.
+
+**C4 + C6 — Logo del Dueño en propuestas / login:**
+- `loginPorPin`: si el vendedor tiene `dueno_id`, se lee el Dueño; si el Dueño **no está activo, el login se rechaza** (mismo mensaje "PIN incorrecto o cuenta pendiente de aprobación"). Si está activo, su `logo_inmobiliaria` se guarda en `aglir_vendedor.logo` → `/propuesta/[id]?modo=vendedor` lo muestra.
+- Un Dueño logueado usa su propio `logo_inmobiliaria`.
+- Sin Dueño → se conserva el logo del perfil local (`aglir_vendedor`), como antes.
+- Al abrir el dashboard (`fetchContextoSesion`) se re-chequea el estado propio **y el del Dueño**: si cualquiera está inactivo → logout automático. También refresca el logo del Dueño si cambió.
+
+**C5 — Registro de interés por terreno:**
+- Ya existía desde OE 040: "Generar propuesta" inserta en `propuestas` (`vendedor_id`, `lot_id`, `manzana`, `solar`; `created_at` por default). Sin cambios.
+
+**`src/lib/vendedores.ts`:** tipos `RolVendedor`, `PropuestaRow`; sesión con `rol` y `dueno_id` (sesiones viejas sin rol se leen como `vendedor`); `loginPorPin` devuelve `{ session, logo }`; nuevas `fetchContextoSesion`, `syncPerfilPropuesta`, `fetchEquipo`, `crearVendedorEquipo`, `fetchPropuestas`, `countBy`. Eliminada `fetchEstadoVendedor` (reemplazada).
+
+### SQL a verificar / ejecutar (Supabase SQL Editor)
+
+`rol` y `dueno_id` ya existen según la OE; `logo_inmobiliaria` puede no existir:
+
+```sql
+alter table vendedores add column if not exists rol text default 'vendedor';
+alter table vendedores add column if not exists dueno_id uuid references vendedores(id);
+alter table vendedores add column if not exists logo_inmobiliaria text;
+```
+
+Más el SQL de OE 040 (RLS + realtime) si no se ejecutó.
+
+### Riesgos de seguridad
+
+- Siguen los de OE 040 (PIN de 4 dígitos, tabla legible con anon key).
+- **Nuevo:** el aislamiento entre equipos es solo de UI. Con la anon key, cualquiera puede leer todos los vendedores (incluidos PINs de otros equipos) y cambiar el estado de cualquiera. Para aislar de verdad hace falta mover estas operaciones a API routes / RPC con validación de sesión server-side.
+- Un Dueño ve los PINs de sus vendedores en claro (pedido por la OE).
+
+### Verificación
+
+- `npx tsc --noEmit`: limpio.
+- `next dev`: `/vendedores` y `/gestion` → 200, sin errores en log.
+- **No verificado** contra Supabase real.
+
+### Pendientes al cerrar OE 042
+
+- Ejecutar SQL de arriba (+ OE 040 si falta).
+- Probar: registro Dueño con logo → Aprobar en /gestion → login Dueño → crear vendedor → login vendedor → propuesta con logo del Dueño → Desactivar Dueño → vendedor deslogueado / no puede entrar.
+- OE de hardening: login y operaciones de equipo server-side.
