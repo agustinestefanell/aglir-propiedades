@@ -2008,3 +2008,31 @@ En mobile, al tocar un campo del login de `/gestion` o `/vendedores`, el teclado
 
 - Probar login de `/gestion`, registro/login de `/vendedores`, "Nuevo vendedor" y modal de perfil en Android Chrome e iOS Safari.
 - Si en iOS el botón de submit queda justo bajo el teclado en el registro (formulario largo), evaluar padding inferior dinámico con `window.visualViewport`.
+
+---
+
+## OE 047 — Tabla resumen de estados por manzana en /gestion
+
+**Fecha:** 2026-10-07
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** Feature — admin
+
+### Cambios ejecutados
+
+**`src/components/admin/AdminStatusSummary.tsx` (nuevo):**
+- Tabla con columnas Mz / En venta / Reserv. / Vendidos / Total, una fila por manzana (2, 3, 4, 6, 7, 8, 9 — derivadas de los lotes, ordenadas numéricamente) + fila Total en `<tfoot>`.
+- Datos: recibe `lots` de `useLotStates` (base `lots.ts` + estado actual de Supabase ya aplicado) → se actualiza en vivo con el realtime de `lot_states` y con los cambios hechos desde el tab Plano.
+- `table-fixed`, 5 columnas, contenedor `max-w-[430px]` → sin scroll horizontal.
+- Badges alineados con los colores del plano (`LotPolygon`): gris claro (`stone`) en venta, verde (`emerald`) reservado, amarillo (`yellow`) vendido. (La OE pedía verde/amarillo/naranja; se ajustó antes del push para coincidir con el plano.)
+
+**`src/app/gestion/page.tsx`:** el tab Terrenos renderiza `AdminStatusSummary` arriba de `AdminPriceTable`.
+
+### Verificación
+
+- `npx tsc --noEmit`: limpio.
+- No verificado en navegador. Los conteos dependen de que la lectura de `lot_states` funcione (policies de OE 036): si RLS bloquea el SELECT, la tabla muestra los 90 lotes como "En venta".
+
+### Pendientes al cerrar OE 047
+
+- Probar en smartphone: tab Terrenos → resumen; cambiar estado de un lote en el tab Plano → contadores se actualizan.
+- Pendientes previos: SQL OE 036/037/040/042/043.

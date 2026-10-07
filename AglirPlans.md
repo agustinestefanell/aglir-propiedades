@@ -109,7 +109,7 @@ public/
 - Login guard con `localStorage["aglir_gestion_user"]` (persiste entre sesiones). Credenciales hardcodeadas: Agustin/Estefanell33, Rodrigo/Surferogalactico33.
 - Flujo: `LoginScreen` → autenticación → header con tabs → **Plano** (plano interactivo + LotStatusMenu) / **Visitas** (panel de solicitudes).
 - Tab "Plano": plano interactivo, toque simple en lote → LotStatusMenu para cambiar estado (upsert Supabase).
-- Tab "Terrenos" (OE 037): `AdminPriceTable` — tabla de los 90 lotes con inputs Precio UR / Contado U$S y botón Guardar por fila (upsert `lot_states.precio_ur` / `precio_contado`, sin tocar `estado`).
+- Tab "Terrenos" (OE 037/047): arriba `AdminStatusSummary` (resumen En venta / Reservados / Vendidos / Total por manzana, OE 047); debajo `AdminPriceTable` — tabla de los 90 lotes con inputs Precio UR / Contado U$S y botón Guardar por fila (upsert `lot_states.precio_ur` / `precio_contado`, sin tocar `estado`).
 - Tab "Vendedores" (OE 040/042): `AdminVendedores` — agrupado por Dueño (equipo + total de propuestas) + grupo "sin dueño"; Aprobar / Desactivar / Activar; realtime sobre `vendedores` y `propuestas`.
 - Tab "Visitas": lista `visit_requests` de Supabase ordenada por `created_at` desc. Realtime (`postgres_changes`). Badge con count pendientes. Botones WhatsApp y Confirmar (update estado en Supabase).
 - Botón `🔔 Notif` en header: activa Web Push manualmente si no hay permiso.

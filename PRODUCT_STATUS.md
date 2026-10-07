@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-10-06 — OE 046
+Ultima actualizacion: 2026-10-07 — OE 047
 
 ---
 
@@ -69,6 +69,7 @@ Ultima actualizacion: 2026-10-06 — OE 046
 | Sincronización Admin ↔ Público | Broken | `useLotStates` con Supabase realtime (`postgres_changes`) implementado correctamente (OE 023) pero al abrir/recargar la página no se leen los estados guardados — sospecha de RLS de SELECT bloqueando lectura anon en `lot_states` (OE 036) | Ejecutar SQL de policies en Supabase (OE 036) y confirmar en navegador |
 | URL admin no predecible | Closed | `/gestion` en lugar de `/admin`; botón Admin eliminado del header público | — |
 | Tabla de precios (tab Terrenos) | Partial | `AdminPriceTable` — 90 lotes, inputs UR / Contado U$S, Guardar por fila con upsert en `lot_states` (OE 037) | Ejecutar SQL `add column precio_ur/precio_contado` en Supabase |
+| Resumen de estados por manzana (tab Terrenos) | Partial | `AdminStatusSummary` — En venta / Reservados / Vendidos / Total por manzana + fila Total, arriba de la tabla de precios; se calcula desde `useLotStates` (OE 047) | Conteos correctos dependen del SQL de policies OE 036 (SELECT anon en `lot_states`) |
 | Edición de precio desde popup del plano | Partial | `LotStatusMenu` con inputs Precio UR / U$S contado + "Guardar precio", pre-llenados, comparte `useLotStates` con tab Terrenos (OE 037b) | Ejecutar SQL de columnas (OE 037) |
 | Botón "Enviar propuesta" en popup del plano | Closed | `LotStatusMenu`, solo lotes disponibles → `/propuesta/[id]?modo=vendedor`; pide perfil si no existe (OE 039/039b) | — |
 | Perfil del vendedor | Closed | `VendedorProfileModal` — nombre, teléfono, "Logo de tu inmobiliaria" (JPG/PNG, redimensionado 400px) en `localStorage["aglir_vendedor"]` (OE 039); logo se pide al ingresar a `/gestion` si falta ("Omitir por ahora" disponible) y se edita con "Editar mi perfil" en el header (OE 041/041b) | Solo vive en el dispositivo del vendedor; probar upload en smartphone |

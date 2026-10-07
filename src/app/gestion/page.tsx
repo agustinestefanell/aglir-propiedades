@@ -6,6 +6,7 @@ import { InteractivePlan } from "@/components/plan/InteractivePlan";
 import { LoginScreen } from "@/components/admin/LoginScreen";
 import { LotStatusMenu } from "@/components/admin/LotStatusMenu";
 import { AdminPriceTable } from "@/components/admin/AdminPriceTable";
+import { AdminStatusSummary } from "@/components/admin/AdminStatusSummary";
 import { AdminVendedores } from "@/components/admin/AdminVendedores";
 import { VendedorProfileModal } from "@/components/admin/VendedorProfileModal";
 import { loadVendedor } from "@/lib/vendedor";
@@ -377,7 +378,10 @@ export default function GestionPage() {
 
       {/* ── Tab: Terrenos (precios) ──────────────────────────────────── */}
       {activeTab === "terrenos" && (
-        <AdminPriceTable lots={lots} onSavePrices={savePrices} />
+        <>
+          <AdminStatusSummary lots={lots} />
+          <AdminPriceTable lots={lots} onSavePrices={savePrices} />
+        </>
       )}
 
       {/* ── Tab: Vendedores ──────────────────────────────────────────── */}
