@@ -2090,3 +2090,26 @@ No se reprodujo en navegador (sin Playwright en el entorno); no hay ancestros co
 - Acción manual usuario: SQL del constraint de `estado` (si existe).
 - Probar flujo: Desactivar → Archivar → oculto → "Mostrar archivados" → Desarchivar → Activar; login de vendedor archivado rechazado.
 - Pendientes previos: SQL OE 036/037/040/042/043.
+
+---
+
+## OE 049 — Fix visual: botón Desactivar en rojo
+
+**Fecha:** 2026-10-07
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** UI
+
+### Cambio ejecutado
+
+**`src/components/admin/AdminVendedores.tsx` → `AccionEstado`:** "Desactivar" pasa de borde gris a relleno rojo (`bg-red-600 text-white hover:bg-red-700`) para diferenciarlo de "Desarchivar". Sin cambios: Desarchivar y Archivar (borde gris, neutros), Aprobar/Activar (verde `bg-leaf`).
+
+- Solo el tab Vendedores de `/gestion`. El botón Desactivar de "Mi equipo" (`DuenoPanel.tsx`) no se tocó (fuera del alcance de la OE).
+
+### Verificación
+
+- `npx tsc --noEmit`: limpio.
+- No verificado en navegador.
+
+### Pendientes al cerrar OE 049
+
+- Mismos que OE 048.

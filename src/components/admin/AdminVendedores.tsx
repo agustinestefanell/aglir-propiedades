@@ -43,7 +43,12 @@ function AccionEstado({
     "rounded border border-stone-300 px-2 py-1 text-[11px] font-bold text-stone-600 disabled:opacity-60";
   if (v.estado === "activo") {
     return (
-      <button type="button" onClick={() => onChange(v.id, "inactivo")} disabled={busy} className={secundario}>
+      <button
+        type="button"
+        onClick={() => onChange(v.id, "inactivo")}
+        disabled={busy}
+        className="rounded bg-red-600 px-2 py-1 text-[11px] font-bold text-white hover:bg-red-700 disabled:opacity-60"
+      >
         Desactivar
       </button>
     );

@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-10-07 — OE 048
+Ultima actualizacion: 2026-10-07 — OE 049
 
 ---
 
@@ -74,7 +74,7 @@ Ultima actualizacion: 2026-10-07 — OE 048
 | Edición de precio desde popup del plano | Partial | `LotStatusMenu` con inputs Precio UR / U$S contado + "Guardar precio", pre-llenados, comparte `useLotStates` con tab Terrenos (OE 037b) | Ejecutar SQL de columnas (OE 037) |
 | Botón "Enviar propuesta" en popup del plano | Closed | `LotStatusMenu`, solo lotes disponibles → `/propuesta/[id]?modo=vendedor`; pide perfil si no existe (OE 039/039b) | — |
 | Perfil del vendedor | Closed | `VendedorProfileModal` — nombre, teléfono, "Logo de tu inmobiliaria" (JPG/PNG, redimensionado 400px) en `localStorage["aglir_vendedor"]` (OE 039); logo se pide al ingresar a `/gestion` si falta ("Omitir por ahora" disponible) y se edita con "Editar mi perfil" en el header (OE 041/041b) | Solo vive en el dispositivo del vendedor; probar upload en smartphone |
-| Tab Vendedores (gestión) | Partial | `AdminVendedores` — agrupado por Dueño (equipo + total de propuestas) + "sin dueño"; Aprobar/Desactivar/Activar; realtime (OE 040/042). Estado `archivado` (OE 048): Archivar solo desde inactivo, oculto por defecto con toggle "Mostrar archivados", Desarchivar → inactivo; archivado no puede loguear | Ejecutar SQL OE 040 (RLS + realtime publication); ampliar check constraint de `estado` si existe (SQL OE 048) |
+| Tab Vendedores (gestión) | Partial | `AdminVendedores` — agrupado por Dueño (equipo + total de propuestas) + "sin dueño"; Aprobar/Desactivar/Activar; realtime (OE 040/042). Estado `archivado` (OE 048): Archivar solo desde inactivo, oculto por defecto con toggle "Mostrar archivados", Desarchivar → inactivo; archivado no puede loguear. Botón Desactivar en rojo (OE 049) | Ejecutar SQL OE 040 (RLS + realtime publication); ampliar check constraint de `estado` si existe (SQL OE 048) |
 | Logo Aglir en header | Closed | `public/logo.jpg` integrado en ambas páginas (`img` h-8 w-8) | — |
 
 ---
