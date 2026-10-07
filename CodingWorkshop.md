@@ -276,3 +276,29 @@ Agravante: la función devolvía solo `"error"` y la UI mostraba un texto genér
 ### Leccion
 
 Cuando el esquema de una tabla es asumido (no verificado contra la base real), todo insert debe propagar `error.message` de Supabase hasta la UI desde el primer día: los errores de constraints (NOT NULL, CHECK, FK) son autoexplicativos si se muestran, e invisibles si se reemplazan por un texto genérico. En apps mobile-first, `console.error` no es un canal de diagnóstico.
+
+---
+
+## 2026-10-06 - Plano borroso al hacer zoom (willChange: transform)
+
+### Problema
+
+El plano interactivo se veía borroso al hacer zoom (rueda, pinch), aunque la imagen fuente tiene 2897×4496 px.
+
+### Causa raiz
+
+El zoom se implementa con CSS `transform: translate() scale()` sobre un div que envuelve el SVG, y ese div tenía `willChange: "transform"`. `will-change: transform` le indica al browser que cree una capa de composición y la mantenga rasterizada para animarla en GPU: Chrome/Safari la rasterizan una vez a la escala inicial (~430 px de ancho) y en cada zoom **escalan ese bitmap** en lugar de redibujar el contenido. Resultado: a 3x–8x se ve un bitmap de 430 px estirado — borroso, incluidos los bordes vectoriales de los polígonos.
+
+La resolución de la imagen no era el problema (se verificó antes de tocar nada).
+
+### Solucion final
+
+Eliminado `willChange: "transform"` del div del zoom en `InteractivePlan.tsx`. Sin la pista, el browser re-rasteriza la capa a la escala real después de cada cambio de transform.
+
+### Commit
+
+`[ver OE 045]`
+
+### Leccion
+
+`will-change: transform` es para animaciones cortas de elementos que no cambian de tamaño visual relevante (slides, fades). En un visor con zoom, provoca exactamente el efecto contrario al buscado: congela la resolución de rasterizado. Señal para diagnosticarlo: si al hacer zoom **también** se ven borrosos elementos vectoriales (SVG, texto), el problema es el escalado de capa, no la resolución de la imagen.

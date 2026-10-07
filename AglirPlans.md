@@ -155,7 +155,7 @@ Props: `lots`, `selectedLot`, `onSelectLot`, `onSchedule`, `showLotDetails?`, `i
 
 - Renderiza un único `<svg viewBox="0 0 100 155.20">` que contiene un `<image>` del plano + los polígonos SVG en el mismo espacio de coordenadas. Imagen portrait completa, sin crop lateral.
 - La imagen (`/plan/plano-11223.png`) se coloca en `x="0" y="0" width="100" height="155.20"`. Si no carga, muestra un `<rect>` placeholder.
-- Implementa zoom/pan con rueda del mouse, drag y pinch de dos dedos (max 8x).
+- Implementa zoom/pan con rueda del mouse, drag y pinch de dos dedos (max 8x). Zoom vía CSS transform **sin** `will-change` (OE 045: con `will-change: transform` el plano se ve borroso).
 - `clamp` con letterbox-awareness: calcula el offset real del SVG (`xMidYMid meet`) y acota el translate al contenido real, no al contenedor. Evita que el plano se escape en desktop wide.
 - Guard `dragMoved` evita que un drag dispare selección de lote.
 - Cuando `showLotDetails=false` (admin), no renderiza `LotDetailPanel`.

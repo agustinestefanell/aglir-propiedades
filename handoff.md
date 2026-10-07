@@ -1930,3 +1930,42 @@ Un vendedor simple (`rol = "vendedor"`) logueado en `/vendedores` llegaba a la p
 
 - Probar: login vendedor simple → Generar propuesta → Editar mi perfil sin campo de logo, logo del Dueño intacto. Login Dueño → campo visible.
 - Decidir: logo para vendedores sin Dueño / edición del logo del equipo por el Dueño en Supabase.
+
+---
+
+## OE 045 — Fix nitidez del plano al hacer zoom
+
+**Fecha:** 2026-10-06
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** Bug fix — rendering
+
+### Diagnóstico (previo al cambio)
+
+- `public/plan/plano-11223.png`: 2897×4496 px, sin alfa, 2,3 MB — resolución esperada, no requiere regenerarse.
+- Fuentes en `IMAGENES DE PROYECTO/`: el PDF es vectorial y landscape (1684×1191 pt); el plano portrait usado es una edición manual (PSD 2897×4496). Regenerar desde el PDF cambiaría recorte/orientación y desalinearía los 90 polígonos → descartado.
+- Render: `<image>` dentro de `<svg viewBox="0 0 100 155.20">` al 100% del contenedor — sin límites de resolución.
+- Zoom: CSS `transform: translate() scale()` sobre el div contenedor, con `willChange: "transform"`.
+
+### Causa raíz
+
+`willChange: "transform"` promueve el div a una capa de composición que el browser rasteriza una vez a escala 1 (~430px de ancho) y luego solo escala ese bitmap en la GPU → borroso al hacer zoom (también los bordes vectoriales de los polígonos).
+
+### Cambio ejecutado
+
+**`src/components/plan/InteractivePlan.tsx`:** eliminado `willChange: "transform"` del div del zoom (con comentario explicando por qué no volver a agregarlo). El browser vuelve a rasterizar al tamaño real tras cada cambio de zoom.
+
+### Límite conocido
+
+La imagen tiene ~6,7 px por px CSS a zoom 1 (2897 px en ~430 px). En pantallas DPR 3, la imagen es nítida hasta ~2,2x; más allá se ve el límite del PNG (los polígonos siguen nítidos). Para nitidez a zoom alto: re-exportar el plano desde Photoshop a 2x (5794×8992) **con el mismo recorte** — mismo aspect ratio, polígonos alineados sin cambios. Trabajo manual del usuario.
+
+Si en algún browser el redibujado durante pinch resulta lento, alternativa: implementar el zoom vía `viewBox` del SVG en vez de CSS transform.
+
+### Verificación
+
+- `npx tsc --noEmit`: limpio.
+- No verificado visualmente en navegador/smartphone.
+
+### Pendientes al cerrar OE 045
+
+- Probar zoom en smartphone real (nitidez + fluidez del pinch).
+- Opcional: re-export del plano a 2x desde PSD/PDF.

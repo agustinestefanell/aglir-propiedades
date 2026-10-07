@@ -212,7 +212,8 @@ export function InteractivePlan({
             transformOrigin: "0 0",
             width: "100%",
             height: "100%",
-            willChange: "transform",
+            // Sin willChange: con "transform" el browser rasteriza la capa una vez a escala 1
+            // y la estira al hacer zoom → plano borroso (OE 045, ver CodingWorkshop.md)
           }}
         >
           {/* Single SVG: plan image + polygons share the same coordinate space.
