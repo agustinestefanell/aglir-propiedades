@@ -29,14 +29,20 @@ export function LotDetailPanel({ lot, onClose }: Props) {
   const cfg = statusConfig[lot.estado];
 
   return (
-    // Bottom sheet centrado en 430px — idéntico en mobile y desktop
+    // Mobile/tablet: bottom sheet centrado en 430px.
+    // Desktop (lg+): columna derecha fija, a la derecha del plano de 430px (OE 048).
+    // En ambos casos max-h al viewport visible + scroll interno → nunca se sale de pantalla.
     <aside className="
       fixed bottom-0 left-1/2 z-30
       w-full max-w-[430px] -translate-x-1/2
+      max-h-[calc(100dvh-4rem)] overflow-y-auto
       flex flex-col gap-3
       rounded-t-xl border-t border-stone-200
       bg-white px-5 pt-4 pb-6
       shadow-[0_-4px_16px_rgba(0,0,0,0.08)]
+      lg:top-20 lg:bottom-auto lg:left-auto lg:right-4 lg:translate-x-0
+      lg:w-64 lg:max-h-[calc(100dvh-6rem)]
+      lg:rounded-xl lg:border lg:shadow-lg
     ">
       <div className="flex items-start justify-between gap-3">
         <div>

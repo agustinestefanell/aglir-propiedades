@@ -15,6 +15,7 @@ import {
 const badgeCls: Record<string, string> = {
   pendiente: "bg-yellow-100 text-yellow-800",
   activo: "bg-emerald-100 text-emerald-800",
+  archivado: "bg-stone-200 text-stone-500",
 };
 
 function EstadoBadge({ estado }: { estado: string }) {
@@ -38,28 +39,40 @@ function AccionEstado({
   busy: boolean;
   onChange: (id: string, estado: EstadoVendedor) => void;
 }) {
+  const secundario =
+    "rounded border border-stone-300 px-2 py-1 text-[11px] font-bold text-stone-600 disabled:opacity-60";
   if (v.estado === "activo") {
     return (
-      <button
-        type="button"
-        onClick={() => onChange(v.id, "inactivo")}
-        disabled={busy}
-        className="rounded border border-stone-300 px-2 py-1 text-[11px] font-bold text-stone-600 disabled:opacity-60"
-      >
+      <button type="button" onClick={() => onChange(v.id, "inactivo")} disabled={busy} className={secundario}>
         Desactivar
       </button>
     );
   }
-  // pendiente → Aprobar; inactivo → Activar
+  // archivado → solo Desarchivar (vuelve a inactivo); no se reactiva directo (OE 048)
+  if (v.estado === "archivado") {
+    return (
+      <button type="button" onClick={() => onChange(v.id, "inactivo")} disabled={busy} className={secundario}>
+        Desarchivar
+      </button>
+    );
+  }
+  // pendiente → Aprobar; inactivo → Activar + Archivar
   return (
-    <button
-      type="button"
-      onClick={() => onChange(v.id, "activo")}
-      disabled={busy}
-      className="rounded bg-leaf px-2 py-1 text-[11px] font-bold text-white disabled:opacity-60"
-    >
-      {v.estado === "pendiente" ? "Aprobar" : "Activar"}
-    </button>
+    <div className="flex gap-1">
+      {v.estado === "inactivo" && (
+        <button type="button" onClick={() => onChange(v.id, "archivado")} disabled={busy} className={secundario}>
+          Archivar
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => onChange(v.id, "activo")}
+        disabled={busy}
+        className="rounded bg-leaf px-2 py-1 text-[11px] font-bold text-white disabled:opacity-60"
+      >
+        {v.estado === "pendiente" ? "Aprobar" : "Activar"}
+      </button>
+    </div>
   );
 }
 
@@ -67,6 +80,7 @@ export function AdminVendedores() {
   const [vendedores, setVendedores] = useState<VendedorRow[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   useEffect(() => {
     fetchVendedores().then(setVendedores);
@@ -100,13 +114,20 @@ export function AdminVendedores() {
     );
   }
 
+  const archivadosCount = vendedores.filter((v) => v.estado === "archivado").length;
+  const visible = (v: VendedorRow) => showArchived || v.estado !== "archivado";
+
   const duenos = vendedores.filter((v) => v.rol === "dueno");
+  // Con todos los Dueños (incluso archivados) para que su equipo no caiga en "sin dueño"
   const duenoIds = new Set(duenos.map((d) => d.id));
-  const equipoDe = (id: string) => vendedores.filter((v) => v.rol !== "dueno" && v.dueno_id === id);
+  const equipoDe = (id: string) =>
+    vendedores.filter((v) => v.rol !== "dueno" && v.dueno_id === id && visible(v));
   // Sin Dueño (o con dueno_id que no corresponde a un Dueño existente)
   const independientes = vendedores.filter(
-    (v) => v.rol !== "dueno" && (!v.dueno_id || !duenoIds.has(v.dueno_id))
+    (v) => v.rol !== "dueno" && (!v.dueno_id || !duenoIds.has(v.dueno_id)) && visible(v)
   );
+  // Un Dueño archivado se oculta, salvo que tenga vendedores visibles en su equipo
+  const duenosVisibles = duenos.filter((d) => visible(d) || equipoDe(d.id).length > 0);
 
   function VendedorLine({ v, duenoInactivo }: { v: VendedorRow; duenoInactivo?: boolean }) {
     return (
@@ -134,14 +155,27 @@ export function AdminVendedores() {
 
   return (
     <section className="mx-auto grid w-full max-w-[430px] gap-3 px-2 pt-3 pb-6">
-      <p className="px-1 text-[10px] uppercase tracking-wide text-stone-400">
-        Número junto al estado = propuestas enviadas
-      </p>
+      <div className="flex items-center justify-between gap-2 px-1">
+        <p className="text-[10px] uppercase tracking-wide text-stone-400">
+          Número junto al estado = propuestas enviadas
+        </p>
+        <label className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-stone-600">
+          <input
+            type="checkbox"
+            checked={showArchived}
+            onChange={(e) => setShowArchived(e.target.checked)}
+            className="h-3.5 w-3.5 accent-leaf"
+          />
+          Mostrar archivados ({archivadosCount})
+        </label>
+      </div>
 
-      {duenos.map((d) => {
+      {duenosVisibles.map((d) => {
         const equipo = equipoDe(d.id);
+        // Total histórico: incluye propuestas de vendedores archivados aunque estén ocultos
         const totalEquipo =
-          (counts[d.id] ?? 0) + equipo.reduce((acc, v) => acc + (counts[v.id] ?? 0), 0);
+          (counts[d.id] ?? 0) +
+          vendedores.filter((v) => v.dueno_id === d.id).reduce((acc, v) => acc + (counts[v.id] ?? 0), 0);
         const duenoInactivo = d.estado !== "activo";
         return (
           <div key={d.id} className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">

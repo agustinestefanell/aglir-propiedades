@@ -217,6 +217,8 @@ export function DuenoPanel({ session, vista }: { session: VendedorSession; vista
                   </td>
                   <td className="py-2 text-center font-bold text-ink">{counts[v.id] ?? 0}</td>
                   <td className="px-2 py-2 text-right">
+                    {/* Archivado: solo el admin puede desarchivar (OE 048) */}
+                    {v.estado !== "archivado" && (
                     <button
                       type="button"
                       onClick={() => changeEstado(v.id, v.estado === "activo" ? "inactivo" : "activo")}
@@ -229,6 +231,7 @@ export function DuenoPanel({ session, vista }: { session: VendedorSession; vista
                     >
                       {v.estado === "activo" ? "Desactivar" : "Activar"}
                     </button>
+                    )}
                   </td>
                 </tr>
               ))}

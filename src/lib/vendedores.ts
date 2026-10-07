@@ -3,7 +3,7 @@ import { supabase } from "./supabase";
 import { loadVendedor, saveVendedor } from "./vendedor";
 
 // Esquema asumido (OE 040 + OE 042) — ver handoff.md para el SQL de verificación:
-//   vendedores: id, nombre, telefono, mail, pin, estado ("pendiente" | "activo" | "inactivo"),
+//   vendedores: id, nombre, telefono, mail, pin, estado ("pendiente" | "activo" | "inactivo" | "archivado"),
 //               rol ("dueno" | "vendedor"), dueno_id (FK vendedores.id), logo_inmobiliaria (data URL), created_at
 //   propuestas: id, vendedor_id, lot_id, manzana, solar, created_at
 export const VENDEDORES_TABLE = "vendedores";
@@ -13,7 +13,8 @@ export const SESSION_KEY = "aglir_vendedor_session";
 // Marca que este dispositivo ya registró un vendedor → /vendedores abre en Login en vez de Registro
 export const REGISTRADO_KEY = "aglir_vendedor_registrado";
 
-export type EstadoVendedor = "pendiente" | "activo" | "inactivo";
+// archivado (OE 048): sin acceso y oculto por defecto en /gestion; solo se sale desarchivando (→ inactivo)
+export type EstadoVendedor = "pendiente" | "activo" | "inactivo" | "archivado";
 export type RolVendedor = "dueno" | "vendedor";
 
 export type VendedorRow = {

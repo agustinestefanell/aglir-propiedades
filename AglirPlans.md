@@ -110,7 +110,7 @@ public/
 - Flujo: `LoginScreen` → autenticación → header con tabs → **Plano** (plano interactivo + LotStatusMenu) / **Visitas** (panel de solicitudes).
 - Tab "Plano": plano interactivo, toque simple en lote → LotStatusMenu para cambiar estado (upsert Supabase).
 - Tab "Terrenos" (OE 037/047): arriba `AdminStatusSummary` (resumen En venta / Reservados / Vendidos / Total por manzana, OE 047); debajo `AdminPriceTable` — tabla de los 90 lotes con inputs Precio UR / Contado U$S y botón Guardar por fila (upsert `lot_states.precio_ur` / `precio_contado`, sin tocar `estado`).
-- Tab "Vendedores" (OE 040/042): `AdminVendedores` — agrupado por Dueño (equipo + total de propuestas) + grupo "sin dueño"; Aprobar / Desactivar / Activar; realtime sobre `vendedores` y `propuestas`.
+- Tab "Vendedores" (OE 040/042/048): `AdminVendedores` — agrupado por Dueño (equipo + total de propuestas) + grupo "sin dueño"; Aprobar / Desactivar / Activar / Archivar (solo inactivos) / Desarchivar (→ inactivo); archivados ocultos salvo toggle "Mostrar archivados"; realtime sobre `vendedores` y `propuestas`. Estados de `vendedores.estado`: `pendiente | activo | inactivo | archivado`.
 - Tab "Visitas": lista `visit_requests` de Supabase ordenada por `created_at` desc. Realtime (`postgres_changes`). Badge con count pendientes. Botones WhatsApp y Confirmar (update estado en Supabase).
 - Botón `🔔 Notif` en header: activa Web Push manualmente si no hay permiso.
 - Botón "Editar mi perfil" en header (OE 041b): abre `VendedorProfileModal` (nombre, teléfono, logo). Al ingresar, si `aglir_vendedor` no tiene logo, se pide con opción "Omitir por ahora" (silenciado por `sessionStorage["aglir_logo_omitido"]`).
@@ -185,7 +185,7 @@ Props: `lot`, `selected`, `onSelect`, `forceClickable?`
 Props: `lot`, `onClose`, `onSchedule`
 
 - Badge de estado, Manzana, Solar, m² (muestra "—" si area=0), precios si están cargados, botón "Descargar propuesta" (OE 039b, `/propuesta/{id}?modo=publico`). Botón "Agendar visita" eliminado en OE 039 (`onSchedule` opcional, sin uso).
-- Bottom sheet centrado en 430px en todos los tamaños: `fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-30` (OE 019 — eliminado el modo sticky de columna derecha).
+- Mobile/tablet: bottom sheet centrado en 430px (`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-30`, OE 019). Desktop `lg`: columna derecha fija `top-20 right-4 w-64` junto al plano (OE 048). Siempre `max-h` al viewport (`dvh`) + `overflow-y-auto`.
 - Botón "Agendar visita" siempre visible sin scroll (deshabilitado si no disponible).
 - Nota "Horario a confirmar · Te contactamos por WhatsApp" fija bajo el botón.
 

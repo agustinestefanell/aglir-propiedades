@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-10-07 — OE 047
+Ultima actualizacion: 2026-10-07 — OE 048
 
 ---
 
@@ -44,6 +44,7 @@ Ultima actualizacion: 2026-10-07 — OE 047
 | Carátula derecha del A3 | Closed | Nueva imagen portrait sin carátula lateral separada — todo el contenido está integrado en la imagen | — |
 | Panel lateral — desktop sticky | Closed | `position:sticky top:56px width:300px` — validado Playwright | — |
 | Panel — mobile bottom sheet | Closed | `position:fixed bottom:0` — superpuesto sobre plano, validado Playwright | — |
+| Panel de detalle dentro del viewport en desktop | Partial | `LotDetailPanel`: `max-h` al viewport + scroll interno en todos los tamaños; en `lg` columna derecha fija `top-20 right-4 w-64` junto al plano (OE 048) | Verificar en navegador desktop (1024/1366/1920 y ventana baja) |
 | Botón "Descargar propuesta" | Closed | `LotDetailPanel`, solo lotes disponibles → `/propuesta/[id]?modo=publico` (OE 039b) | — |
 | Botón "Agendar visita" | Deferred | Eliminado de `LotDetailPanel` en OE 039 | `VisitBookingModal` sigue en el repo, inalcanzable |
 | Flujo de agenda (registro + booking) | Deferred | Sin punto de entrada desde OE 039. Antes: | `VisitBookingModal` 2 pasos; guarda en Supabase `visit_requests`; error visible si falla | — |
@@ -73,7 +74,7 @@ Ultima actualizacion: 2026-10-07 — OE 047
 | Edición de precio desde popup del plano | Partial | `LotStatusMenu` con inputs Precio UR / U$S contado + "Guardar precio", pre-llenados, comparte `useLotStates` con tab Terrenos (OE 037b) | Ejecutar SQL de columnas (OE 037) |
 | Botón "Enviar propuesta" en popup del plano | Closed | `LotStatusMenu`, solo lotes disponibles → `/propuesta/[id]?modo=vendedor`; pide perfil si no existe (OE 039/039b) | — |
 | Perfil del vendedor | Closed | `VendedorProfileModal` — nombre, teléfono, "Logo de tu inmobiliaria" (JPG/PNG, redimensionado 400px) en `localStorage["aglir_vendedor"]` (OE 039); logo se pide al ingresar a `/gestion` si falta ("Omitir por ahora" disponible) y se edita con "Editar mi perfil" en el header (OE 041/041b) | Solo vive en el dispositivo del vendedor; probar upload en smartphone |
-| Tab Vendedores (gestión) | Partial | `AdminVendedores` — agrupado por Dueño (equipo + total de propuestas) + "sin dueño"; Aprobar/Desactivar/Activar; realtime (OE 040/042) | Ejecutar SQL OE 040 (RLS + realtime publication) |
+| Tab Vendedores (gestión) | Partial | `AdminVendedores` — agrupado por Dueño (equipo + total de propuestas) + "sin dueño"; Aprobar/Desactivar/Activar; realtime (OE 040/042). Estado `archivado` (OE 048): Archivar solo desde inactivo, oculto por defecto con toggle "Mostrar archivados", Desarchivar → inactivo; archivado no puede loguear | Ejecutar SQL OE 040 (RLS + realtime publication); ampliar check constraint de `estado` si existe (SQL OE 048) |
 | Logo Aglir en header | Closed | `public/logo.jpg` integrado en ambas páginas (`img` h-8 w-8) | — |
 
 ---

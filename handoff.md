@@ -2036,3 +2036,57 @@ En mobile, al tocar un campo del login de `/gestion` o `/vendedores`, el teclado
 
 - Probar en smartphone: tab Terrenos → resumen; cambiar estado de un lote en el tab Plano → contadores se actualizan.
 - Pendientes previos: SQL OE 036/037/040/042/043.
+
+---
+
+## OE 048 — Archivar vendedores + fix panel de terreno en desktop
+
+**Fecha:** 2026-10-07
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** Feature admin + UI fix
+
+### Cambio 1 — Estado `archivado` para vendedores
+
+**`src/lib/vendedores.ts`:** `EstadoVendedor` = `pendiente | activo | inactivo | archivado`. El login (`loginPorPin` filtra `estado = 'activo'`) y el re-chequeo de sesión (`fetchContextoSesion`) ya exigían `activo` → un archivado no puede entrar y una sesión abierta se cierra sola. Sin cambios en esa lógica.
+
+**`src/components/admin/AdminVendedores.tsx` (tab Vendedores de `/gestion`):**
+- Transiciones: pendiente → **Aprobar**; activo → **Desactivar**; inactivo → **Activar** o **Archivar**; archivado → solo **Desarchivar** (vuelve a `inactivo`, después se puede activar). Un activo no se puede archivar directo.
+- Checkbox "Mostrar archivados (N)" arriba de la lista, apagado por defecto. Archivados ocultos de los equipos y del grupo "sin dueño".
+- Un Dueño archivado se oculta, salvo que tenga vendedores no archivados en su equipo (para no perderlos de vista). Sus vendedores no caen en "sin dueño".
+- "Propuestas del equipo" sigue sumando las de vendedores archivados (total histórico).
+- Badge `archivado` gris.
+
+**`src/components/vendedores/DuenoPanel.tsx` ("Mi equipo"):** un vendedor archivado se ve con su badge pero **sin botón** — el Dueño no puede reactivarlo; solo el admin desarchiva.
+
+**SQL (acción manual usuario, Supabase SQL Editor):** si `vendedores.estado` tiene un check constraint, hay que incluir `archivado`; sin esto, Archivar falla (error en consola, el estado no cambia):
+
+```sql
+-- ver si hay constraint:
+select conname, pg_get_constraintdef(oid) from pg_constraint
+where conrelid = 'vendedores'::regclass and contype = 'c';
+
+-- si existe (reemplazar <nombre> por el conname de arriba):
+alter table vendedores drop constraint <nombre>;
+alter table vendedores add constraint vendedores_estado_check
+  check (estado in ('pendiente', 'activo', 'inactivo', 'archivado'));
+```
+
+Si `estado` es texto libre sin constraint, no hace falta nada.
+
+### Cambio 2 — `LotDetailPanel` dentro del viewport en desktop
+
+No se reprodujo en navegador (sin Playwright en el entorno); no hay ancestros con `transform`/`filter` que rompan el `position: fixed`. El panel era un bottom sheet sin altura máxima: en ventanas bajas (laptop con barras del browser) o con precios cargados puede quedar más alto que el área visible y cortarse arriba. Cambios en `src/components/plan/LotDetailPanel.tsx`:
+- Todas las pantallas: `max-h-[calc(100dvh-4rem)] overflow-y-auto` → nunca más alto que el viewport, scroll interno si hace falta.
+- Desktop `lg` (≥1024px): columna derecha fija — `top-20 right-4 w-64`, `max-h-[calc(100dvh-6rem)]`, bordes redondeados. Con el plano de 430px centrado, a 1024px quedan ~290px libres a la derecha → el panel (256px) no tapa el plano.
+- Mobile/tablet: mismo bottom sheet centrado en 430px.
+
+### Verificación
+
+- `npx tsc --noEmit`: limpio.
+- **No verificado en navegador**: probar `/` en desktop (1024, 1366, 1920 y ventana baja) y mobile; tab Vendedores con archivar/desarchivar contra Supabase real.
+
+### Pendientes al cerrar OE 048
+
+- Acción manual usuario: SQL del constraint de `estado` (si existe).
+- Probar flujo: Desactivar → Archivar → oculto → "Mostrar archivados" → Desarchivar → Activar; login de vendedor archivado rechazado.
+- Pendientes previos: SQL OE 036/037/040/042/043.
