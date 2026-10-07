@@ -8,6 +8,7 @@ import { InteractivePlan } from "@/components/plan/InteractivePlan";
 import { DuenoPanel } from "@/components/vendedores/DuenoPanel";
 import { useLotStates } from "@/lib/lotStates";
 import { fileToResizedDataUrl } from "@/lib/vendedor";
+import { scrollFocusedFieldIntoView } from "@/lib/mobileForm";
 import {
   REGISTRADO_KEY,
   clearSession,
@@ -86,7 +87,7 @@ function RegistroForm({ onDone, onGoLogin }: { onDone: () => void; onGoLogin: ()
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-3">
+    <form onSubmit={handleSubmit} onFocus={scrollFocusedFieldIntoView} className="grid gap-3">
       <h1 className="text-xl font-black text-ink">Registro de vendedores</h1>
       <label className="text-xs font-semibold text-stone-600">
         Nombre
@@ -186,7 +187,7 @@ function LoginForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-3">
+    <form onSubmit={handleSubmit} onFocus={scrollFocusedFieldIntoView} className="grid gap-3">
       <h1 className="text-xl font-black text-ink">Ingreso de vendedores</h1>
       <label className="text-xs font-semibold text-stone-600">
         PIN
@@ -363,7 +364,7 @@ export default function VendedoresPage() {
   if (session) return <Dashboard session={session} onLogout={handleLogout} />;
 
   return (
-    <main className="min-h-screen bg-paper">
+    <main className="min-h-[100dvh] overflow-y-auto bg-paper">
       <div className="mx-auto max-w-[430px] px-5 pt-8 pb-10">
         <div className="mb-6 flex items-center gap-2.5">
           <Logo />

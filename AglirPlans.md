@@ -138,6 +138,11 @@ public/
 - Datos del vendedor desde `localStorage["aglir_vendedor"]` (`src/lib/vendedor.ts`); "Editar mi perfil" abre `VendedorProfileModal`.
 - Entradas: "Enviar propuesta" en `LotStatusMenu` → modo vendedor; "Descargar propuesta" en `LotDetailPanel` → modo público (solo lotes disponibles).
 
+### Formularios mobile (OE 046)
+
+- `layout.tsx` declara `viewport.interactiveWidget = "resizes-content"` (Android achica el layout al abrir el teclado).
+- Formularios usan `onFocus={scrollFocusedFieldIntoView}` (`src/lib/mobileForm.ts`) y contenedores con `dvh` en lugar de `vh`. Aplicar el mismo patrón a todo formulario nuevo.
+
 ### `/admin/trace` — Herramienta de trazado (solo dev)
 
 - Funcion: trazar poligonos SVG sobre el plano para poblar `lots.ts`.

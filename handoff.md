@@ -1969,3 +1969,42 @@ Si en algún browser el redibujado durante pinch resulta lento, alternativa: imp
 
 - Probar zoom en smartphone real (nitidez + fluidez del pinch).
 - Opcional: re-export del plano a 2x desde PSD/PDF.
+
+---
+
+## OE 046 — Fix: teclado mobile tapa el formulario de login
+
+**Fecha:** 2026-10-06
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** Bug fix — UX mobile
+
+### Problema
+
+En mobile, al tocar un campo del login de `/gestion` o `/vendedores`, el teclado virtual tapaba los campos y el botón de submit.
+
+### Causa raíz
+
+- **Android Chrome ≥108** usa por defecto `interactive-widget=resizes-visual`: el teclado se superpone **sin achicar el layout viewport**. `min-h-screen` (100vh) sigue midiendo la pantalla entera → el login, centrado verticalmente con `items-center`, queda detrás del teclado.
+- **iOS Safari** tampoco achica el layout viewport (ni `vh` ni `dvh` reaccionan al teclado); depende de que el campo enfocado se desplace a la vista.
+- El modal de perfil usaba `max-h-[90vh]`: con teclado abierto, más alto que el área visible.
+
+### Cambios ejecutados
+
+- **`src/app/layout.tsx`:** `viewport.interactiveWidget = "resizes-content"` → `<meta name="viewport" content="…, interactive-widget=resizes-content">` (verificado en el HTML de `next dev`). En Android el layout se achica al abrir el teclado: `dvh`, `fixed inset-0` y el centrado se ajustan al área visible. Aplica a todo el sitio.
+- **`src/lib/mobileForm.ts` (nuevo):** `scrollFocusedFieldIntoView` — handler `onFocus` para el `<form>`: 300 ms después de enfocar un input/textarea (tiempo de apertura del teclado) hace `scrollIntoView({ block: "center", behavior: "smooth" })`. Ignora file y checkbox. Cubre iOS y el resto.
+- **`LoginScreen.tsx` (login de `/gestion`):** `min-h-screen` → `min-h-[100dvh]` + `overflow-y-auto` + `py-8`; `onFocus` en el form.
+- **`src/app/vendedores/page.tsx`:** `onFocus` en los forms de Registro y Login; contenedor `min-h-[100dvh] overflow-y-auto`.
+- **`DuenoPanel.tsx`:** `onFocus` en "Nuevo vendedor".
+- **`VendedorProfileModal.tsx`:** `max-h-[90vh]` → `max-h-[90dvh]` + `onFocus` (el scroll ocurre dentro del modal, que ya era `overflow-y-auto`).
+- Con el campo centrado en el área visible, el botón de submit queda inmediatamente debajo y alcanzable con scroll.
+
+### Verificación
+
+- `npx tsc --noEmit`: limpio.
+- `next dev`: meta viewport con `interactive-widget=resizes-content`; `/gestion` y `/vendedores` 200.
+- **No verificado en dispositivos reales** (Android + iOS).
+
+### Pendientes al cerrar OE 046
+
+- Probar login de `/gestion`, registro/login de `/vendedores`, "Nuevo vendedor" y modal de perfil en Android Chrome e iOS Safari.
+- Si en iOS el botón de submit queda justo bajo el teclado en el registro (formulario largo), evaluar padding inferior dinámico con `window.visualViewport`.

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { fileToResizedDataUrl, saveVendedor, type Vendedor } from "@/lib/vendedor";
+import { scrollFocusedFieldIntoView } from "@/lib/mobileForm";
 
 type Props = {
   initial?: Vendedor | null;
@@ -54,7 +55,8 @@ export function VendedorProfileModal({ initial, onSaved, onClose, onSkip, allowL
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 sm:items-center">
       <form
         onSubmit={handleSubmit}
-        className="max-h-[90vh] w-full max-w-[430px] overflow-y-auto rounded-t-2xl bg-white px-5 pt-5 pb-8 shadow-2xl sm:rounded-2xl"
+        onFocus={scrollFocusedFieldIntoView}
+        className="max-h-[90dvh] w-full max-w-[430px] overflow-y-auto rounded-t-2xl bg-white px-5 pt-5 pb-8 shadow-2xl sm:rounded-2xl"
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>

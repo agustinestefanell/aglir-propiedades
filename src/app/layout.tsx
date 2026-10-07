@@ -10,6 +10,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#1a6b45",
+  // Android Chrome ≥108 superpone el teclado sin achicar el layout (resizes-visual):
+  // con resizes-content el viewport se reduce y los formularios quedan visibles (OE 046)
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({

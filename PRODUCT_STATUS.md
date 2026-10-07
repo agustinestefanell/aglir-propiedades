@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-10-06 — OE 045
+Ultima actualizacion: 2026-10-06 — OE 046
 
 ---
 
@@ -63,6 +63,7 @@ Ultima actualizacion: 2026-10-06 — OE 045
 | Panel de visitas admin | Closed | Tab "Visitas" en `/gestion` — lista Supabase `visit_requests` con realtime, badge pendientes, botones WhatsApp + Confirmar (OE 031) | — |
 | WhatsApp human-in-the-loop | Partial | `buildWhatsAppUrl` + apertura de `wa.me/...` | Probar con numero real |
 | Formato de contacto AP-{tel}{Nombre} | Closed | `formatContactName` en `whatsapp.ts`, visible en `WhatsAppAcceptButton` | Probar flujo real |
+| Formularios mobile con teclado abierto | Partial | `interactive-widget=resizes-content` + `dvh` + scroll del campo enfocado en login `/gestion`, registro/login `/vendedores`, Nuevo vendedor y modal de perfil (OE 046) | Probar en Android Chrome e iOS Safari reales |
 | Login admin (`/gestion`) | Closed | `LoginScreen` con credenciales hardcodeadas, **localStorage** (persiste entre sesiones) (OE 025) | Migrar a Supabase Auth |
 | Cambio de estado desde plano (admin) | Closed | Single-tap → `LotStatusMenu`; upsert en Supabase `lot_states`; optimistic update inmediato (OE 023) | — |
 | Sincronización Admin ↔ Público | Broken | `useLotStates` con Supabase realtime (`postgres_changes`) implementado correctamente (OE 023) pero al abrir/recargar la página no se leen los estados guardados — sospecha de RLS de SELECT bloqueando lectura anon en `lot_states` (OE 036) | Ejecutar SQL de policies en Supabase (OE 036) y confirmar en navegador |

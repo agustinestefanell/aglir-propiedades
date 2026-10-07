@@ -302,3 +302,29 @@ Eliminado `willChange: "transform"` del div del zoom en `InteractivePlan.tsx`. S
 ### Leccion
 
 `will-change: transform` es para animaciones cortas de elementos que no cambian de tamaño visual relevante (slides, fades). En un visor con zoom, provoca exactamente el efecto contrario al buscado: congela la resolución de rasterizado. Señal para diagnosticarlo: si al hacer zoom **también** se ven borrosos elementos vectoriales (SVG, texto), el problema es el escalado de capa, no la resolución de la imagen.
+
+---
+
+## 2026-10-06 - Teclado mobile tapa los formularios de login
+
+### Problema
+
+En mobile, al enfocar un campo del login (`/gestion`, `/vendedores`), el teclado virtual tapaba los inputs y el botón de submit.
+
+### Causa raiz
+
+Desde Chrome 108, Android usa `interactive-widget=resizes-visual` por defecto: el teclado reduce solo el *visual* viewport y deja el *layout* viewport en tamaño completo. Todo lo que mide el layout (`100vh`/`min-h-screen`, `fixed inset-0`, centrado con flex) sigue calculándose para la pantalla entera, así que un formulario centrado verticalmente queda en la mitad inferior, detrás del teclado. iOS Safari se comporta parecido (el layout no se achica; `dvh` tampoco cambia con el teclado) y depende de que el input enfocado se desplace a la vista.
+
+### Solucion final
+
+- `viewport.interactiveWidget = "resizes-content"` en `src/app/layout.tsx` → Android achica el layout al abrir el teclado.
+- `min-h-[100dvh]` en lugar de `min-h-screen` en contenedores de login; `max-h-[90dvh]` en el modal de perfil.
+- `scrollFocusedFieldIntoView` (`src/lib/mobileForm.ts`) como `onFocus` de los forms: centra el campo activo tras 300 ms (cubre iOS).
+
+### Commit
+
+`[ver OE 046]`
+
+### Leccion
+
+En formularios mobile no alcanza con `100vh` ni con centrar verticalmente: el teclado no achica el layout por defecto en Android moderno ni en iOS. Declarar `interactive-widget=resizes-content` en el viewport desde el inicio del proyecto, usar unidades `dvh` y llevar el campo enfocado a la vista con `scrollIntoView`. Probar siempre en dispositivo real: DevTools en modo responsive no simula el teclado.

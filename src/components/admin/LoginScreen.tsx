@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { scrollFocusedFieldIntoView } from "@/lib/mobileForm";
 
 const USERS: Record<string, string> = {
   Agustin: "Estefanell33",
@@ -28,7 +29,7 @@ export function LoginScreen({ onLogin }: Props) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-paper px-4">
+    <main className="flex min-h-[100dvh] items-center justify-center overflow-y-auto bg-paper px-4 py-8">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <p className="text-base font-black text-ink">Aglir Propiedades</p>
@@ -37,6 +38,7 @@ export function LoginScreen({ onLogin }: Props) {
 
         <form
           onSubmit={handleSubmit}
+          onFocus={scrollFocusedFieldIntoView}
           className="grid gap-4 rounded-xl border border-stone-200 bg-white p-6 shadow-sm"
         >
           <label className="grid gap-1.5 text-sm font-bold text-stone-700">

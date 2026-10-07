@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { supabase } from "@/lib/supabase";
+import { scrollFocusedFieldIntoView } from "@/lib/mobileForm";
 import {
   PROPUESTAS_TABLE,
   VENDEDORES_TABLE,
@@ -66,7 +67,7 @@ function NuevoVendedorForm({ duenoId, onCreated }: { duenoId: string; onCreated:
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
+    <form onSubmit={handleSubmit} onFocus={scrollFocusedFieldIntoView} className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
       <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-stone-400">Nuevo vendedor</p>
       <div className="grid grid-cols-2 gap-2">
         <label className="col-span-2 text-xs font-semibold text-stone-600">
