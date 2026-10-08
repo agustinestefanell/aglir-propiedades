@@ -2,7 +2,7 @@
 
 Estados: **Closed** (terminado) / **Partial** (funciona con limitaciones) / **UI-only** (sin logica real) / **Deferred** (postergado) / **Broken** (roto/faltante)
 
-Ultima actualizacion: 2026-10-07 — OE 049
+Ultima actualizacion: 2026-10-08 — OE 051
 
 ---
 
@@ -61,7 +61,8 @@ Ultima actualizacion: 2026-10-07 — OE 049
 | Ruta `/admin` legacy | Closed | Vaciada en OE 017 — devuelve página en blanco; funcionalidad admin real en `/gestion` | — |
 | Gestion de estados comerciales (local) | Partial | `AdminLotStatusManager` + `AdminLotStatusCard` — cambios locales por sesion | Persistencia real en backend |
 | Busqueda de lotes por manzana/solar | Closed | Filtro de texto en `AdminLotStatusManager` | — |
-| Panel de visitas admin | Closed | Tab "Visitas" en `/gestion` — lista Supabase `visit_requests` con realtime, badge pendientes, botones WhatsApp + Confirmar (OE 031) | — |
+| Panel de visitas admin | Deferred | Tab "Visitas" eliminado en OE 051 (reemplazado por RanTerr); `visit_requests` ya no se muestra en ninguna pantalla | Decidir si se elimina el flujo de visitas |
+| Ranking de terrenos (tab RanTerr) | Partial | `AdminRankingTerrenos` — terrenos con propuestas ordenados por cantidad desc (empate: Mz/Solar), columnas # / Mz / Solar / m² / Propuestas, realtime sobre `propuestas`; mensaje "Aún no se generaron propuestas." (OE 051) | Probar contra Supabase real; depende de RLS de `propuestas` (SQL OE 040) |
 | WhatsApp human-in-the-loop | Partial | `buildWhatsAppUrl` + apertura de `wa.me/...` | Probar con numero real |
 | Formato de contacto AP-{tel}{Nombre} | Closed | `formatContactName` en `whatsapp.ts`, visible en `WhatsAppAcceptButton` | Probar flujo real |
 | Formularios mobile con teclado abierto | Partial | `interactive-widget=resizes-content` + `dvh` + scroll del campo enfocado en login `/gestion`, registro/login `/vendedores`, Nuevo vendedor y modal de perfil (OE 046) | Probar en Android Chrome e iOS Safari reales |

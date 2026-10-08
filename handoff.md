@@ -2113,3 +2113,42 @@ No se reprodujo en navegador (sin Playwright en el entorno); no hay ancestros co
 ### Pendientes al cerrar OE 049
 
 - Mismos que OE 048.
+
+---
+
+## OE 051 — Tab Visitas reemplazado por RanTerr (Ranking de Terrenos)
+
+**Fecha:** 2026-10-08
+**Ejecutor:** Claude (Opus 5.5)
+**Tipo:** Feature — admin
+
+### Cambios ejecutados
+
+**`src/app/gestion/page.tsx`:**
+- Tab "Visitas" renombrado a **RanTerr** (`Tab = "plano" | "ranterr" | "terrenos" | "vendedores"`). Sin badge.
+- Eliminado todo el código de visitas: tipo `VisitRow`, `buildWAUrl`, `fetchVisits`, estado `visits`, `pendingCount`, canal realtime `visit_requests_changes`, `confirmVisit` y el JSX de las cards. Import de `supabase` eliminado (ya no se usa en la página).
+
+**`src/components/admin/AdminRankingTerrenos.tsx` (nuevo):**
+- Tabla con columnas # / Mz / Solar / m² / Propuestas, `table-fixed` en 430px (mismo estilo que `AdminStatusSummary`).
+- Solo lista terrenos con al menos 1 propuesta, ordenados por cantidad desc; empate → manzana y solar (numérico).
+- Manzana / Solar / m² salen de `lots` (`useLotStates`); si un `lot_id` no existe en `lots.ts`, manzana/solar se derivan del id `m{mz}-s{solar}` y m² muestra "—".
+- Sin propuestas → "Aún no se generaron propuestas."
+- Realtime: canal `ranterr_propuestas` (`postgres_changes` sobre `propuestas`) → refetch.
+
+**`src/lib/vendedores.ts`:** `fetchPropuestaCountsPorLote()` — `select lot_id` de `propuestas` y cuenta en el cliente con `countBy`. El `group by lot_id / count(*)` de la OE no se hace en SQL porque PostgREST no agrupa salvo que se habiliten los aggregates en Supabase; el resultado es el mismo (una fila por propuesta).
+
+### Notas
+
+- `visit_requests` sigue existiendo en Supabase y `VisitBookingModal` sigue en el repo (inalcanzable desde OE 039). Las solicitudes de visita ya no se ven en ninguna pantalla.
+- El ranking depende de que `propuestas` sea legible con la anon key (SQL de RLS de OE 040).
+
+### Verificación
+
+- `npx tsc --noEmit`: limpio.
+- No verificado en navegador ni contra Supabase real.
+
+### Pendientes al cerrar OE 051
+
+- Probar: generar propuestas desde `/vendedores` → aparecen en RanTerr con el conteo correcto y se actualizan en vivo.
+- Decidir si se eliminan `VisitBookingModal` / `visit_requests` (flujo de visitas sin uso).
+- Pendientes previos: SQL OE 036/037/040/042/043/048.

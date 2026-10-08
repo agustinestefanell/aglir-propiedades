@@ -283,6 +283,17 @@ export async function fetchPropuestaCounts(): Promise<Record<string, number>> {
   return countBy((data ?? []).map((r) => r.vendedor_id as string));
 }
 
+// Ranking de terrenos (tab RanTerr): count(*) group by lot_id. PostgREST no agrupa sin
+// habilitar aggregates en Supabase, así que se cuenta en el cliente (una fila por propuesta).
+export async function fetchPropuestaCountsPorLote(): Promise<Record<string, number>> {
+  const { data, error } = await supabase.from(PROPUESTAS_TABLE).select("lot_id");
+  if (error) {
+    console.error("Error cargando propuestas por terreno:", error);
+    return {};
+  }
+  return countBy((data ?? []).map((r) => r.lot_id as string).filter(Boolean));
+}
+
 export function countBy(ids: string[]): Record<string, number> {
   const counts: Record<string, number> = {};
   for (const id of ids) counts[id] = (counts[id] ?? 0) + 1;

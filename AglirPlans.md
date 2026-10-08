@@ -107,11 +107,11 @@ public/
 
 - URL no predecible para acceso admin.
 - Login guard con `localStorage["aglir_gestion_user"]` (persiste entre sesiones). Credenciales hardcodeadas: Agustin/Estefanell33, Rodrigo/Surferogalactico33.
-- Flujo: `LoginScreen` → autenticación → header con tabs → **Plano** (plano interactivo + LotStatusMenu) / **Visitas** (panel de solicitudes).
+- Flujo: `LoginScreen` → autenticación → header con tabs → **Plano** (plano interactivo + LotStatusMenu) / **RanTerr** (ranking de terrenos) / **Terrenos** / **Vendedores**.
 - Tab "Plano": plano interactivo, toque simple en lote → LotStatusMenu para cambiar estado (upsert Supabase).
 - Tab "Terrenos" (OE 037/047): arriba `AdminStatusSummary` (resumen En venta / Reservados / Vendidos / Total por manzana, OE 047); debajo `AdminPriceTable` — tabla de los 90 lotes con inputs Precio UR / Contado U$S y botón Guardar por fila (upsert `lot_states.precio_ur` / `precio_contado`, sin tocar `estado`).
 - Tab "Vendedores" (OE 040/042/048): `AdminVendedores` — agrupado por Dueño (equipo + total de propuestas) + grupo "sin dueño"; Aprobar / Desactivar / Activar / Archivar (solo inactivos) / Desarchivar (→ inactivo); archivados ocultos salvo toggle "Mostrar archivados"; realtime sobre `vendedores` y `propuestas`. Estados de `vendedores.estado`: `pendiente | activo | inactivo | archivado`.
-- Tab "Visitas": lista `visit_requests` de Supabase ordenada por `created_at` desc. Realtime (`postgres_changes`). Badge con count pendientes. Botones WhatsApp y Confirmar (update estado en Supabase).
+- Tab "RanTerr" (OE 051, reemplaza a "Visitas"): `AdminRankingTerrenos` — ranking de terrenos por cantidad de propuestas (`fetchPropuestaCountsPorLote` en `vendedores.ts`, count por `lot_id` en el cliente), empate por Mz/Solar; realtime sobre `propuestas`. Las solicitudes de `visit_requests` ya no se muestran.
 - Botón `🔔 Notif` en header: activa Web Push manualmente si no hay permiso.
 - Botón "Editar mi perfil" en header (OE 041b): abre `VendedorProfileModal` (nombre, teléfono, logo). Al ingresar, si `aglir_vendedor` no tiene logo, se pide con opción "Omitir por ahora" (silenciado por `sessionStorage["aglir_logo_omitido"]`).
 - Interacción: double-click/double-tap en lote → `LotStatusMenu` flotante con 3 opciones (En venta / Reservado / Vendido).
